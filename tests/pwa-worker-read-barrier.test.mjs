@@ -43,3 +43,107 @@ test("state confirmation waits for an earlier asset clear rather than exposing t
   assert.equal(read.reply.storedHashes.length, 0);
   assert.equal(read.reply.active, null);
 });
+
+
+test("a committed pack boots without enumerating the asset cache and reports genuinely missing files", async () => {
+  const source = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
+  const scope = "https://example.test/Zombieee/";
+  const key = hash => scope + "__pwa-asset__/" + hash;
+  const [active, missing, previous, candidate, unrelated] = ["a", "b", "c", "d", "e"].map(letter => "sha256-" + letter.repeat(64));
+  const metadata = {
+    active: { version: "1.0.9", assets: [{ hash: active, bytes: 1 }, { hash: missing, bytes: 1 }] },
+    previous: { version: "1.0.8", assets: [{ hash: previous, bytes: 1 }] },
+  };
+  const responses = new Map([active, previous, candidate, unrelated].map(hash => [key(hash), new Response("x")]));
+  const listeners = new Map();
+  let bulkReads = 0, allowBulk = false;
+  const caches = {
+    async open(name) {
+      if (name === "zombieee-meta-v1") {
+        return { async match(url) { return url === key("state.json") ? new Response(JSON.stringify(metadata)) : undefined; } };
+      }
+      assert.equal(name, "zombieee-assets-v1");
+      return {
+        async match(url) { return responses.get(url)?.clone(); },
+        async keys() {
+          bulkReads++;
+          assert.ok(allowBulk, "a committed startup must not enumerate the whole cache");
+          return [...responses.keys()].map(url => ({ url }));
+        },
+      };
+    },
+  };
+  runInNewContext(source, {
+    self: { registration: { scope }, addEventListener: (type, listener) => listeners.set(type, listener) },
+    caches, URL, Response, Request, AbortController, setTimeout, clearTimeout,
+  });
+  function send(details) {
+    let work, reply;
+    listeners.get("message")({
+      data: { type: "pwa:get-state", ...details },
+      ports: [{ postMessage(value) { reply = value; } }],
+      waitUntil(value) { work = value; },
+    });
+    return work.then(() => reply);
+  }
+  const state = await send({ checkManifestAssets: true });
+  assert.equal(state.type, "pwa:state");
+  assert.deepEqual([...state.storedHashes], [active, previous]);
+  assert.equal(state.active.assets.length, 2);
+  const update = await send({ checkManifestAssets: true, candidateHashes: [candidate, missing] });
+  assert.deepEqual([...update.storedHashes], [active, previous, candidate]);
+  assert.equal(bulkReads, 0);
+
+  allowBulk = true;
+  const full = await send({});
+  assert.deepEqual([...full.storedHashes], [active, previous, candidate, unrelated]);
+  assert.equal(bulkReads, 1);
+});
+
+test("a cold startup and a partially downloaded first install only read known asset keys", async () => {
+  const source = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
+  const scope = "https://example.test/Zombieee/";
+  const key = hash => scope + "__pwa-asset__/" + hash;
+  const [downloaded, missing, unrelated] = ["a", "b", "c"].map(letter => "sha256-" + letter.repeat(64));
+  const entries = new Map([downloaded, unrelated].map(hash => [key(hash), new Response("saved")]));
+  const listeners = new Map();
+  const matches = [];
+  let opened = 0;
+  const caches = {
+    async open(name) {
+      if (name === "zombieee-meta-v1") return { async match() { return undefined; } };
+      assert.equal(name, "zombieee-assets-v1");
+      opened++;
+      return {
+        async match(url) { matches.push(url); return entries.get(url)?.clone(); },
+        async keys() { throw new Error("the cache inventory cannot be enumerated during this boot"); },
+      };
+    },
+  };
+  runInNewContext(source, {
+    self: { registration: { scope }, addEventListener: (type, listener) => listeners.set(type, listener) },
+    caches, URL, Response, Request, AbortController, setTimeout, clearTimeout,
+  });
+  function send({ candidateHashes } = {}) {
+    let work, reply;
+    listeners.get("message")({
+      data: { type: "pwa:get-state", checkManifestAssets: true, candidateHashes },
+      ports: [{ postMessage(value) { reply = value; } }],
+      waitUntil(value) { work = value; },
+    });
+    return work.then(() => reply);
+  }
+
+  const boot = await send();
+  assert.equal(boot.type, "pwa:state");
+  assert.equal(boot.active, null);
+  assert.deepEqual([...boot.storedHashes], []);
+  assert.equal(opened, 0, "the first screen has no asset keys to read");
+
+  const partial = await send({ candidateHashes: [downloaded, missing] });
+  assert.equal(partial.type, "pwa:state");
+  assert.equal(partial.active, null, "a partial download is not an installed pack");
+  assert.deepEqual([...partial.storedHashes], [downloaded]);
+  assert.deepEqual(matches, [key(downloaded), key(missing)]);
+  assert.equal(opened, 1);
+});
