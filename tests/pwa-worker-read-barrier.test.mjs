@@ -99,3 +99,51 @@ test("a committed pack boots without enumerating the asset cache and reports gen
   assert.deepEqual([...full.storedHashes], [active, previous, candidate, unrelated]);
   assert.equal(bulkReads, 1);
 });
+
+test("a cold startup and a partially downloaded first install only read known asset keys", async () => {
+  const source = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
+  const scope = "https://example.test/Zombieee/";
+  const key = hash => scope + "__pwa-asset__/" + hash;
+  const [downloaded, missing, unrelated] = ["a", "b", "c"].map(letter => "sha256-" + letter.repeat(64));
+  const entries = new Map([downloaded, unrelated].map(hash => [key(hash), new Response("saved")]));
+  const listeners = new Map();
+  const matches = [];
+  let opened = 0;
+  const caches = {
+    async open(name) {
+      if (name === "zombieee-meta-v1") return { async match() { return undefined; } };
+      assert.equal(name, "zombieee-assets-v1");
+      opened++;
+      return {
+        async match(url) { matches.push(url); return entries.get(url)?.clone(); },
+        async keys() { throw new Error("the cache inventory cannot be enumerated during this boot"); },
+      };
+    },
+  };
+  runInNewContext(source, {
+    self: { registration: { scope }, addEventListener: (type, listener) => listeners.set(type, listener) },
+    caches, URL, Response, Request, AbortController, setTimeout, clearTimeout,
+  });
+  function send({ candidateHashes } = {}) {
+    let work, reply;
+    listeners.get("message")({
+      data: { type: "pwa:get-state", checkManifestAssets: true, candidateHashes },
+      ports: [{ postMessage(value) { reply = value; } }],
+      waitUntil(value) { work = value; },
+    });
+    return work.then(() => reply);
+  }
+
+  const boot = await send();
+  assert.equal(boot.type, "pwa:state");
+  assert.equal(boot.active, null);
+  assert.deepEqual([...boot.storedHashes], []);
+  assert.equal(opened, 0, "the first screen has no asset keys to read");
+
+  const partial = await send({ candidateHashes: [downloaded, missing] });
+  assert.equal(partial.type, "pwa:state");
+  assert.equal(partial.active, null, "a partial download is not an installed pack");
+  assert.deepEqual([...partial.storedHashes], [downloaded]);
+  assert.deepEqual(matches, [key(downloaded), key(missing)]);
+  assert.equal(opened, 1);
+});

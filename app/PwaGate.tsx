@@ -287,12 +287,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const published = await fetchPublishedManifest({ baseUrl });
       if (manifestLookupRef.current !== lookup) return false;
 
-      // Startup knows which committed assets exist. Check a different
-      // published manifest as well, so previously downloaded update bytes
-      // still count towards the next download and its storage estimate.
+      // A first install or a different release can already have downloaded
+      // assets. Check their exact keys once the published manifest is known.
       const registration = registrationRef.current;
       const installed = installedManifestRef.current;
-      if (registration && installed && installed.releaseSha !== published.releaseSha) {
+      if (registration && installed?.releaseSha !== published.releaseSha) {
         const inventory = await requestFromServiceWorker(registration, {
           type: "pwa:get-state",
           checkManifestAssets: true,
@@ -300,8 +299,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         });
         if (manifestLookupRef.current !== lookup) return false;
         if (inventory?.type === "pwa:state"
-          && inventory.active?.releaseSha === installed.releaseSha
-          && installedManifestRef.current?.releaseSha === installed.releaseSha
+          && inventory.active?.releaseSha === installed?.releaseSha
+          && installedManifestRef.current?.releaseSha === installed?.releaseSha
           && Array.isArray(inventory.storedHashes)) {
           setStoredHashes(new Set<string>(inventory.storedHashes));
         }

@@ -604,9 +604,10 @@ async function storedManifestHashes(state, candidateHashes) {
   // A cold Cache.keys() can stall even while reads by exact key work. Check
   // only the known manifests at startup, without reading asset bodies or
   // treating the committed manifest itself as proof that bytes still exist.
-  const cache = await caches.open(ASSET_CACHE);
   const possible = [...hashes];
   const present = new Set();
+  if (possible.length === 0) return present;
+  const cache = await caches.open(ASSET_CACHE);
   for (let offset = 0; offset < possible.length; offset += 16) {
     const group = possible.slice(offset, offset + 16);
     const responses = await Promise.all(group.map(hash => cache.match(assetCacheKey(hash))));
@@ -661,7 +662,7 @@ self.addEventListener("message", (event) => {
         // shell warm merely because the page is confirming its local pack.
         await stateMutationTail;
         const state = await readState();
-        const present = message.checkManifestAssets === true && Array.isArray(state.active?.assets) && state.active.assets.length > 0
+        const present = message.checkManifestAssets === true
           ? await storedManifestHashes(state, message.candidateHashes)
           : await storedHashes();
         // The whole manifest, assets included. The page needs the installed
