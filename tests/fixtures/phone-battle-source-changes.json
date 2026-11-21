@@ -775,6 +775,26 @@
     [
       "  const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,\n    obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],\n    get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});\n  ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = \"center\"; ctx.textBaseline = \"alphabetic\";",
       "  const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,\n    obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],\n    occupied:enemyHealthBars,\n    get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});\n  ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = \"center\"; ctx.textBaseline = \"alphabetic\";"
+    ],
+    [
+      "import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';",
+      "import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';\nimport { drawV100StationMud } from \"./v100StationMudVfx.js\";"
+    ],
+    [
+      "  if (f.stationAbility.phase === \"idle\") return;\n  if (g.definition.missionConfig.v100StageNumber && f.kind === \"sprinter\"",
+      "  if (f.stationAbility.phase === \"idle\") return;\n  if (g.definition.missionConfig.v100StageNumber && f.kind === \"ooze\") return;\n  if (g.definition.missionConfig.v100StageNumber && f.kind === \"sprinter\""
+    ],
+    [
+      "  for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);",
+      "  if (g.definition.missionConfig.v100StageNumber) {\n    for (const hazard of g.stationHazards) {\n      if (hazard.active) drawV100StationMud(ctx, hazard, g.time);\n    }\n    for (const fighter of g.fighters) {\n      const ability = fighter.stationAbility;\n      if (fighter.kind !== \"ooze\" || !fighter.combatReady || fighter.hp <= 0 || ability.phase !== \"windup\") continue;\n      drawV100StationMud(ctx, {\n        centerX: ability.centerX ?? fighter.x, centerY: ability.centerY ?? fighter.y,\n        radiusX: STATION_ENEMY_TUNING.leakMud.radiusX, radiusY: STATION_ENEMY_TUNING.leakMud.radiusY,\n        remainingSeconds: ability.remainingSeconds, ownerId: fighter.id,\n      }, g.time, true);\n    }\n  } else {\n    for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);\n  }"
+    ],
+    [
+      "                g.stationMetrics.leakMudZones += 1;\n                f.abilityCooldown = 7.5;",
+      "                g.stationMetrics.leakMudZones += 1;\n                if (g.definition.missionConfig.v100StageNumber) {\n                  playProductionCue(\"floor-mud-impact-r1\", resolved.zone.centerX, {\n                    playbackRate: .97 + f.id % 4 * .02,\n                  });\n                }\n                f.abilityCooldown = 7.5;"
+    ],
+    [
+      "                  abilityFrame = true;\n                  g.banner = \"漏泥 // 床汚染予告\";",
+      "                  abilityFrame = true;\n                  if (g.definition.missionConfig.v100StageNumber) {\n                    playProductionCue(\"floor-mud-warning-r1\", windup.runtime.centerX, {\n                      playbackRate: .97 + f.id % 4 * .02,\n                    });\n                  }\n                  g.banner = \"漏泥 // 床汚染予告\";"
     ]
   ],
   "app/manualAbilities.js": [
@@ -903,6 +923,20 @@
     [
       "  ctx.save();ctx.font=`700 ${fontSize}px \"Noto Sans JP\",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';\n  const rows=state.active.map(row=>{const owner=liveOwner(world,row);return{...row,owner,headX:owner.x,headY:headY(owner)};});\n  const layout=layoutV105AbilityNames(rows,{width,height,fontSize,measure:text=>ctx.measureText(text).width,obstacles:options.obstacles,bounds:options.bounds});\n  for(const row of layout){\n    const age=world.time-row.startedAt;",
       "  ctx.save();ctx.font=`700 ${fontSize}px \"Noto Sans JP\",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';\n  const rows=state.active.map(row=>{const owner=liveOwner(world,row);return{...row,owner,headX:owner.x,headY:headY(owner)};});\n  const layout=layoutV105AbilityNames(rows,{width,height,fontSize,measure:text=>ctx.measureText(text).width,obstacles:options.obstacles,occupied:options.occupied,bounds:options.bounds});\n  for(const row of layout){\n    const age=world.time-row.startedAt;"
+    ]
+  ],
+  "app/productionAudio.js": [
+    [
+      "export const V100_AUDIO_MANIFEST = createAudioManifest(withV100BossSkillAudio(withV100BossCollapseAudio(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST))))))));",
+      "const stationMudFoley = [\n  { id: \"floor-mud-warning-r1\", gain: .58, priority: 74 },\n  { id: \"floor-mud-impact-r1\", gain: .79, priority: 78 },\n].map(cue => ({\n  ...cue, category: \"melee\", preload: \"lazy\", loop: false, cooldownMs: 130, maxInstances: 2,\n  sources: sourceFor(\"/audio/quality-20261121\", \"station-mud\", cue.id),\n}));\nconst v100BattleAudio = withV100BossSkillAudio(withV100BossCollapseAudio(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)))))));\nexport const V100_AUDIO_MANIFEST = createAudioManifest({ ...v100BattleAudio, assets: [...v100BattleAudio.assets, ...stationMudFoley] });"
+    ],
+    [
+      "const legacyVoiceInstallAssets = V100_AUDIO_MANIFEST.assets.map(asset =>",
+      "const existingV100InstallAssets = V100_AUDIO_MANIFEST.assets.slice(0, v100BattleAudio.assets.length);\nconst legacyVoiceInstallAssets = existingV100InstallAssets.map(asset =>"
+    ],
+    [
+      "for (const asset of [...legacyVoiceInstallAssets, ...V100_AUDIO_MANIFEST.assets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST)]) {",
+      "for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley]) {"
     ]
   ]
 }

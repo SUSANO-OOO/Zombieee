@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,285);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,287);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50171061); // Includes the campaign mission artwork and both offline audio alternatives.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50185778); // Includes the campaign mission artwork and both offline audio alternatives.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -43,7 +43,7 @@ test('every bundled audio range still contains its exact encoded content after t
   assert.ok(Number.isSafeInteger(row.bundleOffset)&&row.bundleOffset>=0&&row.bundleOffset+row.bundleBytes<=bytes.length);
   assert.equal('sha256-'+createHash('sha256').update(bytes.subarray(row.bundleOffset,row.bundleOffset+row.bundleBytes)).digest('hex'),row.hash,row.path);checked++;
  }
- assert.equal(checked,419);
+ assert.equal(checked,421);
  const directAudio=manifest=>manifest.assets.filter(row=>row.category==='audio'&&!row.bundlePath);
  const alternateFiles=contract.added.filter(row=>row.category==='audio'&&!row.bundlePath);
  assert.deepEqual(alternateFiles.map(row=>row.path),['/audio/v100/foley/treatment.ogg','/audio/v104/combat/armor-hit.ogg']);
@@ -66,7 +66,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,286);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,288);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -84,4 +84,22 @@ test('only the producer-selected Kuma retained payload changes; every other reta
  assert.deepEqual(contract.contentReplacements.map(r=>r.path),[path]);
  for(const row of contract.transportChanges){assert.equal(row.next.hash,row.previous.hash,row.path);assert.equal(row.next.bytes,row.previous.bytes,row.path);}
  const wrong=structuredClone(candidate);wrong.assets.find(r=>r.path===path).hash=before.get(path).hash;assert.throws(()=>assertDelta(wrong));
+});
+
+test('station mud foley is appended to the audio bank without moving or replacing older clips',()=>{
+  const pinned='0aee66adbe961afea7ed70b558cf468f0357d616';
+  const oldManifest=JSON.parse(execFileSync('git',['show',pinned+':public/asset-manifest.json'],{maxBuffer:4*1024*1024}));
+  const retained=new Map(candidate.assets.map(asset=>[asset.path,asset]));
+  const added=candidate.assets.filter(asset=>!oldManifest.assets.some(old=>old.path===asset.path));
+  assert.deepEqual(added.map(asset=>asset.path).sort(),[
+    '/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3',
+    '/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3',
+  ]);
+  for(const asset of oldManifest.assets){
+    const next=retained.get(asset.path);
+    const expected=asset.bundlePath==='/pwa-bundles/audio-v1.bin'?{...asset,bundleLength:asset.bundleLength+14717}:asset;
+    assert.deepEqual(next,expected,asset.path);
+  }
+  assert.equal(added.reduce((n,asset)=>n+asset.bytes,0),14717);
+  assert.ok(added.every(asset=>asset.bundleOffset>=36220919));
 });

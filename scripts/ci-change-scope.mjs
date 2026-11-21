@@ -550,7 +550,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   assert.ok(['true','false'].includes(draft));
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
-  const paths=execFileSync('git',['diff','--no-renames','--name-only','-z',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).split('\0').filter(Boolean);
+  const incrementalPaths=execFileSync('git',['diff','--no-renames','--name-only','-z',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).split('\0').filter(Boolean);
   let wholePrPaths=null;
   const prBase=process.env.CI_SCOPE_PR_BASE;
   if(/^[0-9a-f]{40}$/u.test(prBase??'')){
@@ -559,6 +559,12 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
       wholePrPaths=execFileSync('git',['diff','--no-renames','--name-only','-z',`${wholeBase}..${head}`],{encoding:'utf8',windowsHide:true}).split('\0').filter(Boolean);
     }catch{/* An unavailable PR base cannot authorize the maintenance exemption. */}
   }
+  // Updating an already-equivalent PR branch can change ancestry without files.
+  // The empty incremental comparison has no evidence to reuse. Classify the
+  // actual PR delta against its base and run the normal checks for that scope.
+  const recheckedWholePr=incrementalPaths.length===0&&action==='synchronize'
+    &&previousHead===base&&comparisonBase===base&&Boolean(wholePrPaths?.length);
+  const paths=recheckedWholePr?wholePrPaths:incrementalPaths;
   const sourceFiles=new Set([...paths.filter(file=>ABILITY_NAME_BLOBS[file]||reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
     ...([ABILITY_NAME_PREDECESSOR.head,QA_FORMATTING_PREDECESSOR.head].includes(previousHead)?Object.keys(ABILITY_NAME_BLOBS):[]),
     ...(previousHead===QA_FORMATTING_PREDECESSOR.head?[QA_FORMATTING_PREDECESSOR.test]:[]),
@@ -569,14 +575,14 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
     catch{return[file,null];}
   }));
-  const eligibleNativeReuse=action==='synchronize'&&previousHead===base&&comparisonBase===base
+  const eligibleNativeReuse=!recheckedWholePr&&action==='synchronize'&&previousHead===base&&comparisonBase===base
     &&/^[0-9a-f]{40}$/u.test(previousHead??'');
   const nativeQaOnlyCandidate=eligibleNativeReuse&&nativeQaOnlyPaths(paths,sourceBlobs);
   const previousFullEvidence=draft==='false'&&nativeQaOnlyCandidate
     ?await previousFullCiEvidence({repository:process.env.GITHUB_REPOSITORY,head:previousHead,
       base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN}):null;
   const reuseNativeQa=previousFullEvidence?.passed===true;
-  const qualityPathsUnchanged=paths.every(file=>file==='docs/PROJECT_STATE.md'
+  const qualityPathsUnchanged=!recheckedWholePr&&paths.every(file=>file==='docs/PROJECT_STATE.md'
     ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
   let qualityEvidence=qualityPathsUnchanged?await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
     head:previousHead,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,fullEvidence:previousFullEvidence})
@@ -604,10 +610,11 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const layoutReadDelta=eligibleAbilityContinuation&&JSON.stringify(changedProductPaths)===JSON.stringify(Object.keys(ABILITY_LAYOUT_PRODUCT_BEFORE).sort())
     &&Object.entries(ABILITY_LAYOUT_PRODUCT_BEFORE).every(([file,before])=>sourceBlobs[file]===ABILITY_NAME_BLOBS[file]
       &&execFileSync('git',['rev-parse',previousHead+':'+file],{encoding:'utf8',windowsHide:true}).trim()===before);
-  const combatQaEvidence=await previousCombatQaEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
+  const freshScopeEvidence={passed:false,reason:'whole-pr-delta-after-synchronization'};
+  const combatQaEvidence=recheckedWholePr?freshScopeEvidence:await previousCombatQaEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
-  const combatFixtureEvidence=await previousCombatFixtureEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
+  const combatFixtureEvidence=recheckedWholePr?freshScopeEvidence:await previousCombatFixtureEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
   const abilityNameEvidence=eligibleNativeReuse?await previousAbilityNameEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
@@ -632,5 +639,5 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
       :abilityNameEvidence.formalTransferDelta
       ?'This QA-only delta retains the completed19 conditional Verify browser/audit steps, normal-play and Ranger gates with their verified original owners; tests, lint, content, build, all6 formal performance windows and PhaseG run fresh.'
       :'The ability-name display delta reruns all19 conditional Verify browser/audit steps, tests, lint, content, build and formal performance; failed or missing normal-play evidence also runs again.'} Original failures remain failures.\n`);
-  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,abilityNameEvidence,changedPaths:paths}));
+  console.log(JSON.stringify({...scope,base,comparisonBase,head,recheckedWholePr,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,abilityNameEvidence,changedPaths:paths}));
 }

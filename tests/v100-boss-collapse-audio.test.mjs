@@ -26,8 +26,10 @@ const files=Object.values(V100_BOSS_COLLAPSE_FILES);
 
 test('nine non-vocal materials are added without replacing any original asset, voice, scene, alias or pool',()=>{
   assert.deepEqual(Object.keys(V100_BOSS_COLLAPSE_AUDIO),kinds);
-  assert.deepEqual(createAudioManifest(withV100BossSkillAudio(withV100BossCollapseAudio(previous))),V100_AUDIO_MANIFEST);
-  assert.equal(V100_AUDIO_MANIFEST.assets.length,previous.assets.length+9+19);
+  const bossAudio=withV100BossSkillAudio(withV100BossCollapseAudio(previous));
+  const mudAudio=['floor-mud-warning-r1','floor-mud-impact-r1'].map(id=>V100_AUDIO_MANIFEST.assetById[id]);
+  assert.deepEqual(createAudioManifest({...bossAudio,assets:[...bossAudio.assets,...mudAudio]}),V100_AUDIO_MANIFEST);
+  assert.equal(V100_AUDIO_MANIFEST.assets.length,previous.assets.length+9+19+2);
   for(const asset of previous.assets)assert.deepEqual(V100_AUDIO_MANIFEST.assetById[asset.id],asset,asset.id);
   for(const key of ['pools','scenes','aliases'])assert.deepEqual(V100_AUDIO_MANIFEST[key],previous[key]);
   for(const spec of Object.values(V100_BOSS_COLLAPSE_AUDIO)){

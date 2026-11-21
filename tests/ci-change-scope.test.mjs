@@ -783,3 +783,41 @@ test('exact reviewed Kuma motion, Ranger pool and first-fixed-paint QA target Dr
  const workflow=load(readFileSync('.github/workflows/targeted-frame-performance.yml','utf8'));
  assert.ok(workflow.on.pull_request.paths.includes(receipts),'changing the transitive workload validator must trigger the real original measurement');
 });
+
+
+test('a merge-only branch synchronization checks the whole outstanding PR without evidence reuse',()=>{
+ const script=resolve('scripts/ci-change-scope.mjs');
+ const directory=mkdtempSync(join(tmpdir(),'zombieee-sync-scope-'));
+ const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();
+ const commit=(message,...args)=>git('-c','user.email=fixture@example.invalid','-c','user.name=Fixture','commit','-qm',message,...args);
+ git('init','-q');
+ writeFileSync(join(directory,'AGENTS.md'),'base');
+ git('add','.');commit('base');
+ const fork=git('rev-parse','HEAD');
+ git('checkout','-qb','candidate');
+ mkdirSync(join(directory,'app'));
+ writeFileSync(join(directory,'app/example.js'),'export const ready = true;\n');
+ git('add','.');commit('change product');
+ const previous=git('rev-parse','HEAD');
+ git('checkout','-qb','advanced-main',fork);
+ commit('merge recorded on main','--allow-empty');
+ const main=git('rev-parse','HEAD');
+ git('checkout','-q','candidate');
+ git('-c','user.email=fixture@example.invalid','-c','user.name=Fixture','merge','--no-ff','-qm','update from main',main);
+ const head=git('rev-parse','HEAD');
+ assert.equal(git('diff','--name-only',previous,head),'');
+ assert.equal(git('diff','--name-only',main,head),'app/example.js');
+ const run=(extra={})=>JSON.parse(execFileSync(process.execPath,[script],{cwd:directory,encoding:'utf8',windowsHide:true,
+   stdio:['ignore','pipe','pipe'],env:{...process.env,CI_SCOPE_BASE:previous,CI_SCOPE_HEAD:head,
+     CI_SCOPE_DRAFT:'false',CI_SCOPE_ACTION:'synchronize',CI_SCOPE_PREVIOUS_HEAD:previous,CI_SCOPE_PR_BASE:main,
+     CI_SCOPE_ACTIONS_TOKEN:'',GITHUB_OUTPUT:'',GITHUB_STEP_SUMMARY:'',...extra}}));
+ const scope=run();
+ assert.deepEqual(scope.changedPaths,['app/example.js']);
+ assert.equal(scope.recheckedWholePr,true);
+ assert.equal(scope.full,true);
+ assert.equal(scope.verify_full,true);
+ assert.equal(scope.eligibleNativeReuse,false);
+ assert.equal(scope.combatQaEvidence.passed,false);
+ assert.throws(()=>run({CI_SCOPE_ACTION:'opened'}),/Command failed/u);
+ assert.throws(()=>run({CI_SCOPE_PR_BASE:head}),/Command failed/u);
+});
