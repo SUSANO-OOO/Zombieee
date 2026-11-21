@@ -108,10 +108,10 @@ export function v100TacticalHintFor(stage) {
   if (Number(stage.number) === 5) return "床がオレンジに光ったら突進が来る。クマバーソンの「鉄鍋仁王立ち」で前線を守ろう。";
   if (Number(stage.number) === 11) return "前衛を出撃させて供給弁の周りを確保。仲間が弁のそばにいると復旧が進む。復旧したらMOTHERを倒そう。";
   if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いたユニットをタップで回避。";
-  if (stage.missionType === "boss") return "大技の予告を見逃さず、守備役の固有技を敵の攻撃に合わせて使おう。";
+  if (stage.missionType === "boss") return "大技の予告を見逃さず、守備役の手動アビリティを敵の攻撃に合わせて使おう。";
   if (stage.missionType === "escort") return "前衛と足止め役で、護衛対象へ近づく敵を止める。";
   if (stage.missionType === "timed-defense") return "前衛と射撃役を揃え、防衛地点へ迫る敵を迎え撃とう。敵が増えたら前衛を追加で出撃させよう。";
-  if (Number(stage.number) >= 21) return "盾持ちには重装兵、射撃兵には遊撃兵。固有技で敵を足止め。";
+  if (Number(stage.number) >= 21) return "盾持ちには重装兵、射撃兵には遊撃兵。手動アビリティで敵を足止め。";
   return "前衛が敵を引き受け、後ろから射撃で援護しよう。敵が増えたら前衛を追加で出撃させよう。";
 }
 

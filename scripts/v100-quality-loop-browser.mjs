@@ -237,7 +237,7 @@ async function formationDetailsReachable(page, viewport, row) {
   assert.ok(/auto|pan-y|manipulation/.test(before.touchAction), 'Vertical touch scrolling is allowed');
   await pane.evaluate(element => { element.scrollTop = element.scrollHeight; });
   const after = await pane.evaluate(element => {
-    const copy = element.querySelector('.v100-briefing-person > div[aria-label$="の役割・固有技"]');
+    const copy = element.querySelector('.v100-briefing-person > div[aria-label$="の役割・手動アビリティ"]');
     const box = element.getBoundingClientRect();
     if (!copy?.lastElementChild) return { readable: false, reason: 'Missing selected crew information' };
     const range = document.createRange(); range.selectNodeContents(copy.lastElementChild);
@@ -248,7 +248,7 @@ async function formationDetailsReachable(page, viewport, row) {
       tail: tail ? { top: tail.top, bottom: tail.bottom } : null, pane: { top: box.top, bottom: box.bottom } };
   });
   row.formationDetailScroll = { before, after, input: 'Scroll extent observer; native touch is separate evidence' };
-  assert.equal(after.readable, true, 'The final line of the selected crew ability is reachable');
+  assert.equal(after.readable, true, 'The final line of the selected crew ability is reachable' + (after.reason ? ': ' + after.reason : ''));
   if (before.scrollHeight > before.clientHeight) assert.ok(after.scrollTop > 0, 'Overflowing information can move');
   assert.deepEqual(await controls(), controlsBefore, 'Formation actions remain fixed while information scrolls');
   assert.deepEqual(await counterReadout(), controlBefore, 'The selected crew requirements remain fixed while information scrolls');

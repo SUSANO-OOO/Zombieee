@@ -88,14 +88,14 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
         <header><strong>{item.slotType === "tactical" ? "部隊全員に効果" : "装備した場合"}</strong><span>数値：{selectedPresentation.displayName} / 枠{previewSlot + 1}</span></header>
         <dl className="v100-equipment-quote-changes">{comparison.changes.map(change => <div key={change.key} data-stat={change.key} data-improved={change.improved}><dt>{change.label}</dt><dd><span>{change.beforeLabel}</span><span aria-hidden="true">→</span><strong>{change.afterLabel}</strong></dd></div>)}</dl>
         {comparison.changes.length === 0 && (!comparison.reason || quantity === 0) && <p className="v100-equipment-quote-neutral">この仲間の戦闘能力は変わりません。</p>}
-        <p className="v100-equipment-quote-guide">{quantity === 0 ? "購入後は「装備を比べる」で装備先を選ぼう。" : comparison.reason ?? "「装備を比べる」で仲間と装備枠を選べます。"}<small>固有技は比較に含みません。</small></p>
+        <p className="v100-equipment-quote-guide">{quantity === 0 ? "購入後は「装備を比べる」で装備先を選ぼう。" : comparison.reason ?? "「装備を比べる」で仲間と装備枠を選べます。"}<small>手動アビリティは比較に含みません。</small></p>
       </section>}
       {fittingOpen && comparison && createPortal(<div className="v100-fitting-backdrop"><section className="v100-equipment-fitting" role="dialog" aria-modal="true" aria-labelledby="v100-fitting-title">
         <header><div className="v100-fitting-heading"><EquipmentArt item={item} /><div><small>装備比較 / {item.slotType === "personal" ? "個人装備" : "部隊装備"}</small><h2 id="v100-fitting-title">{item.displayName}を装備すると</h2></div></div><button type="button" onClick={()=>setFittingOpen(false)}>閉じる</button></header>
         <div className="v100-fitting-body" tabIndex={0} aria-label="装備を替えたときの変化"><div className="v100-fitting-person">
         <label>効果を比べる仲間<select aria-label="効果を比べる仲間" value={selectedUnit} onChange={event=>setUnitId(event.target.value)}>{UNITS.filter(unit=>save.ownedUnitIds.includes(unit.id)).map(unit=><option key={unit.id} value={unit.id}>{unit.displayName}</option>)}</select></label>
         <div className="v100-fitting-slots" aria-label="比較する装備枠">{[0,1].map(slot=><button type="button" key={slot} aria-pressed={previewSlot===slot} onClick={()=>setPreviewSlot(slot)}>枠{slot+1}と比較</button>)}</div>
-        <small>{item.slotType==='tactical'?'部隊全員に効果があります。数値は選んだ仲間の変化です。':'今のレベル・装備から替えた場合の数値です。'} 固有技の威力は、この比較には含みません。</small></div>
+        <small>{item.slotType==='tactical'?'部隊全員に効果があります。数値は選んだ仲間の変化です。':'今のレベル・装備から替えた場合の数値です。'} 手動アビリティの威力は、この比較には含みません。</small></div>
         <div className="v100-fitting-result"><p className="v100-fitting-replacement">{comparison.replacedName} → {item.displayName}</p>
         <dl className="v100-fitting-changes">{comparison.changes.map(change=><div key={change.key} data-stat={change.key} data-improved={change.improved}><dt>{change.label}</dt><dd><span>{change.beforeLabel}</span><span aria-hidden="true">→</span><strong>{change.afterLabel}</strong></dd></div>)}</dl>
         {comparison.changes.length===0&&<p>{comparison.reason??'この仲間の戦闘能力は変わりません。'}</p>}
