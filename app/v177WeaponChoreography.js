@@ -26,6 +26,23 @@ function sampleChainsawRev(progress){
  const [bodyX,bodyY,lean,sawX,sawY,pitch]=keys(progress,chainsawRevFrames);
  return {bodyX,bodyY,lean,sawX,sawY,pitch};
 }
+// The powered cut stays low: draw the bar in, drive it through at waist
+// height, then let the weight of the motor pull the hands down.
+const chainsawOverdriveFrames=[
+ [0,0,0,0,0,0,.15],
+ [.12,-2,6,.04,-13,8,.52],
+ [.23,-7,11,.08,-28,16,.39],
+ [.28,17,10,.23,42,28,-.12],
+ [.41,26,13,.30,37,32,.24],
+ [.57,15,11,.25,17,39,.63],
+ [.76,4,6,.10,-6,12,.35],
+ [1,0,0,0,0,0,.15],
+];
+function sampleChainsawOverdrive(progress,remaining){
+ const [bodyX,bodyY,lean,sawX,sawY,pitch]=keys(progress,chainsawOverdriveFrames);
+ return {bodyX,bodyY,lean,sawX,sawY,pitch,blend:ease(remaining/.18)};
+}
+const blendValue=(from,to,amount)=>from+(to-from)*amount;
 // Both hands already own the approved plasma-blade hilt. Keep them on it
 // while TKY lowers the blade across his waist and takes a long, low sweep.
 // Source-space keys: phase, body x/y/lean, hilt x/y, blade pitch from rest.
@@ -290,6 +307,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const assessing=kind==='babayaga'&&plan.abilityPresentation==='weak-point-assessment';
  const rev=kind==='crazy-king'&&plan.abilityPresentation==='chainsaw-rev'
   ?sampleChainsawRev(p/atlas.attackBoundaries[0]):null;
+ const overdrive=kind==='crazy-king'&&plan.abilityPresentation==='chainsaw-overdrive'
+  ?sampleChainsawOverdrive(p,actor.manualAbility?.activeRemaining??0):null;
  const lightblade=kind==='tky'&&plan.abilityPresentation==='lightblade-release'?sampleLightbladeRelease(p):null;
  const fireWhisky=kind==='zakimiya'&&plan.abilityPresentation==='fire-whisky-throw'?sampleFireWhiskyThrow(p):null;
  const crossCounter=kind==='miyamoto-musashi'&&plan.abilityPresentation==='cross-counter'
@@ -303,9 +322,14 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  // then rises out of the follow-through on the existing ability clock.
  const [drive,crouch,lean]=intercept?keys(p,[[0,0,0,0],[.22,-9,16,.34],[.28,0,14,.39],
   [.40,18,9,.47],[.57,10,6,.30],[1,0,0,0]]):[0,0,0];
- const bodyAngle=authoredBody?.lean??(intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?.18*assessment:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight);
- const torsoX=authoredBody?.bodyX??(intercept?drive:weight*(heavy?13:9));
- const torsoY=authoredBody?.bodyY??(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3));
+ let bodyAngle=authoredBody?.lean??(intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?.18*assessment:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight);
+ let torsoX=authoredBody?.bodyX??(intercept?drive:weight*(heavy?13:9));
+ let torsoY=authoredBody?.bodyY??(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3));
+ if(overdrive){
+  bodyAngle=blendValue(bodyAngle,overdrive.lean,overdrive.blend);
+  torsoX=blendValue(torsoX,overdrive.bodyX,overdrive.blend);
+  torsoY=blendValue(torsoY,overdrive.bodyY,overdrive.blend);
+ }
  const torso=rigid(waist,[waist[0]+torsoX,waist[1]+torsoY],bodyAngle);
  for(const [bone,m]of Object.entries(base)){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
@@ -399,9 +423,17 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   // front of the body; never rotate the bar behind the hips at impact.
   const sourceDirection=Math.atan2(atlas.muzzle[1]-pivot[1],atlas.muzzle[0]-pivot[0]);
   const carry=atlas.weaponCarryPosition??[227,205];
-  const local=rev?[carry[0]+rev.sawX,carry[1]+rev.sawY]
+  let local=rev?[carry[0]+rev.sawX,carry[1]+rev.sawY]
    :attacking?shoulderTarget(primary,p,carry,[[.18,44,-11],[.23,44,-11],[.28,59,37],[.48,44,50],[.64,44,50]]):carry;
-  angle=(rev?.pitch??(attacking?swingAngle(p,.15,-2.15,-.05,.8):.15))-sourceDirection;
+  let pitch=rev?.pitch??(attacking?swingAngle(p,.15,-2.15,-.05,.8):.15);
+  if(overdrive){
+   local=[
+    blendValue(local[0],carry[0]+overdrive.sawX,overdrive.blend),
+    blendValue(local[1],carry[1]+overdrive.sawY,overdrive.blend),
+   ];
+   pitch=blendValue(pitch,nearAngle(overdrive.pitch,pitch),overdrive.blend);
+  }
+  angle=pitch-sourceDirection;
   upper['weapon-0']=multiply(torso,rigid(pivot,local,angle));
   // Older paint has a separate support hand. Complete combat paint already
   // binds both hands to this weapon and supplies their own source positions.

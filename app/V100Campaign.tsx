@@ -1406,7 +1406,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
             {absence && <p className="v100-stage-absence" role="note">{absence}</p>}
             {activeUnit && activePresentation ? <div className="v100-briefing-person" data-v100-focused-unit={activeUnit.id}>
               <CrewPortrait unitId={activeUnit.id} label={activeUnit.displayName} />
-              <div aria-label={activeUnit.displayName + "の役割・固有技"}>
+              <div aria-label={activeUnit.displayName + "の役割・手動アビリティ"}>
                 <h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3>
                 <strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={index + "-" + part}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong>
                 {activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}
@@ -1419,7 +1419,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
           </dl>}
         </aside>
         <div className="v100-callin-roster">
-          <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上で固有技"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、埋まった枠なら入れ替え。" : requestedUnit ? "この仲間は、別の作戦で試そう。" : modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
+          <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上タップで手動アビリティ"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、埋まった枠なら入れ替え。" : requestedUnit ? "この仲間は、別の作戦で試そう。" : modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
           {briefingOpen && (
             <V100BattleBriefing
               allowControls={!modePreparation}
@@ -1465,14 +1465,14 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
         </div>
       </div>
       <div className="v100-formation-workspace">
-        <div className="v100-roster-heading"><h3>{activeSlot + 1}枠目に入れる仲間</h3><span>固有技と出撃に必要な指揮を見て選ぼう</span><button type="button" className="v100-picker-close" onClick={() => setPickerOpen(false)}>編成に戻る</button></div>
+        <div className="v100-roster-heading"><h3>{activeSlot + 1}枠目に入れる仲間</h3><span>手動アビリティと必要指揮で選ぶ</span><button type="button" className="v100-picker-close" onClick={() => setPickerOpen(false)}>編成に戻る</button></div>
         <div className="v100-formation-columns"><div className="v100-roster-grid">{ownedUnits.map((unit) => {
           const art = formationCardForUnit(unit.id);
           const info = v100UnitPresentation(save, unit.id);
           const unavailable = v100StageAbsenceReason(stageId, unit.id);
           return <button type="button" disabled={Boolean(unavailable)} data-roster-unit={unit.id} data-crew-role={unit.role} className={"v100-roster-card game-unit-card " + (activeUnitId === unit.id ? "selected" : "")} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={unavailable ?? unit.displayName + "を枠" + (activeSlot + 1) + "へ配置"}>
             <span className="v100-roster-card-art">{art && <><CrewPortrait unitId={unit.id} /><CrewInsignia unitId={unit.id} /></>}</span>
-            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small className="v100-roster-role">{v100RoleLabelFor(unit.role)}</small><span className="v100-roster-advice">{unavailable ?? `固有技：${info?.abilityAdvice}`}</span><small className="v100-roster-callin"><span>指揮 <b>{info?.commandCost}</b></span><span>次の出撃まで <b>{formatV100Number(info?.redeploySeconds ?? 0)}秒</b></span></small></span>
+            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small className="v100-roster-role">{v100RoleLabelFor(unit.role)}</small><span className="v100-roster-advice">{unavailable ?? `手動アビリティ：${info?.abilityAdvice}`}</span><small className="v100-roster-callin"><span>指揮 <b>{info?.commandCost}</b></span><span>次の出撃まで <b>{formatV100Number(info?.redeploySeconds ?? 0)}秒</b></span></small></span>
           </button>;
         })}</div></div>
       </div>
