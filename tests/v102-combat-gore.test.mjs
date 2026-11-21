@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spriteFrameFor,spriteKinds} from '../app/spriteManifest.js';
-import {beginV102GoreStep,finishV102GoreStep,noteV102GoreImpact,noteV102GorePeriodicDamage,getV102GoreSnapshot,clearV102CombatGore,V102_GORE_LIMITS,v102CorpseSeverPlan,beginV102CorpseSever,endV102CorpseSever} from '../app/v102CombatGore.js';
+import {beginV102GoreStep,finishV102GoreStep,noteV102GoreImpact,noteV102GorePeriodicDamage,getV102GoreSnapshot,clearV102CombatGore,drawV102GoreGround,V102_GORE_LIMITS,v102CorpseSeverPlan,beginV102CorpseSever,endV102CorpseSever} from '../app/v102CombatGore.js';
 const fighter=(extra={})=>({id:2,kind:'walker',side:'zombie',hp:100,maxHp:100,x:350,y:320,...extra});
 const world=(actors=[fighter()])=>({definition:{missionConfig:{v100StageNumber:1}},time:0,fighters:actors,corpses:[]});
 function hit(g,{weapon='tky',damage=100}={}){const target=g.fighters[0],step=beginV102GoreStep(g);g.time+=1/30;target.hp-=damage;noteV102GoreImpact(g,target,{weapon,originX:target.x-50,damage});return finishV102GoreStep(g,step);}
@@ -71,4 +71,43 @@ test('cutting and explosive severing use distinct boundaries and preserve world 
     assert.ok((positions[1][0]-(r.x+r.w*.5))*-1>0,'mirrored local flight follows the original world impact');
   }
   assert.notDeepEqual(plans[0].part,plans[2].part,'slicing and explosive impact have different source boundaries');
+});
+
+test('ground stains use one correctly cropped painted decal and the battle clock', () => {
+  const atlas={complete:true,naturalWidth:768,naturalHeight:512};
+  const objects={'v102-ground-stains':atlas};
+  const stained=(weapon)=>{
+    const g=world();
+    hit(g,{weapon});
+    const impactTime=g.time;
+    const draws=[],saved=[];
+    const ctx={
+      globalAlpha:.23,globalCompositeOperation:'source-over',shadowBlur:4,
+      save(){saved.push([this.globalAlpha,this.globalCompositeOperation,this.shadowBlur]);},
+      restore(){[this.globalAlpha,this.globalCompositeOperation,this.shadowBlur]=saved.pop();},
+      drawImage(...args){draws.push({args,alpha:this.globalAlpha,blend:this.globalCompositeOperation});},
+    };
+    drawV102GoreGround(ctx,g,{});
+    assert.equal(draws.length,0);
+    drawV102GoreGround(ctx,g,objects);
+    drawV102GoreGround(ctx,g,objects);
+    assert.equal(draws.length,2);
+    assert.deepEqual(draws[0],draws[1],'a redraw while paused does not pick a new shape');
+    assert.equal(ctx.globalAlpha,.23);
+    assert.equal(ctx.globalCompositeOperation,'source-over');
+    assert.equal(ctx.shadowBlur,4);
+    assert.deepEqual(draws[0].args.slice(3,5),[384,256]);
+    assert.equal(draws[0].args[0],atlas);
+    assert.equal(draws[0].blend,'multiply');
+    g.time=impactTime+6.7;
+    drawV102GoreGround(ctx,g,objects);
+    assert.ok(draws[2].alpha<draws[0].alpha);
+    assert.ok(draws[2].args[7]>draws[0].args[7]);
+    g.time=impactTime+7.01;
+    drawV102GoreGround(ctx,g,objects);
+    assert.equal(draws.length,3);
+    return draws[0].args.slice(1,3);
+  };
+  assert.deepEqual(stained('tky'),[384,0]);
+  assert.deepEqual(stained('grenade'),[384,256]);
 });

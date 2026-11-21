@@ -835,6 +835,14 @@
     [
       "            semantic: isBossFighter(fighter) ? \"boss-defeat\" : \"fighter-defeat\",\n            receiptId: `fighter:${fighter.id}`,\n            ownerId: fighter.id,",
       "            semantic: isBossFighter(fighter) ? \"boss-defeat\" : \"fighter-defeat\",\n            receiptId: `fighter:${fighter.id}`,\n            ownerId: fighter.id,\n            fighterVoiceEvent: fighter.side === \"human\" ? \"exit\" : undefined,"
+    ],
+    [
+      "  if (g.definition.missionConfig.v100StageNumber) drawV100GateChargeWarning(ctx, g, activeLaneCenters, BASE_X + 48);",
+      "  if (g.definition.missionConfig.v100StageNumber) drawV102GoreGround(ctx, g, stageObjects);\n  if (g.definition.missionConfig.v100StageNumber) drawV100GateChargeWarning(ctx, g, activeLaneCenters, BASE_X + 48);"
+    ],
+    [
+      "  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);",
+      "  if(g.definition.missionConfig.v100StageNumber){pruneV177CorpseJointPoses(g);"
     ]
   ],
   "app/manualAbilities.js": [

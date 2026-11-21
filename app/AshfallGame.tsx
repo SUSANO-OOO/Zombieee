@@ -9048,6 +9048,7 @@ function drawWorld(
   if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});
   if(g.definition.missionConfig.v100StageNumber)drawV100BossReleaseFields(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
 
+  if (g.definition.missionConfig.v100StageNumber) drawV102GoreGround(ctx, g, stageObjects);
   if (g.definition.missionConfig.v100StageNumber) drawV100GateChargeWarning(ctx, g, activeLaneCenters, BASE_X + 48);
 
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
@@ -9109,7 +9110,7 @@ function drawWorld(
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
-  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177HumanCorpsePaints(g);pruneV177BossCorpsePaints(g);pruneV177JointActorHistory(g);pruneV177TurnedCorpsePaints(g);}
+  if(g.definition.missionConfig.v100StageNumber){pruneV177CorpseJointPoses(g);pruneV177HumanCorpsePaints(g);pruneV177BossCorpsePaints(g);pruneV177JointActorHistory(g);pruneV177TurnedCorpsePaints(g);}
   for (const corpse of g.corpses) {
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;

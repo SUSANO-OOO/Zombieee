@@ -1,0 +1,66 @@
+{
+  "generator": "OpenAI built-in image_gen",
+  "creator": "Original surface artwork produced for 西新世紀末物語",
+  "license": "Project-original generated material artwork under the existing game asset policy; no third-party source",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original decal artwork generated for this project"
+  },
+  "producerApproval": "The current goal requests eliminating simple geometric combat effects. Final production acceptance is pending.",
+  "source": {
+    "path": "assets/source/quality-20261122/vfx/ground-stains-r1/master-r1.png",
+    "bytes": 1796610,
+    "sha256": "6ef0a76d8ff11cd787cc21351332338eb99a6a621b35936c5fb1b987a1e13a66"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261122/vfx/ground-stains-r1/prompt.txt",
+    "sha256": "c647adc3fb6febd454c02e1dde1289bbc5ba6cabdc725b767055516185d45189"
+  },
+  "layout": {
+    "columns": 2,
+    "rows": 2,
+    "originalWidth": 1536,
+    "originalHeight": 1024,
+    "width": 768,
+    "height": 512,
+    "pixelFormat": "RGBA",
+    "cells": [
+      {
+        "cell": 0,
+        "maximumMarginAlpha": 1,
+        "paintedPixels": 8438,
+        "softPixels": 2465
+      },
+      {
+        "cell": 1,
+        "maximumMarginAlpha": 1,
+        "paintedPixels": 16806,
+        "softPixels": 4425
+      },
+      {
+        "cell": 2,
+        "maximumMarginAlpha": 1,
+        "paintedPixels": 28615,
+        "softPixels": 4297
+      },
+      {
+        "cell": 3,
+        "maximumMarginAlpha": 1,
+        "paintedPixels": 9076,
+        "softPixels": 4777
+      }
+    ]
+  },
+  "output": {
+    "id": "v102-ground-stains",
+    "path": "/art/v102/combat-gore/ground-stains-r1.webp",
+    "hash": "sha256-351092e5b35b40517f30c610cfc1ef207b7e248e61505bd2c353cc207511b81c",
+    "bytes": 92352
+  },
+  "encoding": "FFmpeg Lanczos 768×512, libwebp q83, compression level 6, unchanged fractional alpha cutout",
+  "runtimeAssetCount": 1,
+  "logicalBytes": 92352,
+  "distinctBytes": 92352
+}
