@@ -338,14 +338,16 @@ record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", critic
 record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });
 
-// These two short effects needed their alternate sources during offline play.
+// These short cues needed their alternate sources during offline play.
 // Save the original alternatives directly alongside the preferred bundled MP3s.
-for (const [path, audioId] of [
+for (const [path, audioId, audioChannel = "se"] of [
   ["/audio/v100/foley/treatment.ogg", "offline-treatment-fallback"],
   ["/audio/v104/combat/armor-hit.ogg", "offline-armor-hit-fallback"],
+  // Mobile Chromium requested this 15,722-byte voice alternate during an offline battle.
+  ["/audio/v060/sfx/enemy-turned-hurt-02.ogg", "offline-turned-hurt-fallback", "voice"],
 ]) {
   record(path, { pack: "audio", category: "audio", criticality: "optional",
-    audioChannel: "se", audioId, audioType: "audio/ogg" });
+    audioChannel, audioId, audioType: "audio/ogg" });
 }
 
 for (const asset of INSTALL_AUDIO_ASSETS) {

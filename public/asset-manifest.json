@@ -5627,6 +5627,17 @@
       "bundleLength": 36235636
     },
     {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-02.ogg",
+      "bytes": 15722,
+      "hash": "sha256-fca95a4d3a670daa1e37c44225e716552b7046ba82cc61516368d8c9d15eec9e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-turned-hurt-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
       "path": "/audio/v060/sfx/enemy-walker-attack-01.mp3",
       "bytes": 4346,
       "hash": "sha256-beb7770fb80d0fc7836ade548d04c033dba033312428986b6978ae1cc28a2b9b",
