@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   PRODUCTION_AUDIO_MANIFEST,
+  V100_AUDIO_MANIFEST,
   V100_STAGE_AUDIO_CONTRACT,
   enemyCombatCueFor,
   enemyVoiceCue,
@@ -54,4 +55,16 @@ test("V1 Red Panther and boss roles have distinct production cue identities with
     assert.ok(PRODUCTION_AUDIO_MANIFEST.aliases.some(({ id }) => id === cue));
   }
   assert.equal(enemyVoiceCue("not-registered", "attack"), null);
+});
+
+test("obsolete spoken deployments are retained on disk without preloading in battle", () => {
+  const retired = ["voice-kumaverson-deploy", "voice-babayaga-deploy", "voice-crazy-king-deploy"];
+  for (const manifest of [PRODUCTION_AUDIO_MANIFEST, V100_AUDIO_MANIFEST]) {
+    for (const cueId of retired) assert.ok(manifest.assetById[cueId], cueId);
+    const preloadIds = new Set(manifest.scenes.flatMap(scene => scene.preload));
+    for (const cueId of retired) assert.ok(!preloadIds.has(cueId), cueId);
+    for (const active of ["voice-mayo-deploy", "voice-kumaverson-hurt", "weapon-suppressed-pistol"]) {
+      assert.ok(preloadIds.has(active), active);
+    }
+  }
 });

@@ -262,7 +262,8 @@ test("foreground combat audio bypasses ordinary gain and overlapping voices rele
   const manualContact = await mixer.play("melee-hit", { dedupeKey: "manual-ability:42:1:impact" });
   assert.equal(mixer.activeVoices.get(manualContact.id).combatForeground, true, "ability contact can reuse an ordinary weapon recording");
   manualContact.stop();
-  const first = await mixer.play("voice-a"), second = await mixer.play("voice-b");
+  const first = await mixer.play("voice-a", { priority: 88 });
+  const second = await mixer.play("voice-b", { priority: 88 });
   assert.deepEqual(mixer.getDiagnostics().combatMix, { foregroundVoices: 2, ordinaryTargetGain: .45 });
   assert.equal(mixer.ordinaryCombatBuses.weapons.gain.events.at(-1).at, context.currentTime + .035);
   const warning = await mixer.play("weapon-b", { duck: { level: .3 } });
@@ -277,6 +278,35 @@ test("foreground combat audio bypasses ordinary gain and overlapping voices rele
   mixer.dispose();
 });
 
+test("ordinary reactions leave room for weapon sound and yield to a major cue", async () => {
+  const context = new FakeAudioContext();
+  const network = makeFetcher();
+  const mixer = createAudioMixer({ manifest: createTestManifest(), contextFactory: () => context, fetcher: network.fetcher });
+  try {
+    await mixer.unlock();
+    const shot = await mixer.play("weapon-a");
+    const effort = await mixer.play("voice-a", { priority: 67 });
+    const hurt = await mixer.play("voice-b", { priority: 76 });
+    assert.deepEqual(mixer.getDiagnostics().combatMix, { foregroundVoices: 2, ordinaryTargetGain: .72 });
+    const route = mixer.activeVoices.get(shot.id);
+    assert.equal((route.panner ?? route.gain).connections[0], mixer.ordinaryCombatBuses.weapons);
+    assert.equal(mixer.ordinaryCombatBuses.weapons.gain.events.at(-1).value, .72);
+
+    const warning = await mixer.play("melee-hit", { priority: 90 });
+    assert.ok(warning);
+    assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .45);
+    warning.stop();
+    assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .72);
+    effort.stop();
+    assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .72);
+    hurt.stop();
+    assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
+    assert.equal(mixer.activeVoices.has(shot.id), true);
+  } finally {
+    await mixer.dispose();
+  }
+});
+
 test("inaudible foreground, muted categories and stopped voices cannot leave ordinary combat attenuated", async () => {
   const context = new FakeAudioContext(), network = makeFetcher();
   const mixer = createAudioMixer({ manifest: createTestManifest(), contextFactory: () => context, fetcher: network.fetcher });
@@ -284,11 +314,11 @@ test("inaudible foreground, muted categories and stopped voices cannot leave ord
   await mixer.play("voice-a", { volume: 0 });
   assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
   await mixer.play("voice-b");
-  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .45);
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .72);
   mixer.setCategoryVolume("humanVoices", 0);
   assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
   mixer.setCategoryVolume("humanVoices", .9);
-  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .45);
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .72);
   mixer.setSettings({ sfxEnabled: false });
   assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
   mixer.setSettings({ sfxEnabled: true });

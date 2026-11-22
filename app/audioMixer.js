@@ -14,12 +14,14 @@ const DEFAULT_CATEGORY_VOLUMES = Object.freeze({
 });
 
 const ORDINARY_COMBAT_CATEGORIES = ["weapons", "melee", "monsters"];
-function foregroundCombatCue(asset, options, priority) {
-  if (["bgm", "ambience"].includes(asset.category)) return false;
-  return asset.category === "humanVoices" || Boolean(options.duck)
-    || asset.id.startsWith("ability-")
+function ordinaryCombatGainDuring(asset, options, priority) {
+  const category = asset.category;
+  if (category === "bgm" || category === "ambience") return 1;
+  const canLeadCombat = category === "humanVoices" || category === "support" || ORDINARY_COMBAT_CATEGORIES.includes(category);
+  if (options.duck || asset.id.startsWith("ability-")
     || String(options.dedupeKey ?? "").startsWith("manual-ability:")
-    || (priority >= 85 && [...ORDINARY_COMBAT_CATEGORIES, "support"].includes(asset.category));
+    || (priority >= 85 && canLeadCombat)) return 0.45;
+  return category === "humanVoices" ? 0.72 : 1;
 }
 
 export const AUDIO_MIXER_STATES = Object.freeze({
@@ -802,10 +804,15 @@ export class AudioMixer {
   #syncCombatDucking() {
     const audible = !this.settings.muted && this.settings.sfxEnabled
       && this.settings.masterVolume > 0 && this.settings.sfxVolume > 0;
-    this.combatForegroundCount = audible ? [...this.activeVoices.values()].filter(voice => (
-      !voice.cleaned && voice.combatForeground && voice.volume > 0 && this.categoryVolumes[voice.category] > 0
-    )).length : 0;
-    const target = this.combatForegroundCount ? 0.45 : 1;
+    this.combatForegroundCount = 0;
+    let target = 1;
+    if (audible) {
+      for (const voice of this.activeVoices.values()) {
+        if (voice.cleaned || !voice.combatForeground || voice.volume <= 0 || this.categoryVolumes[voice.category] <= 0) continue;
+        this.combatForegroundCount++;
+        target = Math.min(target, voice.ordinaryCombatGain);
+      }
+    }
     if (target === this.combatDuckTarget) return;
     this.combatDuckTarget = target;
     const now = this.context?.currentTime ?? 0;
@@ -1316,7 +1323,8 @@ export class AudioMixer {
     } else {
       setParamValue(gain.gain, volume, now);
     }
-    const combatForeground = foregroundCombatCue(asset, options, priority);
+    const ordinaryCombatGain = ordinaryCombatGainDuring(asset, options, priority);
+    const combatForeground = ordinaryCombatGain < 1;
     const destination = (!combatForeground && this.ordinaryCombatBuses[asset.category]) || this.buses[asset.category];
     source.connect(gain);
     if (panner) {
@@ -1334,6 +1342,7 @@ export class AudioMixer {
       category: asset.category,
       priority,
       combatForeground,
+      ordinaryCombatGain,
       instanceKey,
       dedupeKey: options.dedupeKey ?? null,
       source,
