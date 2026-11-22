@@ -66,17 +66,26 @@ export function layoutV105AbilityNames(rows,{width,height,fontSize,measure,obsta
       ? {left:row.headX-fontSize*2,right:row.headX+fontSize*2,top:row.headY+7,
         bottom:row.headY+7+Math.max(fontSize*1.5,Math.min(fontSize*3,row.owner.y-row.headY))}
       : null;
+    const canPlace=p=>p.x>=left+w/2+5&&p.x<=right-w/2-5&&p.y>=top+lineHeight/2+5&&p.y<=bottom-lineHeight/2-5
+      &&(!ownHead||p.x+w/2<=ownHead.left-gap||p.x-w/2>=ownHead.right+gap
+        ||p.y+lineHeight/2<=ownHead.top-gap||p.y-lineHeight/2>=ownHead.bottom+gap)
+      &&!reserved.some(q=>p.x+w/2>q.x-gap&&p.x-w/2<q.x+q.width+gap&&p.y+lineHeight/2>q.y-gap&&p.y-lineHeight/2<q.y+q.height+gap)
+      &&!placed.some(q=>Math.abs(q.x-p.x)<(q.width+w)/2+gap-.001&&Math.abs(q.y-p.y)<lineHeight+gap-.001);
+    const previous=row.lastPaint;
+    // Keep a clear position during the short announcement while it is still
+    // close to the caster. Nearby fighters may move as often as every frame.
+    if(previous&&Math.abs(previous.x-preferredX)<=w/2+fontSize*3
+      &&Math.abs(previous.y-preferredY)<=lineHeight*2.25&&canPlace(previous)){
+      placed.push({...row,x:previous.x,y:previous.y,width:w,height:lineHeight,fontSize});
+      continue;
+    }
     const sideXs=ownHead?[ownHead.left-w/2-gap,ownHead.right+w/2+gap]:[];
     const xs=[preferredX,...sideXs,left+w/2+6,right-w/2-6,...obstacles.flatMap(p=>[p.x-w/2-gap,p.x+p.width+w/2+gap]),...placed.flatMap(p=>[p.x-(p.width+w)/2-gap,p.x+(p.width+w)/2+gap])];
     const ys=[preferredY,...(ownHead?[ownHead.top-lineHeight/2-gap]:[]),...Array.from({length:Math.ceil((bottom-top)/(lineHeight+gap))},(_,i)=>[
       preferredY-(i+1)*(lineHeight+gap),preferredY+(i+1)*(lineHeight+gap),top+lineHeight/2+6+i*(lineHeight+gap)]).flat(),
       ...obstacles.flatMap(p=>[p.y-lineHeight/2-gap,p.y+p.height+lineHeight/2+gap])];
     const choices=xs.flatMap(x=>ys.map(y=>({x,y,score:Math.abs(x-preferredX)*.7+Math.abs(y-preferredY)})))
-      .filter(p=>p.x>=left+w/2+5&&p.x<=right-w/2-5&&p.y>=top+lineHeight/2+5&&p.y<=bottom-lineHeight/2-5
-        &&(!ownHead||p.x+w/2<=ownHead.left-gap||p.x-w/2>=ownHead.right+gap
-          ||p.y+lineHeight/2<=ownHead.top-gap||p.y-lineHeight/2>=ownHead.bottom+gap)
-        &&!reserved.some(q=>p.x+w/2>q.x-gap&&p.x-w/2<q.x+q.width+gap&&p.y+lineHeight/2>q.y-gap&&p.y-lineHeight/2<q.y+q.height+gap)
-        &&!placed.some(q=>Math.abs(q.x-p.x)<(q.width+w)/2+gap-.001&&Math.abs(q.y-p.y)<lineHeight+gap-.001))
+      .filter(canPlace)
       .sort((a,b)=>a.score-b.score||a.y-b.y||a.x-b.x);
     const {x,y}=choices[0]??{x:preferredX,y:preferredY};
     placed.push({...row,x,y,width:w,height:lineHeight,fontSize});

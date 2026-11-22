@@ -138,6 +138,32 @@ test('the actual name painter uses live obstacles without querying them when no 
   world.time=3;drawV105AbilityNames(ctx,world,options);assert.equal(reads,1);
 });
 
+test('an active boss name keeps its readable position until it is blocked or too far from its owner',()=>{
+  const owner={id:1,kind:'kurome',side:'zombie',hp:100,combatReady:true,x:760,y:292};
+  const world={time:1,fighters:[owner]};
+  const ctx={save(){},restore(){},measureText:text=>({width:text.length*24}),fillText(){}};
+  const options={width:960,height:540,headY:()=>215,cssScale:1};
+  startV105AbilityName(world,owner,{name:'追跡眼',source:'enemy'});
+  world.time=1.1;
+  const [first]=drawV105AbilityNames(ctx,world,{...options,occupied:[{x:715,y:183,width:90,height:35}]});
+
+  world.time=1.2;
+  owner.x+=8;
+  const [steady]=drawV105AbilityNames(ctx,world,options);
+  assert.deepEqual([steady.x,steady.y],[first.x,first.y]);
+
+  world.time=1.3;
+  const obstruction={x:steady.x-5,y:steady.y-5,width:10,height:10};
+  const [moved]=drawV105AbilityNames(ctx,world,{...options,obstacles:[obstruction]});
+  assert.ok(moved.x+moved.width/2<=obstruction.x||moved.x-moved.width/2>=obstruction.x+obstruction.width
+    ||moved.y+moved.height/2<=obstruction.y||moved.y-moved.height/2>=obstruction.y+obstruction.height);
+
+  world.time=1.4;
+  owner.x=340;
+  const [followed]=drawV105AbilityNames(ctx,world,options);
+  assert.equal(followed.x,owner.x);
+});
+
 test('cropped mobile canvas bounds prevent moving a label above the visible battlefield',()=>{
   const bounds={left:0,top:78,right:960,bottom:464},obstacles=[{x:0,y:78,width:960,height:62},{x:286,y:144,width:388,height:31}];
   const rows=[{ownerId:1,name:'増殖室離床',headX:560,headY:35},{ownerId:2,name:'Ω大剣薙ぎ払い',headX:930,headY:25}];
