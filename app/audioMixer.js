@@ -966,13 +966,15 @@ export class AudioMixer {
     let entry = await this.#fetchAsset(assetId);
     if (!entry || entry.status === "failed") return null;
     if (entry.buffer) return entry.buffer;
-    if (!this.context || this.context.state === "closed") return null;
     if (entry.decodePromise) return entry.decodePromise;
     const asset = this.manifest.assetById[assetId];
     const cacheEntry = entry;
     cacheEntry.decodePromise = (async () => {
       let lastError = null;
       while (entry?.raw) {
+        const context = this.context;
+        if (!context || context.state === "closed") return null;
+        const lifecycleGeneration = this.lifecycleGeneration;
         try {
           const buffer = await this.#decodeRaw(entry.raw);
           entry.buffer = buffer;
@@ -983,6 +985,11 @@ export class AudioMixer {
           entry.lastAccess = ++this.cacheAccessSequence;
           return buffer;
         } catch (error) {
+          // Keep the downloaded source for the next cue if the browser interrupted decoding.
+          if (this.disposed || this.lifecycleHidden || this.navigationPending
+            || lifecycleGeneration !== this.lifecycleGeneration
+            || context !== this.context || context.state === "closed") return null;
+
           lastError = error;
           entry.raw = null;
           entry.source = null;

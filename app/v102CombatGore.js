@@ -81,18 +81,35 @@ export function getV102GoreSnapshot(world){
 }
 function trace(ctx,points){for(let i=0;i<points.length;i++){if(i)ctx.lineTo(...points[i]);else ctx.moveTo(...points[i]);}ctx.closePath();}
 function polygon(ctx,points){ctx.beginPath();trace(ctx,points);}
-function ragged(seed,x,y,rx,ry,points=13){return Array.from({length:points},(_,i)=>{const a=i/points*Math.PI*2,r=.7+random(seed,i)*.3;return [x+Math.cos(a)*rx*r,y+Math.sin(a)*ry*r];});}
+const stainCellForStyle = Object.freeze({bleed:0,cut:1,saw:1,blast:3});
 
-export function drawV102GoreGround(ctx,world){
-  const s=worlds.get(world);if(!s||!v1(world))return;expire(world,s);
-  ctx.save();ctx.shadowBlur=0;
-  for(const e of s.pools){const age=world.time-e.at,fade=clamp((7-age)/1.4),grow=.5+.5*clamp(age/.35);
-    const radius=clamp(e.height*.13*e.intensity*(e.style==='bleed'?.28:1),e.style==='bleed'?1:4,22)*grow;
-    ctx.globalAlpha=.72*fade;ctx.fillStyle='#27090c';polygon(ctx,ragged(e.seed,e.x,e.y,radius*1.65,radius*.34));ctx.fill();
-    ctx.fillStyle='#5d111a';polygon(ctx,ragged(e.seed+2,e.x+2,e.y-1,radius*1.2,radius*.22));ctx.fill();
-    ctx.fillStyle='#88212b';ctx.globalAlpha=.38*fade;ctx.beginPath();
-    for(let i=0;i<9;i++){const x=e.x+(random(e.seed,i+30)-.5)*radius*5,y=e.y+(random(e.seed,i+50)-.5)*radius*.8,r=.5+random(e.seed,i+70)*1.6;ctx.moveTo(x+r,y);ctx.ellipse(x,y,r,r*.4,0,0,Math.PI*2);}ctx.fill();
-  }ctx.restore();
+export function drawV102GoreGround(ctx, world, objects = {}) {
+  const s = worlds.get(world);
+  if (!s || !v1(world)) return;
+  expire(world,s);
+  const image = objects['v102-ground-stains'];
+  if (!image?.complete || !image.naturalWidth || !image.naturalHeight || !s.pools.length) return;
+  const cellWidth = image.naturalWidth / 2, cellHeight = image.naturalHeight / 2;
+  ctx.save();
+  try {
+    // The cutout darkens the real floor grain. Draw once per retained hit.
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.shadowBlur = 0;
+    for (const e of s.pools) {
+      const age = world.time - e.at;
+      const fade = clamp((7 - age) / 1.4);
+      const grow = .5 + .5 * clamp(age / .35);
+      const radius = clamp(e.height * .13 * e.intensity * (e.style === 'bleed' ? .28 : 1), e.style === 'bleed' ? 1 : 4, 22) * grow;
+      const variant = random(e.seed, 29);
+      const cell = stainCellForStyle[e.style] ?? (e.lethal ? 2 + Math.floor(variant * 2) : Math.floor(variant * 4));
+      const width = radius * 4.6, height = radius * 1.38;
+      ctx.globalAlpha = fade * (e.lethal ? .86 : .66);
+      ctx.drawImage(image, cell % 2 * cellWidth, Math.floor(cell / 2) * cellHeight, cellWidth, cellHeight,
+        e.x + e.direction * radius * .16 - width / 2, e.y - height / 2, width, height);
+    }
+  } finally {
+    ctx.restore();
+  }
 }
 
 export function drawV102GoreAir(ctx,world,density=1,objects={}){

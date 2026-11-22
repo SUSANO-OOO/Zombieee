@@ -123,6 +123,7 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     "/art/v104/combat-vfx/organic-r1.webp",
     "/art/v104/combat-vfx/eye-r1.webp",
     "/art/v102/combat-gore/flesh-wound-r1.webp",
+    "/art/v102/combat-gore/ground-stains-r1.webp",
     "/art/v100/combat-vfx/aircraft-support-r1.webp",
     "/art/v100/combat-vfx/explosion-fire-smoke.webp",
     "/art/v100/combat-vfx/blackSmoke01.webp",

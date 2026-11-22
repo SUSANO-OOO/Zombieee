@@ -17,6 +17,7 @@ export const V100_COMBAT_VFX_ART=Object.freeze({
  'v104-organic':'/art/v104/combat-vfx/organic-r1.webp',
  'v104-eye':'/art/v104/combat-vfx/eye-r1.webp',
  'v102-flesh-wound':'/art/v102/combat-gore/flesh-wound-r1.webp',
+ 'v102-ground-stains':'/art/v102/combat-gore/ground-stains-r1.webp',
  'v100-support-aircraft':'/art/v100/combat-vfx/aircraft-support-r1.webp',
  'v100-explosion':'/art/v100/combat-vfx/explosion-fire-smoke.webp',
  'v100-smoke-a':'/art/v100/combat-vfx/blackSmoke01.webp',

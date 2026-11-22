@@ -408,6 +408,85 @@ test("backgrounding during decode cancels the delayed cue without fallback or so
   await mixer.dispose();
 });
 
+test("an interrupted voice decode keeps the downloaded source after returning to the game", async () => {
+  const context = new FakeContext();
+  const windowTarget = new FakeWindow();
+  const calls = [];
+  const failures = [];
+  let rejectDecode;
+  let decodes = 0;
+  context.decodeAudioData = () => {
+    decodes += 1;
+    if (decodes > 1) return Promise.resolve({ duration: .3 });
+    return new Promise((_, reject) => { rejectDecode = reject; });
+  };
+  const audio = manifest();
+  audio.assets.push({ id: "reaction", category: "humanVoices", sources: [
+    { src: "/audio/reaction.mp3" }, { src: "/audio/reaction.ogg" },
+  ] });
+  const mixer = createAudioMixer({ manifest: audio, contextFactory: () => context,
+    enableAcknowledgementTone: false,
+    onAssetFailure: failure => failures.push(failure),
+    logger: { warn() {} },
+    fetcher: async (src) => {
+      calls.push(src);
+      return src.endsWith(".mp3") ? fetcher() : { ok: false, status: 503 };
+    },
+  });
+  mixer.attachUnlock(windowTarget);
+  try {
+    assert.equal(await mixer.enableAudio(), true);
+    const pending = mixer.play("reaction");
+    await flush();
+    assert.equal(typeof rejectDecode, "function");
+    windowTarget.document.fireVisibility("hidden");
+    windowTarget.document.fireVisibility("visible");
+    await flush();
+    rejectDecode(new Error("Audio decoding was interrupted in the background"));
+    assert.equal(await pending, null);
+    assert.equal(context.sources.length, 0);
+
+    const nextReaction = await mixer.play("reaction");
+    assert.ok(nextReaction, "the next reaction plays the already downloaded format");
+    assert.deepEqual(calls, ["/audio/reaction.mp3"]);
+    assert.equal(decodes, 2);
+    assert.equal(context.sources.filter(source => source.started).length, 1);
+    assert.deepEqual(failures, []);
+  } finally {
+    await mixer.dispose();
+  }
+});
+
+test("an unsupported voice format still tries the available alternate while the game is open", async () => {
+  const context = new FakeContext();
+  context.decodeAudioData = bytes => new Uint8Array(bytes)[0] === 1
+    ? Promise.reject(new Error("Unsupported audio format")) : Promise.resolve({ duration: .3 });
+  const calls = [];
+  const failures = [];
+  const audio = manifest();
+  audio.assets.push({ id: "reaction", category: "humanVoices", sources: [
+    { src: "/audio/reaction.mp3" }, { src: "/audio/reaction.ogg" },
+  ] });
+  const mixer = createAudioMixer({ manifest: audio, contextFactory: () => context,
+    enableAcknowledgementTone: false,
+    onAssetFailure: failure => failures.push(failure),
+    logger: { warn() {} },
+    fetcher: async (src) => {
+      calls.push(src);
+      return { ok: true, arrayBuffer: async () => new Uint8Array([src.endsWith(".mp3") ? 1 : 2]).buffer };
+    },
+  });
+  try {
+    assert.equal(await mixer.enableAudio(), true);
+    assert.ok(await mixer.play("reaction"));
+    assert.deepEqual(calls, ["/audio/reaction.mp3", "/audio/reaction.ogg"]);
+    assert.equal(context.sources.filter(source => source.started).length, 1);
+    assert.deepEqual(failures, []);
+  } finally {
+    await mixer.dispose();
+  }
+});
+
 test("portrait rotation cancels a delayed cue and cannot override a hidden page", async () => {
   const context = new FakeContext();
   let releaseDecode;

@@ -3911,6 +3911,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v102/combat-gore/ground-stains-r1.webp",
+      "bytes": 92352,
+      "hash": "sha256-351092e5b35b40517f30c610cfc1ef207b7e248e61505bd2c353cc207511b81c",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v104/combat-vfx/eye-r1.webp",
       "bytes": 138498,
       "hash": "sha256-903d5889db484bf2a6ec320ecd6dfb7218f27270aa4acec276ae6475f5de0dc3",
