@@ -9,14 +9,52 @@ import {installEndingAudioGainObserver,assertEndingGainFadeOnset} from '../scrip
 const source=fs.readFileSync(new URL('../app/V100EndingRoll.tsx',import.meta.url),'utf8');
 const parsed=ts.createSourceFile('EndingRoll.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 let callback;
-function visit(node){if(ts.isVariableDeclaration(node)&&node.name.getText(parsed)==='beginOutro')callback=node.initializer.arguments[0];ts.forEachChild(node,visit);}
-visit(parsed);assert.ok(callback);
+let musicTick;
+function visit(node) {
+  if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === 'beginOutro') callback = node.initializer.arguments[0];
+  if (ts.isIfStatement(node) && node.expression.getText(parsed) === 'waitingAtRef.current === null') musicTick = node.thenStatement;
+  ts.forEachChild(node, visit);
+}
+visit(parsed);
+assert.ok(callback);
+assert.ok(musicTick);
 const code=ts.transpileModule('('+callback.getText(parsed)+')',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 
 test('outro elapsed retains the boundary overshoot at every film speed without changing music rate',()=>{
   for(const speed of [1,2,4])assert.ok(Math.abs(v100CreditsOutroOvershoot(106.33291585,speed)-.33291585/speed)<1e-12);
   for(const elapsed of [0,105,106,NaN,Infinity])assert.equal(v100CreditsOutroOvershoot(elapsed),0);
   assert.equal(v100CreditsOutroOvershoot(107,0),1);
+});
+
+test('native audio briefly rolling backward on resume cannot advance the edit twice', () => {
+  const pausedAt = .376782706;
+  const resumedAt = .211819975;
+  const audio = { currentTime: pausedAt, playbackRate: 1 };
+  const advance = vm.createScript(musicTick.getText(parsed));
+  for (const speed of [1, 2, 4]) {
+    const refs = {
+      audio,
+      musicCursorRef: { current: pausedAt },
+      musicSampleRef: { current: pausedAt },
+      elapsedRef: { current: pausedAt },
+      speedRef: { current: speed },
+    };
+    const run = time => { audio.currentTime = time; advance.runInNewContext(refs); };
+    run(resumedAt);
+    run(.315452443);
+    assert.equal(refs.musicCursorRef.current, pausedAt);
+    assert.equal(refs.musicSampleRef.current, pausedAt);
+    assert.equal(refs.elapsedRef.current, pausedAt);
+    run(.475316824);
+    assert.equal(refs.elapsedRef.current, pausedAt + (.475316824 - pausedAt) * speed);
+    assert.equal(audio.playbackRate, 1);
+    if (speed === 1) {
+      run(105.885928446);
+      assert.equal(v100StaffRollFrame(refs.elapsedRef.current, V100_CREDITS_DURATION, 11).ended, false);
+      run(106.02);
+      assert.equal(v100StaffRollFrame(refs.elapsedRef.current, V100_CREDITS_DURATION, 11).ended, true);
+    }
+  }
 });
 
 function beginFixture({paused=false}={}) {
