@@ -138,11 +138,66 @@ test('the actual name painter uses live obstacles without querying them when no 
   world.time=3;drawV105AbilityNames(ctx,world,options);assert.equal(reads,1);
 });
 
+test('an active boss name keeps its readable position until it is blocked or too far from its owner',()=>{
+  const owner={id:1,kind:'kurome',side:'zombie',hp:100,combatReady:true,x:760,y:292};
+  const world={time:1,fighters:[owner]};
+  const ctx={save(){},restore(){},measureText:text=>({width:text.length*24}),fillText(){}};
+  const options={width:960,height:540,headY:()=>215,cssScale:1};
+  startV105AbilityName(world,owner,{name:'追跡眼',source:'enemy'});
+  world.time=1.1;
+  const [first]=drawV105AbilityNames(ctx,world,{...options,occupied:[{x:715,y:183,width:90,height:35}]});
+
+  world.time=1.2;
+  owner.x+=8;
+  const [steady]=drawV105AbilityNames(ctx,world,options);
+  assert.deepEqual([steady.x,steady.y],[first.x,first.y]);
+
+  world.time=1.3;
+  const obstruction={x:steady.x-5,y:steady.y-5,width:10,height:10};
+  const [moved]=drawV105AbilityNames(ctx,world,{...options,obstacles:[obstruction]});
+  assert.ok(moved.x+moved.width/2<=obstruction.x||moved.x-moved.width/2>=obstruction.x+obstruction.width
+    ||moved.y+moved.height/2<=obstruction.y||moved.y-moved.height/2>=obstruction.y+obstruction.height);
+
+  world.time=1.4;
+  owner.x=340;
+  const [followed]=drawV105AbilityNames(ctx,world,options);
+  assert.equal(followed.x,owner.x);
+});
+
 test('cropped mobile canvas bounds prevent moving a label above the visible battlefield',()=>{
   const bounds={left:0,top:78,right:960,bottom:464},obstacles=[{x:0,y:78,width:960,height:62},{x:286,y:144,width:388,height:31}];
   const rows=[{ownerId:1,name:'増殖室離床',headX:560,headY:35},{ownerId:2,name:'Ω大剣薙ぎ払い',headX:930,headY:25}];
   const placed=layoutV105AbilityNames(rows,{width:960,height:540,fontSize:22,measure:t=>t.length*22,obstacles,bounds});
   for(const p of placed){assert.ok(p.y-p.height/2>=bounds.top);assert.ok(p.y+p.height/2<=bounds.bottom);assert.ok(p.x-p.width/2>=bounds.left);assert.ok(p.x+p.width/2<=bounds.right);}
+});
+
+test('a boss name placed to one side stays on that side as space opens in a crowd',()=>{
+  const owner={id:23,kind:'kurome',side:'zombie',hp:100,combatReady:true,x:768,y:292};
+  const world={time:1,fighters:[owner]};
+  const ctx={save(){},restore(){},measureText:text=>({width:text.length*24}),fillText(){}};
+  const options={width:960,height:390,headY:()=>151,cssScale:1};
+  const wall={x:640,y:0,width:220,height:390};
+  startV105AbilityName(world,owner,{name:'追跡眼',source:'enemy'});
+  world.time=1.1;
+  const [side]=drawV105AbilityNames(ctx,world,{...options,obstacles:[wall]});
+  assert.ok(side.x>owner.x+125);
+
+  world.time=1.2;
+  owner.x+=4;
+  const [steady]=drawV105AbilityNames(ctx,world,options);
+  assert.deepEqual([steady.x,steady.y],[side.x,side.y]);
+
+  world.time=1.3;
+  const blocker={x:side.x-5,y:side.y-5,width:10,height:10};
+  const [moved]=drawV105AbilityNames(ctx,world,{...options,obstacles:[blocker]});
+  assert.ok(moved.x>owner.x+80);
+  assert.ok(Math.hypot(moved.x-side.x,moved.y-side.y)<=side.height+5);
+  assert.ok(moved.y+moved.height/2<=blocker.y||moved.y-moved.height/2>=blocker.y+blocker.height);
+
+  world.time=1.4;
+  owner.x=650;
+  const [followed]=drawV105AbilityNames(ctx,world,options);
+  assert.equal(followed.x,owner.x);
 });
 
 const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
