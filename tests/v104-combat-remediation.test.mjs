@@ -98,6 +98,9 @@ test('first battle calls are audible candidates, cooldowns are per actor, and ar
  const a={hp:100},b={hp:100};assert.equal(battleVoiceReady(a,'attack',0),true);assert.equal(battleVoiceReady(a,'attack',.5),false);assert.equal(battleVoiceReady(b,'attack',.5),true);assert.equal(battleVoiceReady(a,'attack',2.1),true);assert.equal(battleVoiceReady(a,'hurt',2.1),true);
  const assets=V100_AUDIO_MANIFEST.assets,armor=assets.find(a=>a.id==='v104-armor-hit'),pan=assets.find(a=>a.id==='weapon-pan-hit');
  assert.ok(armor.sources.every(s=>s.src.includes('/armor-hit.')));assert.ok(pan.sources.every(s=>s.src.includes('/pan-hit.')));
+ const guard=assets.find(a=>a.id==='ability-kumaverson-pan-guard-contact');
+ assert.deepEqual(guard.sources,[{src:'/audio/quality-20261124/manual/pan-guard-contact.mp3',type:'audio/mpeg'}]);
+ assert.equal(guard.gain,pan.gain,'the guard timbre is distinct at the existing playback gain');
  for(const kind of['crazy-king','kumaverson','babayaga'])for(const event of['deploy','attack','hurt','death'])assert.ok(assets.find(a=>a.id===`voice-${kind}-${event}`).sources.every(s=>s.src.includes(event==='deploy'?'/v104/':'/v060/sfx/human-')));
 });
 
@@ -142,7 +145,7 @@ test('actual front guard contact emits the matching shield or pan sound once; mi
   const hit={owner,attacker:{side:'zombie',x:430},incomingDamage:20,x:420,y:280};
   assert.equal(queueV100GuardContact(world,hit),true);assert.equal(queueV100GuardContact(world,hit),true);
   assert.equal(world.pendingBattleAudioCues.length,1);
-  assert.equal(world.pendingBattleAudioCues[0].cueId,kind==='guardian'?'v104-armor-hit':'weapon-pan-hit');
+  assert.equal(world.pendingBattleAudioCues[0].cueId,kind==='guardian'?'v104-armor-hit':'ability-kumaverson-pan-guard-contact');
   assert.equal(queueV100GuardContact(world,{...hit,incomingDamage:0}),false);
   assert.equal(queueV100GuardContact(world,{...hit,owner:{...owner,manualAbility:{phase:'cooldown'}}}),false);
   if(kind==='guardian')assert.equal(queueV100GuardContact(world,{...hit,attacker:{side:'zombie',x:370}}),false);

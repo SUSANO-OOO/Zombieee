@@ -41,6 +41,15 @@ export function withV104CombatAudio(base){
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
 export const V104_CROSSBOW_AUDIO={id:'weapon-crossbow-release',category:'weapons',sources:sources('crossbow-release'),gain:.68,priority:70,cooldownMs:90,maxInstances:4};
+export const V104_PAN_GUARD_AUDIO = {
+  id: 'ability-kumaverson-pan-guard-contact',
+  category: 'melee',
+  sources: [{src: '/audio/quality-20261124/manual/pan-guard-contact.mp3', type: 'audio/mpeg'}],
+  gain: .58,
+  priority: 78,
+  cooldownMs: 80,
+  maxInstances: 2,
+};
 const rpVoiceEvents={attack:{priority:67,cooldownMs:1400,gain:.72},hurt:{priority:76,cooldownMs:700,gain:.78},death:{priority:86,cooldownMs:300,gain:.8}};
 const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander']
  .flatMap(kind=>Object.entries(rpVoiceEvents).map(([event,settings])=>Object.freeze({kind,event,
@@ -103,7 +112,7 @@ export function queueV104GuardImpact(world,owner){
  const key=v177JointActorKey(owner,world),last=guardClocks.get(key);
  if(Number.isFinite(last)&&world.time>=last&&world.time-last<.08)return false;
  guardClocks.set(key,world.time);
- (world.pendingBattleAudioCues??=[]).push({cueId:owner.kind==='kumaverson'?'weapon-pan-hit':'v104-armor-hit',
+ (world.pendingBattleAudioCues??=[]).push({cueId:owner.kind==='kumaverson'?V104_PAN_GUARD_AUDIO.id:'v104-armor-hit',
   x:owner.x,battleGeneration:world.battleAudioGeneration,ownerId:owner.id,activationId:0,
   semantic:'guard-contact',receiptId:`guard:${owner.id}:${world.time.toFixed(6)}`,dueSimulationTime:world.time,
   priority:78,cooldownMs:0,maxInstances:2});

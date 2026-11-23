@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 36235636,
+  "bytes": 36241636,
   "assets": {
     "/audio/v105/fist-wave-charge.mp3": {
       "id": "v105-fist-wave-charge",
@@ -2528,6 +2528,12 @@
       "offset": 36226083,
       "bytes": 9553,
       "hash": "sha256-d769f4904c51907ca1a0c334a93bb308fb5c27e5b51667bf4968cab9e13f36ad"
+    },
+    "/audio/quality-20261124/manual/pan-guard-contact.mp3": {
+      "id": "install-quality-20261124-manual-pan-guard-contact",
+      "offset": 36235636,
+      "bytes": 6000,
+      "hash": "sha256-4eb8ef7484b13c8a4f2b7ec3b86b459c558822b0c81aee4b2539950f7289e654"
     }
   }
 }
