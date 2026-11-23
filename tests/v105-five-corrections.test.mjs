@@ -171,6 +171,35 @@ test('cropped mobile canvas bounds prevent moving a label above the visible batt
   for(const p of placed){assert.ok(p.y-p.height/2>=bounds.top);assert.ok(p.y+p.height/2<=bounds.bottom);assert.ok(p.x-p.width/2>=bounds.left);assert.ok(p.x+p.width/2<=bounds.right);}
 });
 
+test('a boss name placed to one side stays on that side as space opens in a crowd',()=>{
+  const owner={id:23,kind:'kurome',side:'zombie',hp:100,combatReady:true,x:768,y:292};
+  const world={time:1,fighters:[owner]};
+  const ctx={save(){},restore(){},measureText:text=>({width:text.length*24}),fillText(){}};
+  const options={width:960,height:390,headY:()=>151,cssScale:1};
+  const wall={x:640,y:0,width:220,height:390};
+  startV105AbilityName(world,owner,{name:'追跡眼',source:'enemy'});
+  world.time=1.1;
+  const [side]=drawV105AbilityNames(ctx,world,{...options,obstacles:[wall]});
+  assert.ok(side.x>owner.x+125);
+
+  world.time=1.2;
+  owner.x+=4;
+  const [steady]=drawV105AbilityNames(ctx,world,options);
+  assert.deepEqual([steady.x,steady.y],[side.x,side.y]);
+
+  world.time=1.3;
+  const blocker={x:side.x-5,y:side.y-5,width:10,height:10};
+  const [moved]=drawV105AbilityNames(ctx,world,{...options,obstacles:[blocker]});
+  assert.ok(moved.x>owner.x+80);
+  assert.ok(Math.hypot(moved.x-side.x,moved.y-side.y)<=side.height+5);
+  assert.ok(moved.y+moved.height/2<=blocker.y||moved.y-moved.height/2>=blocker.y+blocker.height);
+
+  world.time=1.4;
+  owner.x=650;
+  const [followed]=drawV105AbilityNames(ctx,world,options);
+  assert.equal(followed.x,owner.x);
+});
+
 const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
 const ctx=new Proxy({},{get:(_target,key)=>key==='drawImage'?()=>{}:()=>{},set:()=>true});
 test('ground strikes move original held weapons to the actual boot floor and recover with attached original limbs',()=>{

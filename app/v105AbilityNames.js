@@ -72,23 +72,27 @@ export function layoutV105AbilityNames(rows,{width,height,fontSize,measure,obsta
       &&!reserved.some(q=>p.x+w/2>q.x-gap&&p.x-w/2<q.x+q.width+gap&&p.y+lineHeight/2>q.y-gap&&p.y-lineHeight/2<q.y+q.height+gap)
       &&!placed.some(q=>Math.abs(q.x-p.x)<(q.width+w)/2+gap-.001&&Math.abs(q.y-p.y)<lineHeight+gap-.001);
     const previous=row.lastPaint;
-    // Keep a clear position during the short announcement while it is still
-    // close to the caster. Nearby fighters may move as often as every frame.
-    if(previous&&Math.abs(previous.x-preferredX)<=w/2+fontSize*3
-      &&Math.abs(previous.y-preferredY)<=lineHeight*2.25&&canPlace(previous)){
-      placed.push({...row,x:previous.x,y:previous.y,width:w,height:lineHeight,fontSize});
+    // The first safe position can be off to one side in a crowd. Reuse it
+    // while the caster remains near where that placement was chosen.
+    const anchored=previous&&Math.abs(row.headX-previous.anchorX)<=fontSize*2
+      &&Math.abs(row.headY-previous.anchorY)<=lineHeight*1.5;
+    if(anchored&&canPlace(previous)){
+      placed.push({...row,x:previous.x,y:previous.y,width:w,height:lineHeight,fontSize,
+        anchorX:previous.anchorX,anchorY:previous.anchorY});
       continue;
     }
+    // If something covers the name, try the closest clear position first.
+    const originX=anchored?previous.x:preferredX,originY=anchored?previous.y:preferredY;
     const sideXs=ownHead?[ownHead.left-w/2-gap,ownHead.right+w/2+gap]:[];
-    const xs=[preferredX,...sideXs,left+w/2+6,right-w/2-6,...obstacles.flatMap(p=>[p.x-w/2-gap,p.x+p.width+w/2+gap]),...placed.flatMap(p=>[p.x-(p.width+w)/2-gap,p.x+(p.width+w)/2+gap])];
-    const ys=[preferredY,...(ownHead?[ownHead.top-lineHeight/2-gap]:[]),...Array.from({length:Math.ceil((bottom-top)/(lineHeight+gap))},(_,i)=>[
+    const xs=[originX,preferredX,...sideXs,left+w/2+6,right-w/2-6,...obstacles.flatMap(p=>[p.x-w/2-gap,p.x+p.width+w/2+gap]),...placed.flatMap(p=>[p.x-(p.width+w)/2-gap,p.x+(p.width+w)/2+gap])];
+    const ys=[originY,preferredY,...(ownHead?[ownHead.top-lineHeight/2-gap]:[]),...Array.from({length:Math.ceil((bottom-top)/(lineHeight+gap))},(_,i)=>[
       preferredY-(i+1)*(lineHeight+gap),preferredY+(i+1)*(lineHeight+gap),top+lineHeight/2+6+i*(lineHeight+gap)]).flat(),
       ...obstacles.flatMap(p=>[p.y-lineHeight/2-gap,p.y+p.height+lineHeight/2+gap])];
-    const choices=xs.flatMap(x=>ys.map(y=>({x,y,score:Math.abs(x-preferredX)*.7+Math.abs(y-preferredY)})))
+    const choices=xs.flatMap(x=>ys.map(y=>({x,y,score:Math.abs(x-originX)*.7+Math.abs(y-originY)})))
       .filter(canPlace)
       .sort((a,b)=>a.score-b.score||a.y-b.y||a.x-b.x);
     const {x,y}=choices[0]??{x:preferredX,y:preferredY};
-    placed.push({...row,x,y,width:w,height:lineHeight,fontSize});
+    placed.push({...row,x,y,width:w,height:lineHeight,fontSize,anchorX:row.headX,anchorY:row.headY});
   }
   return placed;
 }
@@ -108,7 +112,7 @@ export function drawV105AbilityNames(ctx,world,options={}){
     ctx.fillStyle=color;
     ctx[V105_ABILITY_NAME_PAINT]={ownerId:row.ownerId,activationId:row.activationId,name:row.name,key:row.key,startedAt:row.startedAt};
     try{ctx.fillText(row.name,row.x,row.y);}finally{delete ctx[V105_ABILITY_NAME_PAINT];}
-    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time};
+    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time,anchorX:row.anchorX,anchorY:row.anchorY};
     const active=state.active.find(entry=>entry.key===row.key);if(active)active.lastPaint=row.lastPaint;
   }
   ctx.restore();return layout.map(row=>({ownerId:row.ownerId,key:row.key,name:row.name,x:row.x,y:row.y,width:row.width,height:row.height}));
