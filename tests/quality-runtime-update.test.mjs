@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,288);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,289);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50278130); // Includes the campaign mission artwork and both offline audio alternatives.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50293852); // Includes campaign artwork and three offline audio alternatives.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -46,7 +46,11 @@ test('every bundled audio range still contains its exact encoded content after t
  assert.equal(checked,421);
  const directAudio=manifest=>manifest.assets.filter(row=>row.category==='audio'&&!row.bundlePath);
  const alternateFiles=contract.added.filter(row=>row.category==='audio'&&!row.bundlePath);
- assert.deepEqual(alternateFiles.map(row=>row.path),['/audio/v100/foley/treatment.ogg','/audio/v104/combat/armor-hit.ogg']);
+ assert.deepEqual(alternateFiles.map(row=>row.path),[
+  '/audio/v060/sfx/enemy-turned-hurt-02.ogg',
+  '/audio/v100/foley/treatment.ogg',
+  '/audio/v104/combat/armor-hit.ogg',
+ ]);
  assert.deepEqual(ordered(directAudio(candidate)),ordered([...directAudio(baseline),...alternateFiles]));
 });
 
@@ -66,7 +70,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,289);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,290);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -95,13 +99,14 @@ test('station mud foley is appended to the audio bank without moving or replacin
     '/art/v102/combat-gore/ground-stains-r1.webp',
     '/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3',
     '/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3',
+    '/audio/v060/sfx/enemy-turned-hurt-02.ogg',
   ]);
   for(const asset of oldManifest.assets){
     const next=retained.get(asset.path);
     const expected=asset.bundlePath==='/pwa-bundles/audio-v1.bin'?{...asset,bundleLength:asset.bundleLength+14717}:asset;
     assert.deepEqual(next,expected,asset.path);
   }
-  const foley=added.filter(asset=>asset.category==='audio');
+  const foley=added.filter(asset=>asset.bundlePath==='/pwa-bundles/audio-v1.bin');
   assert.equal(foley.reduce((n,asset)=>n+asset.bytes,0),14717);
   assert.ok(foley.every(asset=>asset.bundleOffset>=36220919));
 });
