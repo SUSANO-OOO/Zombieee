@@ -65,6 +65,7 @@ export async function runAssetLoadSession({
   abort,
   deadlineMs = ASSET_LOAD_SESSION_DEADLINE_MS,
   concurrency = ASSET_LOAD_MAX_CONCURRENCY,
+  retryDecodeOnce = false,
   onProgress = () => {},
   now = Date.now,
   setTimer = globalThis.setTimeout,
@@ -75,7 +76,7 @@ export async function runAssetLoadSession({
   const boundedConcurrency = Math.max(1, Math.min(4, Math.floor(concurrency) || 1));
   const completed = new Set();
   const failures = new Map();
-  let cursor = 0;
+  const decodeRetryPaths = [];
   let deadlineReached = false;
   let deadlineTimer = null;
 
@@ -98,6 +99,7 @@ export async function runAssetLoadSession({
       ...snapshot(),
       status: "ready",
       failures: [],
+      decodeRetryPaths,
       deadlineReached: false,
     });
   }
@@ -109,32 +111,45 @@ export async function runAssetLoadSession({
     settleDeadline("deadline");
   }, Math.max(1, Math.floor(deadlineMs) || ASSET_LOAD_SESSION_DEADLINE_MS));
 
-  const worker = async () => {
-    while (!deadlineReached && !signal?.aborted) {
-      const index = cursor;
-      cursor += 1;
-      if (index >= queue.length) return;
-      const job = queue[index];
-      publish(job);
-      try {
-        await job.run(signal);
-      } catch (error) {
-        failures.set(job.path, {
-          path: job.path,
-          category: job.category ?? "asset",
-          reason: assetFailureReason(error),
-        });
-      } finally {
-        completed.add(job.path);
-        publish();
+  const runBatch = (batch) => {
+    let cursor = 0;
+    const worker = async () => {
+      while (!deadlineReached && !signal?.aborted) {
+        const index = cursor;
+        cursor += 1;
+        if (index >= batch.length) return;
+        const job = batch[index];
+        publish(job);
+        try {
+          await job.run(signal);
+          failures.delete(job.path);
+        } catch (error) {
+          failures.set(job.path, {
+            path: job.path,
+            category: job.category ?? "asset",
+            reason: assetFailureReason(error),
+          });
+        } finally {
+          completed.add(job.path);
+          publish();
+        }
       }
-    }
+    };
+    return Promise.allSettled(Array.from(
+      { length: Math.min(boundedConcurrency, batch.length) },
+      () => worker(),
+    ));
   };
-  const workers = Array.from(
-    { length: Math.min(boundedConcurrency, queue.length) },
-    () => worker(),
-  );
-  const workersDone = Promise.allSettled(workers);
+  const workersDone = runBatch(queue).then(() => {
+    if (!retryDecodeOnce || deadlineReached || signal?.aborted) return;
+    // Use a fresh image request after the first batch settles, within the same session deadline.
+    const retryJobs = queue.filter((job) => failures.get(job.path)?.reason === "decode");
+    for (const job of retryJobs) {
+      decodeRetryPaths.push(job.path);
+      completed.delete(job.path);
+    }
+    return runBatch(retryJobs);
+  });
   await Promise.race([workersDone, deadline]);
 
   if (deadlineReached) {
@@ -157,6 +172,7 @@ export async function runAssetLoadSession({
     ...snapshot(),
     status: failures.size > 0 ? "error" : "ready",
     failures: [...failures.values()].map((failure) => Object.freeze({ ...failure })),
+    decodeRetryPaths: [...decodeRetryPaths],
     deadlineReached,
   });
 }

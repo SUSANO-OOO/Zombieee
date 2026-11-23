@@ -15819,6 +15819,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       reason: sessionReason,
       signal: controller.signal,
       abort: () => controller.abort(),
+      retryDecodeOnce: externalSessionActive && !retryPaths,
       onProgress: publishProgress,
     }).then(async (criticalResult) => {
       if (!current()) return;
@@ -15835,6 +15836,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         completed: criticalResult.completed,
         total: criticalResult.total,
         failures: criticalResult.failures,
+        decodeRetryPaths: criticalResult.decodeRetryPaths,
         deadlineReached: criticalResult.deadlineReached,
       });
       activePhaseTerminal = true;
