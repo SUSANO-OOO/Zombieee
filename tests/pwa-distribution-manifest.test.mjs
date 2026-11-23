@@ -239,12 +239,18 @@ test("the full install contains one preferred playable source for every audio cu
   const byId = new Map(audioAssets.map((asset) => [asset.audioId, asset]));
   assert.equal(byId.size, audioAssets.length, "Physical inventory IDs must be unique");
   assert.equal(new Set(INSTALL_AUDIO_ASSETS.map(asset => asset.id)).size, INSTALL_AUDIO_ASSETS.length);
-  for (const prefix of ["/audio/v100/foley/treatment", "/audio/v104/combat/armor-hit"]) {
+  for (const [prefix, channel] of [
+    ["/audio/v100/foley/treatment", "se"],
+    ["/audio/v104/combat/armor-hit", "se"],
+    ["/audio/v060/sfx/enemy-turned-hurt-02", "voice"],
+  ]) {
     const preferred = audioAssets.find(asset => asset.path === prefix + ".mp3");
     const alternate = audioAssets.find(asset => asset.path === prefix + ".ogg");
     assert.equal(preferred?.audioType, "audio/mpeg");
     assert.equal(alternate?.audioType, "audio/ogg");
+    assert.equal(alternate.audioChannel, channel);
     assert.equal(alternate.criticality, "optional");
+    assert.equal(alternate.bundlePath, undefined);
   }
   for (const cue of V100_AUDIO_MANIFEST.assets) {
     const preferred = selectPreferredAudioSource(cue.sources);
