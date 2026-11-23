@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
+import { planInstall } from "../app/pwaAssetManifest.js";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 import { assertPwaInstallCapacity } from "./pwa-install-capacity-qa.mjs";
 
@@ -15,7 +16,7 @@ const results = [];
 let failure;
 try {
   const shipped = await (await fetch(new URL("asset-manifest.json", base))).json();
-  const expectedCapacityBytes = shipped.assets.reduce((sum, asset) => sum + Number(asset.bytes), 0);
+  const expectedCapacityBytes = planInstall(shipped).pendingBytes;
   const metadataCases = process.env.PWA_FIRST_INSTALL_CASE === "commit-only" ? [] : ["network", "html", "pending", "standalone-network"];
   for (const mode of metadataCases) {
     const context = await browser.newContext({

@@ -10,7 +10,7 @@
 // fetches the published manifest, and owns nothing that is not I/O.
 
 import { detectEviction, estimateStorage, resolveAssetUrl } from "./pwaAssetStore.js";
-import { formatBytes, planInstall, validateAssetManifest } from "./pwaAssetManifest.js";
+import { distinctDownloadBytes, formatBytes, planInstall, validateAssetManifest } from "./pwaAssetManifest.js";
 import { assessCommitRecovery } from "./pwaManifestCommit.js";
 import { evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
 
@@ -260,7 +260,7 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
   if (!manifest) return null;
   const assets = manifest.assets ?? [];
   const totalAssets = assets.length;
-  const totalBytes = assets.reduce((sum, asset) => sum + (Number(asset?.bytes) || 0), 0);
+  const totalBytes = distinctDownloadBytes(assets);
 
   return {
     headline: "西新世紀末物語をインストール",
