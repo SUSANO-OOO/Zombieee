@@ -303,10 +303,14 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
           if (closing.ended) void finish();
         } else if (playingRef.current && audio && !audio.paused && !audio.ended) {
           if (waitingAtRef.current === null) {
-            const musicDelta = Math.max(0, audio.currentTime - musicSampleRef.current);
-            musicCursorRef.current = audio.currentTime;
-            musicSampleRef.current = audio.currentTime;
-            elapsedRef.current += musicDelta * speedRef.current;
+            const musicTime = audio.currentTime;
+            // The media clock can briefly move backward after resuming playback.
+            // Keep the accepted cursor until playback passes it again.
+            if (musicTime > musicSampleRef.current) {
+              elapsedRef.current += (musicTime - musicSampleRef.current) * speedRef.current;
+              musicSampleRef.current = musicTime;
+              musicCursorRef.current = musicTime;
+            }
           }
           else if (at - waitingAtRef.current > 8000) {
             playbackAllowedRef.current = false; playAttemptRef.current += 1; audio.pause(); playingRef.current = false; waitingAtRef.current = null; setSoundState("unavailable");
