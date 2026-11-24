@@ -399,6 +399,9 @@ const retainedCandidateLogicalCount = retainedCandidateAssets.length;
 const candidateUpdatePlan = diffAssetManifests(oldManifest, candidateManifest, { retainedHashes });
 const candidateDownloadableAssets = candidateUpdatePlan.downloadable;
 const candidateDownloadTransportPaths = new Set(candidateDownloadableAssets.map(transportPathFor));
+const candidateBundleAssets = candidateManifest.assets.filter(asset => asset.bundlePath).map(asset => ({
+  pathname: transportPathFor(asset), hash: asset.hash,
+}));
 // AudioMixer intentionally consumes the logical audio source URL for runtime
 // playback even when the update manifest stores that same asset in the shared
 // audio bundle. Keep those source reads separate from PWA update transport:
@@ -408,6 +411,9 @@ const candidateBundledAudioSourcePaths = new Set(candidateManifest.assets
   .filter((asset) => asset.bundlePath && asset.path.startsWith("/audio/"))
   .map(logicalPathFor));
 const unchangedStoredAssets = manifestDelta.unchanged.filter((asset) => retainedHashes.has(asset.hash));
+const unchangedStoredDirectTransportPaths = new Set(
+  unchangedStoredAssets.filter((asset) => !asset.bundlePath).map(transportPathFor),
+);
 const unchangedMissingAssets = manifestDelta.unchanged.filter((asset) => !retainedHashes.has(asset.hash));
 const allowedDownloadPaths = new Set([
   ...candidateUpdatePlan.changed,
@@ -956,9 +962,13 @@ try {
     .map(({ pathname }) => pathname);
   const incidentOwnership = partitionPwaUpdateTransportPaths(incidentAssetRequests, candidateDownloadTransportPaths, candidateBundledAudioSourcePaths);
   const incidentRepairRequests = incidentOwnership.repair;
+  // A shared transport still needs one request when any of its logical slices
+  // are absent at entry. Only a fully cached bundle is an unchanged refetch.
+  const incidentBundles = inspectPwaRecoveryBundles(
+    candidateBundleAssets, candidateHashesAtRepairStart, incidentAssetRequests, [], bundlePathname,
+  );
   const incidentUnchangedStoredRefetches = incidentAssetRequests.filter((pathname) => (
-    pathname !== bundlePathname
-    && unchangedStoredAssets.some((asset) => transportPathFor(asset) === pathname)
+    unchangedStoredDirectTransportPaths.has(pathname) || incidentBundles.fullyCachedPaths.has(pathname)
   ));
   const incidentRuntimeAudioSourceRequests = incidentOwnership.runtimeAudio;
   const incidentUnexpectedRequests = incidentOwnership.unexpected;
@@ -1000,6 +1010,7 @@ try {
     incidentRuntimeAudioSourceRequests,
     incidentUnexpectedRequests,
     incidentUnchangedStoredRefetches,
+    incidentBundleCoverage: incidentBundles.details,
     incidentChangedRequests,
     incidentProgress,
     incidentProgressCompleted,
@@ -1054,9 +1065,6 @@ try {
   const hashesBeforeRecovery = new Set(await cacheHashes(page));
   const successfulBeforeRecoveryAssets = candidateManifest.assets.filter((asset) => hashesBeforeRecovery.has(asset.hash));
   const successfulBeforeRecoveryTransportPaths = new Set(successfulBeforeRecoveryAssets.map(transportPathFor));
-  const unchangedStoredDirectTransportPaths = new Set(
-    unchangedStoredAssets.filter((asset) => !asset.bundlePath).map(transportPathFor),
-  );
   const cancelledWorker = await workerState(page);
   const cancelledV100 = await v100State(page);
   record("cancel preserves the old assets plus newly successful assets, old manifest, and save", (
@@ -1307,10 +1315,7 @@ try {
     completeChangedRequestBreakdown,
   });
   const bundleRecovery = inspectPwaRecoveryBundles(
-    candidateManifest.assets.filter(asset => asset.bundlePath).map(asset => ({
-      pathname: transportPathFor(asset), hash: asset.hash,
-    })),
-    relaunchedHashes, incidentAssetRequests, recoveryAssetRequests, bundlePathname,
+    candidateBundleAssets, relaunchedHashes, incidentAssetRequests, recoveryAssetRequests, bundlePathname,
   );
   const completeChangedCoverage = inspectPwaContentTransportCoverage(completeChangedRequests,
     candidatePendingReleaseDeltaAssets.map(asset => ({

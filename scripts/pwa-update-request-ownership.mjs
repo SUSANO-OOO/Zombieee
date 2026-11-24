@@ -43,6 +43,7 @@ export function inspectPwaRecoveryBundles(bundleAssets, cachedHashes, incidentRe
 
   const repeatablePaths = new Set([stalledPath]);
   const pendingPaths = new Set();
+  const fullyCachedPaths = new Set();
   const invalid = [];
   const details = [];
   for (const [pathname, hashes] of hashesByPath) {
@@ -53,6 +54,7 @@ export function inspectPwaRecoveryBundles(bundleAssets, cachedHashes, incidentRe
     details.push(row);
 
     if (pending > 0) pendingPaths.add(pathname);
+    else fullyCachedPaths.add(pathname);
     if (recovery === 0) continue;
     const expectedAttempts = pathname === stalledPath ? 2 : 1;
     if (pending === 0 || recovery !== expectedAttempts || (pathname !== stalledPath && incident > 1)) {
@@ -61,5 +63,5 @@ export function inspectPwaRecoveryBundles(bundleAssets, cachedHashes, incidentRe
       repeatablePaths.add(pathname);
     }
   }
-  return { repeatablePaths, pendingPaths, invalid, details };
+  return { repeatablePaths, pendingPaths, fullyCachedPaths, invalid, details };
 }
