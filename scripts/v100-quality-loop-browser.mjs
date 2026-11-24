@@ -10,7 +10,7 @@ import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { observePlayerAbilityText } from "./player-ability-text-audit.mjs";
 import { inspectFormationPortraits } from "./formation-portrait-readiness.mjs";
 import { silenceBrowserOutput, assertSilentQaHost } from "./silent-browser-output.mjs";
-import { enterV100FromTitle, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
+import { enterV100FromTitle, finishV100TitleIntro, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
@@ -559,6 +559,7 @@ for (const engine of engines) {
       }
     }
     if (sections.includes('native')) await runCase(browser, engine, { width: 844, height: 340 }, "early-budget-native", null, async (page, row, reload) => {
+      await finishV100TitleIntro(page);
       await page.locator(".v100-shell").getByRole("button", { name: "データ管理", exact: true }).tap();
       await page.getByRole("dialog", { name: "データ管理", exact: true }).getByLabel("セーブを復元", { exact: true }).setInputFiles({ name: "budget.json", mimeType: "application/json", buffer: Buffer.from(budgetBackup) });
       await page.getByRole("dialog", { name: "データ管理", exact: true }).waitFor({ state: "hidden" });
