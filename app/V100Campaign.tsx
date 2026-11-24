@@ -1457,9 +1457,9 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
             const unit = unitId ? UNIT_BY_ID.get(unitId) : null;
             const info = unitId ? v100UnitPresentation(save, unitId) : null;
             const unavailable = v100StageAbsenceReason(stageId, unitId);
-            return <button type="button" key={"slot-" + index} data-crew-role={unit?.role} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); if (placingUnit) { onSlotChange(index, placingUnit.id); setPickerOpen(false); } else setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")}>
+            return <button type="button" key={"slot-" + index} data-crew-role={unit?.role} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); if (placingUnit) { onSlotChange(index, placingUnit.id); setPickerOpen(false); } else setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")} aria-description={unavailable ?? undefined}>
               <span className="v100-slot-portrait">{art && unitId ? <CrewPortrait unitId={unitId} /> : <i aria-hidden="true">＋</i>}</span>
-              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き枠"}</strong><b>{unavailable ? "救助中・出撃不可" : info ? `指揮 ${info.commandCost}` : placingUnit ? <>ここに<wbr />配置</> : <>仲間を<wbr />選ぶ</>}</b></span>
+              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き枠"}</strong><b className={unavailable ? "v100-slot-unavailable" : undefined}>{unavailable ? "出撃不可" : info ? `指揮 ${info.commandCost}` : placingUnit ? <>ここに<wbr />配置</> : <>仲間を<wbr />選ぶ</>}</b></span>
             </button>;
           })}</div>
         </div>

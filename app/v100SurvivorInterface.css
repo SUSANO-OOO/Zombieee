@@ -153,6 +153,12 @@
   font-size: 12px; line-height: 1.25; color: #223424; white-space: normal; overflow-wrap: anywhere;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b { color: #6c4827; font-weight: 400; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b.v100-slot-unavailable {
+  color: #74351f;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
 /* An unused call-in position is a clipped field ticket, not a disabled photo.
    The existing painted atlas supplies paper/canvas; live text stays readable
    when the offline material is unavailable. Counters include occupied slots. */
