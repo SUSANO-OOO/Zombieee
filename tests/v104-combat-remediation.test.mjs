@@ -5,7 +5,7 @@ import{v177RangerLowerPose}from'../app/v177RangerLowerMotion.js';
 import{v177ChoreographedAbilitySample}from'../app/v177WeaponChoreography.js';
 import{combatFacingFromMotion}from'../app/enemyFacingContract.js';
 import{BOSS_ANOMALY_TUNING}from'../app/bossAnomalies.js';import{KUROME_PROTOTYPE_TUNING}from'../app/kuromeBoss.js';
-import{battleVoiceReady,playV104FighterVoice,queueV104HumanHurt}from'../app/v104CombatAudio.js';import{V100_AUDIO_MANIFEST}from'../app/productionAudio.js';
+import{battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104MonsterVoiceEvent}from'../app/v104CombatAudio.js';import{V100_AUDIO_MANIFEST}from'../app/productionAudio.js';
 import{queueV100GuardContact}from'../app/v100CombatVfx.js';
 import{drawV104WeaponWake,v104WeaponWakeCandidate}from'../app/v104CombatVfx.js';
 import{advanceAreaEffects}from'../app/gameRules.js';
@@ -102,6 +102,27 @@ test('first battle calls are audible candidates, cooldowns are per actor, and ar
  assert.deepEqual(guard.sources,[{src:'/audio/quality-20261124/manual/pan-guard-contact.mp3',type:'audio/mpeg'}]);
  assert.equal(guard.gain,pan.gain,'the guard timbre is distinct at the existing playback gain');
  for(const kind of['crazy-king','kumaverson','babayaga'])for(const event of['deploy','attack','hurt','death'])assert.ok(assets.find(a=>a.id===`voice-${kind}-${event}`).sources.every(s=>s.src.includes(event==='deploy'?'/v104/':'/v060/sfx/human-')));
+});
+
+test('monster reactions share the actor voice slot while material cues and special boss effects keep theirs', () => {
+  const manifest = V100_AUDIO_MANIFEST;
+  const samples = {
+    'enemy-turned-hurt': 'hurt',
+    'enemy-turned-death': 'exit',
+    'enemy-crusher-attack': 'attack',
+    'enemy-takuya-omega-hurt': 'hurt',
+    'enemy-mugarian-president-mutated-death': 'exit',
+  };
+  for (const [cue, event] of Object.entries(samples)) {
+    assert.equal(v104MonsterVoiceEvent(manifest, cue), event, cue);
+  }
+  for (const cue of [
+    'enemy-red-panther-shield-hurt', 'enemy-red-panther-commander-death',
+    'enemy-mugarian-president-mutated-attack', 'enemy-takuya-omega-defeat',
+    'boss-mother-brood-eruption', 'weapon-pan-hit', 'enemy-unknown-hurt',
+  ]) {
+    assert.equal(v104MonsterVoiceEvent(manifest, cue), undefined, cue);
+  }
 });
 
 test('voice intervals survive real fighter copies; boss damage and interception queue only real surviving HP loss',()=>{

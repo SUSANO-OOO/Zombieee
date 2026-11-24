@@ -93,6 +93,19 @@ export function v104EnemyContactAudio(world,actor,damage,cueId){
  if(!battleVoiceReady(actor,voiceAllowed?'hurt':'armor-contact',world?.time,world))return null;
  return {ownerId:actor.id,voiceAllowed};
 }
+// A monster's vocal reaction follows its actor. Weapon, impact and body-fall
+// aliases keep their separate playback, including the Red Panther material cues.
+export function v104MonsterVoiceEvent(manifest, cueId) {
+  const recordedReaction = /^enemy-.+-(attack|hurt|death)$/;
+  const event = recordedReaction.exec(cueId)?.[1];
+  if (!event) return undefined;
+  const alias = manifest.aliasById[cueId];
+  if (alias && !recordedReaction.test(alias.targetId)) return undefined;
+  const cue = alias ?? manifest.poolById[cueId] ?? manifest.assetById[cueId];
+  if (cue?.category !== 'monsters') return undefined;
+  return event === 'death' ? 'exit' : event;
+}
+
 // Keep the original takes. An injury or exit replaces the same fighter's
 // held voice and invalidates an earlier take that is still loading.
 export function playV104FighterVoice(mixer,cueId,event,options){

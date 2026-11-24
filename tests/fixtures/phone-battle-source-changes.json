@@ -851,6 +851,14 @@
     [
       "        total: criticalResult.total,\n        failures: criticalResult.failures,\n        deadlineReached: criticalResult.deadlineReached,",
       "        total: criticalResult.total,\n        failures: criticalResult.failures,\n        decodeRetryPaths: criticalResult.decodeRetryPaths,\n        deadlineReached: criticalResult.deadlineReached,"
+    ],
+    [
+      "import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from \"./v104CombatAudio.js\";",
+      "import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio,v104MonsterVoiceEvent} from \"./v104CombatAudio.js\";"
+    ],
+    [
+      "    const fighterVoiceEvent = options.ownerId === undefined ? undefined\n      : options.fighterVoiceEvent ?? (options.semantic === \"battle-hurt\" ? \"hurt\" : undefined);",
+      "    const fighterVoiceEvent = options.ownerId === undefined ? undefined\n      : options.fighterVoiceEvent ?? (options.semantic === \"battle-hurt\" ? \"hurt\" : undefined)\n        ?? (externalSessionRef.current ? v104MonsterVoiceEvent(productionMixer.manifest, cueId) : undefined);"
     ]
   ],
   "app/manualAbilities.js": [
