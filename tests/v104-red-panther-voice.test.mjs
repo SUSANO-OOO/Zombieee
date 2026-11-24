@@ -6,7 +6,7 @@ import ts from 'typescript';
 import {createHash} from 'node:crypto';
 import {createAudioRequestGate,runGuardedAudioRequest} from '../app/audioMixer.js';
 import {V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
-import {v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
+import {playV104FighterVoice,v104MonsterVoiceEvent,v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
 const kinds=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander'];
 const events=['attack','hurt','death'];
 const source=fs.readFileSync('app/AshfallGame.tsx','utf8');
@@ -17,15 +17,16 @@ assert.equal(declaration.length,1);
 const body=declaration[0].initializer.arguments[0].getText(tree);
 const plain=value=>JSON.parse(JSON.stringify(value));
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-function actualPlayer({muted=false,consume=true,cancelAfterMaterial=false}={}){
+function actualPlayer({muted=false,consume=true,cancelAfterMaterial=false,external=true}={}){
  const requests=[],stops=[],gate=createAudioRequestGate();
- const mixer={unlocked:true,play(cueId,options){requests.push({cueId,options});
+ const mixer={unlocked:true,manifest:external?V100_AUDIO_MANIFEST:GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,play(cueId,options){requests.push({cueId,options});
   if(cancelAfterMaterial&&!cueId.startsWith('voice-'))queueMicrotask(()=>gate.cancelPending());
   return Promise.resolve({cueId});},stopInstance(key,options){stops.push({key,options});}};
  const bindings={productionMixerRef:{current:mixer},battleAudioRuntimeRef:{current:{}},
-  tryConsumeSemanticReceipt:()=>consume,sfxMutedRef:{current:muted},externalSessionActive:false,
+  tryConsumeSemanticReceipt:()=>consume,sfxMutedRef:{current:muted},externalSessionActive:external,
+  externalSessionRef:{current:external?{}:null},gameRef:{current:{battleAudioGeneration:5}},
   SFX_CUES:{},W:1280,productionCueQaLogRef:{current:[]},sfxRequestGateRef:{current:gate},
-  runGuardedAudioRequest,v104SupplementalEnemyVoice};
+  runGuardedAudioRequest,playV104FighterVoice,v104MonsterVoiceEvent,v104SupplementalEnemyVoice};
  return {requests,stops,play:vm.runInNewContext(ts.transpile('('+body+')',{target:ts.ScriptTarget.ES2022}),bindings)};
 }
 test('four RED PANTHER roles use recorded wordless reactions and preserve their legacy source masters',()=>{
@@ -85,4 +86,7 @@ test('mute, consumed semantics and navigation cancellation cannot start a supple
  const anonymous=actualPlayer();anonymous.play(cueId,600);await flush();assert.equal(anonymous.requests.length,1);
  const blocked=actualPlayer();blocked.play(enemyVoiceCue(kinds[0],'hurt'),600,{ownerId:12,voiceAllowed:false});await flush();assert.equal(blocked.requests.length,1);assert.equal(blocked.stops.length,0);
  const unrelated=actualPlayer();unrelated.play('enemy-takuya-attack',600,{ownerId:12});await flush();assert.equal(unrelated.requests.length,1);
+ assert.equal(unrelated.requests[0].options.instanceKey,'fighter-voice:5:12');
+ const legacy=actualPlayer({external:false});legacy.play('enemy-takuya-attack',600,{ownerId:12});await flush();
+ assert.equal(legacy.requests.length,1);assert.equal(legacy.requests[0].options.instanceKey,undefined);
 });
