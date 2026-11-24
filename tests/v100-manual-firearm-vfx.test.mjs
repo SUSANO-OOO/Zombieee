@@ -31,3 +31,28 @@ test('legacy, non-firearms, dead sources, non-damage and invalid positions canno
  const f=fixture();f.owner.kind='scout';assert.equal(queueV100ManualMuzzle(f.world,f),false);
  f.owner.kind='ranger';f.target.y=Infinity;assert.equal(queueV100ManualMuzzle(f.world,f),false);
 });
+test('precision smoke survives a missed flash and keeps its first painted rifle origin',()=>{
+ const f=fixture(),draws=[],positions=[];
+ const ctx={save(){},restore(){},translate(x,y){positions.push([x,y]);},rotate(){},drawImage(image){draws.push(image);}};
+ const smoke={complete:true,naturalWidth:512,naturalHeight:256};
+ const objects={'v100-dust':smoke,'v100-muzzle':{complete:true,naturalWidth:1536}};
+ assert.equal(queueV100ManualMuzzle(f.world,{...f,precisionEnd:{x:550,y:220}}),true);
+
+ f.world.time=5.14;
+ drawV100ManualMuzzles(ctx,objects,f.world,()=>null);
+ assert.deepEqual(draws,[]);
+
+ f.world.time=5.16;
+ drawV100ManualMuzzles(ctx,objects,f.world,()=>({x:331,y:220}));
+ assert.deepEqual(draws,[smoke]);
+ assert.deepEqual(getV100ManualMuzzleSnapshot(f.world),[]);
+
+ f.world.time=5.22;
+ drawV100ManualMuzzles(ctx,objects,f.world,()=>({x:520,y:340}));
+ assert.deepEqual(draws,[smoke,smoke]);
+ assert.ok(positions.every(([x,y])=>x>=331&&x<345&&y<=220&&y>210));
+
+ f.world.time=5.35;
+ drawV100ManualMuzzles(ctx,objects,f.world,()=>({x:520,y:340}));
+ assert.equal(draws.length,2);
+});

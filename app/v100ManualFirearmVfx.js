@@ -37,14 +37,17 @@ export function drawV100ManualMuzzles(ctx,objects,world,socketForOwner){
  for(const entry of entries){
   const elapsed=world.time-entry.startedAt;
   const muzzle=v100MuzzleFrame(entry.kind,elapsed);
-  const socket=muzzle?socketForOwner(entry.ownerId,entry.kind):null;
+  const needsPrecisionOrigin=entry.precision&&!entry.precision.origin;
+  // The precision tail can first be seen after the short flash expires.
+  const socket=muzzle||needsPrecisionOrigin?socketForOwner(entry.ownerId,entry.kind):null;
   const painted=socket&&[socket.x,socket.y].every(Number.isFinite);
-  entry.x=painted?socket.x:null;entry.y=painted?socket.y:null;
+  const showMuzzle=muzzle&&painted;
+  entry.x=showMuzzle?socket.x:null;entry.y=showMuzzle?socket.y:null;
   if(entry.precision){
-   if(painted&&!entry.precision.origin)entry.precision.origin={x:socket.x,y:socket.y};
+   if(painted&&needsPrecisionOrigin)entry.precision.origin={x:socket.x,y:socket.y};
    if(entry.precision.origin)drawV100PrecisionRifleRelease(ctx,objects,world,entry.precision,elapsed);
   }
-  if(painted)drawV100Muzzle(ctx,objects,{weapon:entry.kind,elapsed,x:socket.x,y:socket.y,tx:entry.tx,ty:entry.ty});
+  if(showMuzzle)drawV100Muzzle(ctx,objects,{weapon:entry.kind,elapsed,x:socket.x,y:socket.y,tx:entry.tx,ty:entry.ty});
  }
 }
 export function getV100ManualMuzzleSnapshot(world){
