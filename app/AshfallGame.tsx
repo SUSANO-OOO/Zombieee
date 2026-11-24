@@ -21,7 +21,7 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177ClearHeadHealthBarY } from "./v177HeadLabelPlacement.js";
-import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from "./v104CombatAudio.js";
+import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio,v104MonsterVoiceEvent} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {manualAbilityTacticalView} from "./manualAbilityTactics.js";
 import {ManualAbilityTactics} from "./BattleAbilityGuide";
@@ -16326,7 +16326,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     } : null;
     const pan = Math.max(-.85, Math.min(.85, x / W * 2 - 1));
     const fighterVoiceEvent = options.ownerId === undefined ? undefined
-      : options.fighterVoiceEvent ?? (options.semantic === "battle-hurt" ? "hurt" : undefined);
+      : options.fighterVoiceEvent ?? (options.semantic === "battle-hurt" ? "hurt" : undefined)
+        ?? (externalSessionRef.current ? v104MonsterVoiceEvent(productionMixer.manifest, cueId) : undefined);
     const instanceKey = fighterVoiceEvent
       ? `fighter-voice:${options.battleGeneration ?? gameRef.current.battleAudioGeneration}:${options.ownerId}`
       : options.instanceKey;

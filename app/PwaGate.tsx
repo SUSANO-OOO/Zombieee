@@ -67,6 +67,7 @@ import {V100_BALLISTIC_MATERIAL_ART} from "./v100BallisticMaterialArt.js";
 import {PwaBattleArtworkPathsContext} from "./pwaBattleArtworkContext.js";
 import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext,PwaBossSkillPathsContext,PwaGunFinishPathsContext} from "./pwaAudioAvailabilityContext.js";
 import {PWA_MANUAL_FOLEY_FILES} from "./pwaManualFoleyFiles.js";
+import {PWA_PAN_GUARD_FILE} from "./pwaPanGuardFile.js";
 import {PWA_GUN_FINISH_FILES} from "./pwaGunFinishFiles.js";
 import {PWA_BOSS_COLLAPSE_FILES} from "./pwaBossCollapseFiles.js";
 import {PWA_BOSS_SKILL_FILES} from "./pwaBossSkillFiles.js";
@@ -929,7 +930,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   });
   const verifiedBattleArtworkPaths = [verifiedBossDefeatPaths,verifiedBossAttackPaths,verifiedManualImpactPaths,verifiedParticleMaterialPaths,verifiedKingExhaustPaths,verifiedGuardImpactPaths,verifiedGroundFirePaths,verifiedBallisticMaterialPaths,verifiedGuardActivationPaths].filter(Boolean).join('\n');
   const verifiedManualFoleyPaths = verifiedPwaArtworkPaths({
-    artworks: PWA_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    artworks: { ...PWA_MANUAL_FOLEY_FILES, [PWA_PAN_GUARD_FILE.id]: PWA_PAN_GUARD_FILE }, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedBossCollapsePaths = verifiedPwaArtworkPaths({

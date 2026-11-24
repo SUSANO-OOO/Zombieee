@@ -1,4 +1,5 @@
 import {v177JointActorKey} from './v177JointActorHistory.js';
+import {PWA_PAN_GUARD_FILE} from './pwaPanGuardFile.js';
 const recordedMayoVoices=Object.freeze({
  'voice-mayo-deploy':'recorded-bark',
  'voice-mayo-attack':'recorded-bark',
@@ -41,6 +42,15 @@ export function withV104CombatAudio(base){
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
 export const V104_CROSSBOW_AUDIO={id:'weapon-crossbow-release',category:'weapons',sources:sources('crossbow-release'),gain:.68,priority:70,cooldownMs:90,maxInstances:4};
+export const V104_PAN_GUARD_AUDIO = {
+  id: PWA_PAN_GUARD_FILE.id,
+  category: 'melee',
+  sources: [{src: PWA_PAN_GUARD_FILE.path, type: 'audio/mpeg'}],
+  gain: .58,
+  priority: 78,
+  cooldownMs: 80,
+  maxInstances: 2,
+};
 const rpVoiceEvents={attack:{priority:67,cooldownMs:1400,gain:.72},hurt:{priority:76,cooldownMs:700,gain:.78},death:{priority:86,cooldownMs:300,gain:.8}};
 const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander']
  .flatMap(kind=>Object.entries(rpVoiceEvents).map(([event,settings])=>Object.freeze({kind,event,
@@ -83,6 +93,19 @@ export function v104EnemyContactAudio(world,actor,damage,cueId){
  if(!battleVoiceReady(actor,voiceAllowed?'hurt':'armor-contact',world?.time,world))return null;
  return {ownerId:actor.id,voiceAllowed};
 }
+// A monster's vocal reaction follows its actor. Weapon, impact and body-fall
+// aliases keep their separate playback, including the Red Panther material cues.
+export function v104MonsterVoiceEvent(manifest, cueId) {
+  const recordedReaction = /^enemy-.+-(attack|hurt|death)$/;
+  const event = recordedReaction.exec(cueId)?.[1];
+  if (!event) return undefined;
+  const alias = manifest.aliasById[cueId];
+  if (alias && !recordedReaction.test(alias.targetId)) return undefined;
+  const cue = alias ?? manifest.poolById[cueId] ?? manifest.assetById[cueId];
+  if (cue?.category !== 'monsters') return undefined;
+  return event === 'death' ? 'exit' : event;
+}
+
 // Keep the original takes. An injury or exit replaces the same fighter's
 // held voice and invalidates an earlier take that is still loading.
 export function playV104FighterVoice(mixer,cueId,event,options){
@@ -103,7 +126,7 @@ export function queueV104GuardImpact(world,owner){
  const key=v177JointActorKey(owner,world),last=guardClocks.get(key);
  if(Number.isFinite(last)&&world.time>=last&&world.time-last<.08)return false;
  guardClocks.set(key,world.time);
- (world.pendingBattleAudioCues??=[]).push({cueId:owner.kind==='kumaverson'?'weapon-pan-hit':'v104-armor-hit',
+ (world.pendingBattleAudioCues??=[]).push({cueId:owner.kind==='kumaverson'?V104_PAN_GUARD_AUDIO.id:'v104-armor-hit',
   x:owner.x,battleGeneration:world.battleAudioGeneration,ownerId:owner.id,activationId:0,
   semantic:'guard-contact',receiptId:`guard:${owner.id}:${world.time.toFixed(6)}`,dueSimulationTime:world.time,
   priority:78,cooldownMs:0,maxInstances:2});

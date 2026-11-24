@@ -1,0 +1,47 @@
+{
+  "creativeIntent": "A dense contact on the braced pan followed by shorter pot resonance and a small handle rattle.",
+  "audibleScope": "Actual front or rear contact accepted by the existing Kumaverson guard simulation with the dedicated cue at the existing pan hit gain.",
+  "sources": [
+    {
+      "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+      "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+      "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+      "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+    }
+  ],
+  "creator": "Kenney",
+  "license": "CC0-1.0",
+  "sourceNotices": [
+    "assets/source/v100/audio/kenney-impact/License.txt",
+    "assets/source/v100/audio/kenney-rpg/License.txt"
+  ],
+  "commercialUse": true,
+  "adaptation": true,
+  "redistribution": true,
+  "approval": "Implementation candidate under the manual-ability audio direction. Producer listening acceptance is pending.",
+  "filters": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.235,highpass=f=120,lowpass=f=2900,volume=0.57,afade=t=out:st=0.14:d=0.095,apad=pad_len=22050,atrim=0:0.44[body];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.41,highpass=f=175,lowpass=f=5900,volume=0.43,afade=t=out:st=0.24:d=0.17,adelay=12,apad=pad_len=22050,atrim=0:0.44[pan];[2:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.12,highpass=f=850,lowpass=f=6700,volume=0.16,afade=t=out:st=0.05:d=0.07,adelay=79,apad=pad_len=22050,atrim=0:0.44[grip];[body][pan][grip]amix=inputs=3:duration=longest:dropout_transition=0,volume=3,alimiter=limit=0.62:level=false,afade=t=in:d=0.002,afade=t=out:st=0.385:d=0.055[out]",
+  "masterPostGainDb": 2.92256071356476,
+  "masterWav": {
+    "path": "assets/source/quality-20261124/audio/pan-guard/master.wav",
+    "sha256": "eb3b5cc281ef41afcd5923e6f7378024e2c27695f2dcfe8666a55aa81a4ec947",
+    "seconds": 0.44,
+    "sampleRate": 44100,
+    "channels": 1
+  },
+  "deployed": {
+    "path": "public/audio/quality-20261124/manual/pan-guard-contact.mp3",
+    "sha256": "4eb8ef7484b13c8a4f2b7ec3b86b459c558822b0c81aee4b2539950f7289e654",
+    "codec": "libmp3lame mono 96 kbps",
+    "maxDbfs": -4.7,
+    "meanDbfs": -21.7,
+    "count": 1,
+    "distinctBytes": 6000,
+    "logicalBytes": 6000
+  }
+}

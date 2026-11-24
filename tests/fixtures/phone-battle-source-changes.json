@@ -851,6 +851,14 @@
     [
       "        total: criticalResult.total,\n        failures: criticalResult.failures,\n        deadlineReached: criticalResult.deadlineReached,",
       "        total: criticalResult.total,\n        failures: criticalResult.failures,\n        decodeRetryPaths: criticalResult.decodeRetryPaths,\n        deadlineReached: criticalResult.deadlineReached,"
+    ],
+    [
+      "import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from \"./v104CombatAudio.js\";",
+      "import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio,v104MonsterVoiceEvent} from \"./v104CombatAudio.js\";"
+    ],
+    [
+      "    const fighterVoiceEvent = options.ownerId === undefined ? undefined\n      : options.fighterVoiceEvent ?? (options.semantic === \"battle-hurt\" ? \"hurt\" : undefined);",
+      "    const fighterVoiceEvent = options.ownerId === undefined ? undefined\n      : options.fighterVoiceEvent ?? (options.semantic === \"battle-hurt\" ? \"hurt\" : undefined)\n        ?? (externalSessionRef.current ? v104MonsterVoiceEvent(productionMixer.manifest, cueId) : undefined);"
     ]
   ],
   "app/manualAbilities.js": [
@@ -941,6 +949,14 @@
     [
       "        if (manifestLookupRef.current !== lookup) return false;\n        if (inventory?.type === \"pwa:state\"\n          && inventory.active?.releaseSha === installed.releaseSha\n          && installedManifestRef.current?.releaseSha === installed.releaseSha\n          && Array.isArray(inventory.storedHashes)) {\n          setStoredHashes(new Set<string>(inventory.storedHashes));",
       "        if (manifestLookupRef.current !== lookup) return false;\n        if (inventory?.type === \"pwa:state\"\n          && inventory.active?.releaseSha === installed?.releaseSha\n          && installedManifestRef.current?.releaseSha === installed?.releaseSha\n          && Array.isArray(inventory.storedHashes)) {\n          setStoredHashes(new Set<string>(inventory.storedHashes));"
+    ],
+    [
+      "import {PWA_MANUAL_FOLEY_FILES} from \"./pwaManualFoleyFiles.js\";",
+      "import {PWA_MANUAL_FOLEY_FILES} from \"./pwaManualFoleyFiles.js\";\nimport {PWA_PAN_GUARD_FILE} from \"./pwaPanGuardFile.js\";"
+    ],
+    [
+      "    artworks: PWA_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,",
+      "    artworks: { ...PWA_MANUAL_FOLEY_FILES, [PWA_PAN_GUARD_FILE.id]: PWA_PAN_GUARD_FILE }, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,"
     ]
   ],
   "app/globals.css": [
@@ -1029,6 +1045,18 @@
     [
       "for (const asset of [...legacyVoiceInstallAssets, ...V100_AUDIO_MANIFEST.assets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST)]) {",
       "for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley]) {"
+    ],
+    [
+      "import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO,V104_CROSSBOW_AUDIO,V104_RED_PANTHER_VOICES} from \"./v104CombatAudio.js\";",
+      "import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO,V104_CROSSBOW_AUDIO,V104_PAN_GUARD_AUDIO,V104_RED_PANTHER_VOICES} from \"./v104CombatAudio.js\";"
+    ],
+    [
+      "export const V100_AUDIO_MANIFEST = createAudioManifest({ ...v100BattleAudio, assets: [...v100BattleAudio.assets, ...stationMudFoley] });",
+      "export const V100_AUDIO_MANIFEST = createAudioManifest({ ...v100BattleAudio, assets: [...v100BattleAudio.assets, ...stationMudFoley, V104_PAN_GUARD_AUDIO] });"
+    ],
+    [
+      "for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley]) {",
+      "for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO]) {"
     ]
   ]
 }

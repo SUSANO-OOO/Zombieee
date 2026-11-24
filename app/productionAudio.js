@@ -15,7 +15,7 @@ import {
 } from "./battleAudioContracts.js";
 import { V100_STAGES } from "./v100Registry.js";
 import { v100AudioDesignCandidate, v100SoundSources } from "./v100SoundDesign.js";
-import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO,V104_CROSSBOW_AUDIO,V104_RED_PANTHER_VOICES} from "./v104CombatAudio.js";
+import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO,V104_CROSSBOW_AUDIO,V104_PAN_GUARD_AUDIO,V104_RED_PANTHER_VOICES} from "./v104CombatAudio.js";
 export {
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
@@ -779,7 +779,7 @@ const stationMudFoley = [
   sources: sourceFor("/audio/quality-20261121", "station-mud", cue.id),
 }));
 const v100BattleAudio = withV100BossSkillAudio(withV100BossCollapseAudio(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)))))));
-export const V100_AUDIO_MANIFEST = createAudioManifest({ ...v100BattleAudio, assets: [...v100BattleAudio.assets, ...stationMudFoley] });
+export const V100_AUDIO_MANIFEST = createAudioManifest({ ...v100BattleAudio, assets: [...v100BattleAudio.assets, ...stationMudFoley, V104_PAN_GUARD_AUDIO] });
 // Installation inventories physical files, whereas playback addresses cues.
 // A V1 replacement must not steal a legacy cue's metadata or offline entry.
 const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset => [
@@ -794,7 +794,7 @@ const legacyVoiceInstallAssets = existingV100InstallAssets.map(asset =>
     : /^voice-mayo-(?:deploy|attack|hurt|retreat)$/.test(asset.id)
       ? {...asset,sources:[{src:`/audio/v090/sfx/${asset.id}.wav`,type:'audio/wav'}]}
       : asset);
-for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley]) {
+for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
     const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');

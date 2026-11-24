@@ -16,6 +16,7 @@ import {withMeleeFoley} from '../app/meleeFoleyRecipes.js';
 import {V100_MANUAL_ABILITY_FOLEY,V100_MANUAL_FOLEY_FILES,withV100ManualAbilityFoley,selectV100ManualFoleyPlayback} from '../app/v100ManualAbilityFoley.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 import {PWA_MANUAL_FOLEY_FILES} from '../app/pwaManualFoleyFiles.js';
+import {PWA_PAN_GUARD_FILE} from '../app/pwaPanGuardFile.js';
 import {V099_MANUAL_ABILITY_AUDIO_CONTRACTS} from '../app/battleAudioContracts.js';
 
 const ids=["ability-babayaga-appraise-activate","ability-brute-groundbreak-activate","ability-engineer-trap-arm-activate","ability-guardian-shieldwall-activate","ability-gunner-suppression-activate","ability-kumaverson-iron-pan-activate","ability-medic-emergency-activate","ability-mrs-chiha-salvo-ready","ability-musashi-cross-guard","ability-ranger-precision-activate","ability-scout-intercept-activate","ability-tky-light-blade-charge","ability-zakimiya-molotov-activate","v105-fist-wave-charge"];
@@ -48,7 +49,7 @@ test('the final V1 composition replaces exactly fourteen preparation sources and
   }
   assert.deepEqual(changed.sort(),ids);
   const extraAssets=V100_AUDIO_MANIFEST.assets.filter(asset=>!previous.assetById[asset.id]);
-  assert.deepEqual(extraAssets.map(asset=>asset.id).sort(),['floor-mud-impact-r1','floor-mud-warning-r1']);
+  assert.deepEqual(extraAssets.map(asset=>asset.id).sort(),['ability-kumaverson-pan-guard-contact','floor-mud-impact-r1','floor-mud-warning-r1']);
   for(const key of ['pools','aliases','scenes'])assert.deepEqual(V100_AUDIO_MANIFEST[key],previous[key]);
   assert.equal(V099_MANUAL_ABILITY_AUDIO_CONTRACTS.medic.activationRoot,'ability-medic-emergency-activate');
   assert.equal(V099_MANUAL_ABILITY_AUDIO_CONTRACTS.guardian.activationRoot,'ability-guardian-shieldwall-activate');
@@ -99,7 +100,9 @@ test('exact saved MPEG or explicit browser play permits only that source with th
         assert.deepEqual(next.sources,[old.sources[0],...GAMEPLAY_PRODUCTION_AUDIO_MANIFEST.assetById[old.id].sources]);
         assert.equal(next.sources.some(s=>s.src.includes('/quality-20261114/manual/')&&s.src.endsWith('.ogg')),false,'An installed MPEG pack never requests an unaccepted new Ogg; the exact legacy decoder fallback stays intact');
         const {sources:_old,...policy}=old,{sources:_next,...nextPolicy}=next;assert.deepEqual(nextPolicy,policy);
-      }else assert.deepEqual(next,old);
+      } else if (old.id === PWA_PAN_GUARD_FILE.id) {
+        assert.deepEqual(next.sources, V100_AUDIO_MANIFEST.assetById[PWA_PAN_GUARD_FILE.fallbackId].sources);
+      } else assert.deepEqual(next, old);
     }
   }
   for(const bad of ['wrong-hash','missing-cache']){
@@ -110,6 +113,33 @@ test('exact saved MPEG or explicit browser play permits only that source with th
     const id=Object.keys(V100_MANUAL_FOLEY_FILES)[0];assert.deepEqual(selected.assetById[id].sources,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST.assetById[id].sources);
   }
   for(const [id,file]of Object.entries(V100_MANUAL_FOLEY_FILES))assert.equal(file.hash,'sha256-'+fileHash('public'+V100_AUDIO_MANIFEST.assetById[id].sources[0].src));
+});
+
+test('the iron-pan guard adds its recording only when verified and keeps the original hit as a fallback', () => {
+  const file = PWA_PAN_GUARD_FILE;
+  const artworks = { [file.id]: file };
+  const published = JSON.parse(fs.readFileSync('public/asset-manifest.json', 'utf8'));
+  const entry = published.assets.find(asset => asset.path === file.path);
+  assert.equal(entry.hash, file.hash);
+  const previous = V100_AUDIO_MANIFEST.assetById[file.fallbackId].sources;
+  const guard = V100_AUDIO_MANIFEST.assetById[file.id];
+  assert.equal(guard.sources[0].src, file.path);
+  const installedManifest = { assets: [entry] };
+  const storedHashes = new Set([entry.hash]);
+  const cases = [
+    { options: { installedManifest, storedHashes }, expected: [...guard.sources, ...previous] },
+    { options: { browserPlayAccepted: true }, expected: [...guard.sources, ...previous] },
+    { options: { installedManifest, storedHashes: new Set() }, expected: previous },
+    { options: { installedManifest: { assets: [] }, storedHashes }, expected: previous },
+    { options: { installedManifest: { assets: [{ ...entry, hash: 'sha256-' + '0'.repeat(64) }] }, storedHashes }, expected: previous },
+    { options: { browserPlayAccepted: true, gameBlocked: true }, expected: previous },
+  ];
+  for (const { options, expected } of cases) {
+    const paths = verifiedPwaArtworkPaths({ artworks, gameBlocked: false, ...options });
+    const playback = selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST, GAMEPLAY_PRODUCTION_AUDIO_MANIFEST, paths);
+    assert.deepEqual(playback.assetById[file.id].sources, expected);
+    assert.deepEqual(playback.assetById[file.fallbackId].sources, previous);
+  }
 });
 
 test('both codec choices retain licensed masters, distinct audible signals, original duration bounds and quiet tails',()=>{

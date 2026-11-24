@@ -216,13 +216,16 @@ test("every referenced source is repository-local, nonempty, and has a complete 
   const approvedStationSources = new Set(["warning", "impact"].flatMap(phase =>
     ["mp3", "ogg"].map(ext => `/audio/quality-20261121/station-mud/floor-mud-${phase}-r1.${ext}`),
   ));
-  const approvedSource = source => approvedStationSources.has(source) || approvedMayoSources.has(source) || approvedBossSkillSources.has(source) || /^\/audio\/quality-20261116\/boss-finales\/(?:gate-eater|mother|kurome|ooguchi|gairen|takuya|mugarian-president-mutated|futago|takuya-omega)-collapse-r1\.(mp3|ogg)$/.test(source) || /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105|weapons\/(?:recorded|chainsaw|melee)|quality-20261028)\/[a-z0-9-]+\.(mp3|ogg|wav)$/.test(source)
+  const approvedPanGuardSource = "/audio/quality-20261124/manual/pan-guard-contact.mp3";
+  const approvedSource = source => source === approvedPanGuardSource || approvedStationSources.has(source) || approvedMayoSources.has(source) || approvedBossSkillSources.has(source) || /^\/audio\/quality-20261116\/boss-finales\/(?:gate-eater|mother|kurome|ooguchi|gairen|takuya|mugarian-president-mutated|futago|takuya-omega)-collapse-r1\.(mp3|ogg)$/.test(source) || /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105|weapons\/(?:recorded|chainsaw|melee)|quality-20261028)\/[a-z0-9-]+\.(mp3|ogg|wav)$/.test(source)
     || /^\/audio\/quality-20261114\/manual\/(?:medic|guardian|scout|ranger|brute|kumaverson|babayaga|gunner|engineer|zakimiya|mrs-chiha|miyamoto-musashi|brawler-pressure|tky-energy)-preparation-r1\.(mp3|ogg)$/.test(source);
   for (const kind of ["medic","guardian","scout","ranger","brute","kumaverson","babayaga","gunner","engineer","zakimiya","mrs-chiha","miyamoto-musashi","brawler-pressure","tky-energy"]) for (const ext of ["mp3", "ogg"])
     assert.equal(approvedSource(`/audio/quality-20261114/manual/${kind}-preparation-r1.${ext}`), true);
   for (const source of approvedBossSkillSources) assert.equal(approvedSource(source), true);
   for (const source of approvedMayoSources) assert.equal(approvedSource(source), true);
   for (const source of approvedStationSources) assert.equal(approvedSource(source), true);
+  assert.equal(approvedSource(approvedPanGuardSource), true);
+  assert.equal(approvedSource("/audio/quality-20261124/manual/pan-guard-contact.ogg"), false);
   assert.equal(approvedSource("/audio/quality-20261121/station-mud/floor-mud-unreviewed-r1.ogg"), false);
   for (const source of ["/audio/quality-20261116/mayo/unknown.wav", "/audio/quality-20261116/mayo/recorded-bark.mp3", "/audio/quality-20261116/mayo/recorded-whine.ogg", "https://example.invalid/audio/quality-20261116/mayo/recorded-bark.wav"])
     assert.equal(approvedSource(source), false);
@@ -230,11 +233,13 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     assert.equal(approvedSource(bad), false);
   for (const asset of [...PRODUCTION_AUDIO_MANIFEST.assets, ...V100_AUDIO_MANIFEST.assets]) {
     const wavCue = asset.sources[0]?.type === "audio/wav";
-    const v099Cue = asset.sources[0]?.src.startsWith("/audio/v099/");
-    assert.equal(asset.sources.length, wavCue || v099Cue ? 1 : 2, asset.id);
+    const panGuardCue = asset.id === "ability-kumaverson-pan-guard-contact";
+    const singleMpegCue = panGuardCue || asset.sources[0]?.src.startsWith("/audio/v099/");
+    if (panGuardCue) assert.equal(asset.sources[0]?.src, approvedPanGuardSource);
+    assert.equal(asset.sources.length, wavCue || singleMpegCue ? 1 : 2, asset.id);
     assert.deepEqual(
       asset.sources.map((source) => source.type),
-      wavCue ? ["audio/wav"] : v099Cue ? ["audio/mpeg"] : ["audio/mpeg", "audio/ogg"],
+      wavCue ? ["audio/wav"] : singleMpegCue ? ["audio/mpeg"] : ["audio/mpeg", "audio/ogg"],
       asset.id,
     );
     for (const source of asset.sources) {

@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,289);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,290);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50293852); // Includes campaign artwork and three offline audio alternatives.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50299852); // Includes campaign artwork, offline audio alternatives and the guard cue.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -43,7 +43,7 @@ test('every bundled audio range still contains its exact encoded content after t
   assert.ok(Number.isSafeInteger(row.bundleOffset)&&row.bundleOffset>=0&&row.bundleOffset+row.bundleBytes<=bytes.length);
   assert.equal('sha256-'+createHash('sha256').update(bytes.subarray(row.bundleOffset,row.bundleOffset+row.bundleBytes)).digest('hex'),row.hash,row.path);checked++;
  }
- assert.equal(checked,421);
+ assert.equal(checked,422);
  const directAudio=manifest=>manifest.assets.filter(row=>row.category==='audio'&&!row.bundlePath);
  const alternateFiles=contract.added.filter(row=>row.category==='audio'&&!row.bundlePath);
  assert.deepEqual(alternateFiles.map(row=>row.path),[
@@ -70,7 +70,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,290);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,291);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -90,7 +90,7 @@ test('only the producer-selected Kuma retained payload changes; every other reta
  const wrong=structuredClone(candidate);wrong.assets.find(r=>r.path===path).hash=before.get(path).hash;assert.throws(()=>assertDelta(wrong));
 });
 
-test('station mud foley is appended to the audio bank without moving or replacing older clips',()=>{
+test('station mud and pan guard foley append without moving or replacing older clips',()=>{
   const pinned='0aee66adbe961afea7ed70b558cf468f0357d616';
   const oldManifest=JSON.parse(execFileSync('git',['show',pinned+':public/asset-manifest.json'],{maxBuffer:4*1024*1024}));
   const retained=new Map(candidate.assets.map(asset=>[asset.path,asset]));
@@ -99,14 +99,15 @@ test('station mud foley is appended to the audio bank without moving or replacin
     '/art/v102/combat-gore/ground-stains-r1.webp',
     '/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3',
     '/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3',
+    '/audio/quality-20261124/manual/pan-guard-contact.mp3',
     '/audio/v060/sfx/enemy-turned-hurt-02.ogg',
   ]);
   for(const asset of oldManifest.assets){
     const next=retained.get(asset.path);
-    const expected=asset.bundlePath==='/pwa-bundles/audio-v1.bin'?{...asset,bundleLength:asset.bundleLength+14717}:asset;
+    const expected=asset.bundlePath==='/pwa-bundles/audio-v1.bin'?{...asset,bundleLength:asset.bundleLength+20717}:asset;
     assert.deepEqual(next,expected,asset.path);
   }
   const foley=added.filter(asset=>asset.bundlePath==='/pwa-bundles/audio-v1.bin');
-  assert.equal(foley.reduce((n,asset)=>n+asset.bytes,0),14717);
+  assert.equal(foley.reduce((n,asset)=>n+asset.bytes,0),20717);
   assert.ok(foley.every(asset=>asset.bundleOffset>=36220919));
 });
