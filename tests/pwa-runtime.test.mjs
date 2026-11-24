@@ -101,10 +101,10 @@ test("a finished download reports completion before starting the game", () => {
 });
 
 test("the install invitation states the size without fetching anything", () => {
-  const assets = [asset("/a", 1), asset("/b", 2), asset("/c", 3)];
+  const assets = [asset("/a", 1), asset("/b", 2), asset("/c", 3), asset("/a-alias", 1)];
   const offer = describeInstallOffer(manifest(assets));
   assert.match(offer.headline, /西新世紀末物語をインストール/);
-  assert.equal(offer.totalAssets, 3);
+  assert.equal(offer.totalAssets, 4);
   assert.equal(offer.totalBytes, 3 * 1048576);
   assert.match(offer.sizeLine, /ダウンロード容量/);
   assert.match(offer.sizeLine, /3\.0MB/);

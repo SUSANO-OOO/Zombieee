@@ -15,6 +15,7 @@ import {
 } from "../app/boundedImageLoader.js";
 
 const job = (path, run, category = "unit") => ({ path, category, run });
+const decodeError = () => Object.assign(new Error("Image could not be decoded"), { name: "ImageDecodeError" });
 
 test("only the asset session clears the readiness flag it owns", async () => {
   // selectStage used to clear assetsReady directly. The session effect keys on
@@ -110,6 +111,81 @@ test("retry selection contains only failed or pending paths", () => {
     selectRetryAssetJobs(jobs, new Set(["/unit", "/enemy"])).map(({ path }) => path),
     ["/unit", "/enemy"],
   );
+});
+
+test("a battle can recover only the images that failed decoding after the first pass", async () => {
+  const calls = [];
+  let attempts = 0;
+  const result = await runAssetLoadSession({
+    jobs: [
+      job("/effects.webp", async () => {
+        calls.push("effects");
+        attempts += 1;
+        if (attempts === 1) throw decodeError();
+      }, "stage-object"),
+      job("/background.webp", async () => { calls.push("background"); }),
+    ],
+    concurrency: 1,
+    retryDecodeOnce: true,
+  });
+  assert.deepEqual(calls, ["effects", "background", "effects"]);
+  assert.equal(result.status, "ready");
+  assert.equal(result.completed, 2);
+  assert.deepEqual(result.failures, []);
+  assert.deepEqual(result.decodeRetryPaths, ["/effects.webp"]);
+});
+
+test("a persistent decode failure and a missing file still block battle readiness", async () => {
+  let corruptAttempts = 0;
+  let missingAttempts = 0;
+  const result = await runAssetLoadSession({
+    jobs: [
+      job("/corrupt.webp", async () => { corruptAttempts += 1; throw decodeError(); }),
+      job("/missing.webp", async () => {
+        missingAttempts += 1;
+        throw Object.assign(new Error("Not found"), { name: "ImageLoadError" });
+      }),
+    ],
+    retryDecodeOnce: true,
+  });
+  assert.equal(corruptAttempts, 2);
+  assert.equal(missingAttempts, 1);
+  assert.equal(result.status, "error");
+  assert.deepEqual(result.failures.map((failure) => failure.reason).sort(), ["decode", "http"]);
+});
+
+test("an automatic decode retry stays inside the original session deadline", async () => {
+  const controller = new AbortController();
+  let deadline;
+  let timerStarts = 0;
+  let attempts = 0;
+  let markRetry;
+  const retryStarted = new Promise((resolve) => { markRetry = resolve; });
+  const session = runAssetLoadSession({
+    jobs: [job("/effects.webp", async () => {
+      attempts += 1;
+      if (attempts === 1) throw decodeError();
+      markRetry();
+      await new Promise(() => {});
+    })],
+    retryDecodeOnce: true,
+    signal: controller.signal,
+    abort: () => controller.abort(),
+    setTimer: (callback) => {
+      timerStarts += 1;
+      deadline = callback;
+      return 1;
+    },
+    clearTimer: () => {},
+  });
+  assert.equal(await Promise.race([retryStarted.then(() => true), session.then(() => false)]), true);
+  deadline();
+  const result = await session;
+  assert.equal(timerStarts, 1);
+  assert.equal(controller.signal.aborted, true);
+  assert.equal(result.deadlineReached, true);
+  assert.equal(result.status, "error");
+  assert.deepEqual(result.failures, [{ path: "/effects.webp", category: "unit", reason: "timeout" }]);
 });
 
 test("deduplicated shared paths notify every image consumer", async () => {
