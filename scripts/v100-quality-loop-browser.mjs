@@ -10,7 +10,7 @@ import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { observePlayerAbilityText } from "./player-ability-text-audit.mjs";
 import { inspectFormationPortraits } from "./formation-portrait-readiness.mjs";
 import { silenceBrowserOutput, assertSilentQaHost } from "./silent-browser-output.mjs";
-import { enterV100FromTitle, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
+import { enterV100FromTitle, finishV100TitleIntro, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save, V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
 import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
@@ -559,6 +559,7 @@ for (const engine of engines) {
       }
     }
     if (sections.includes('native')) await runCase(browser, engine, { width: 844, height: 340 }, "early-budget-native", null, async (page, row, reload) => {
+      await finishV100TitleIntro(page);
       await page.locator(".v100-shell").getByRole("button", { name: "データ管理", exact: true }).tap();
       await page.getByRole("dialog", { name: "データ管理", exact: true }).getByLabel("セーブを復元", { exact: true }).setInputFiles({ name: "budget.json", mimeType: "application/json", buffer: Buffer.from(budgetBackup) });
       await page.getByRole("dialog", { name: "データ管理", exact: true }).waitFor({ state: "hidden" });
@@ -614,7 +615,22 @@ for (const engine of engines) {
       assert.ok(row.abilityText.numericDraws > 0, 'Numerical battle feedback remains visible');
       assert.ok(row.abilityText.observedBanners > 0, 'Transient mission banners were observed throughout native battle');
       assert.deepEqual(row.abilityText.forbidden, [], 'Only actual-start owner-bound short names are allowed; old banners and labels remain forbidden');
-      if (await page.locator(".v100-result-panel").isVisible()) {
+      const resultPanel = page.locator(".v100-result-panel");
+      if (!await resultPanel.isVisible()) {
+        await capture(page, row, "native-pressure");
+        const pause = page.getByRole("button", { name: "一時停止", exact: true });
+        if (await pause.isVisible()) {
+          try {
+            await pause.tap();
+          } catch (error) {
+            // The battle can finish while the native tap is being dispatched.
+            if (error.name !== "TimeoutError" || !await resultPanel.isVisible()) throw error;
+          }
+        }
+        const pauseMenu = page.getByRole("dialog", { name: "一時停止メニュー", exact: true });
+        await resultPanel.or(pauseMenu).first().waitFor();
+      }
+      if (await resultPanel.isVisible()) {
         row.nativeResult = true;
         const summary = page.locator(".v100-battle-report summary");
         await within(summary, 44); await summary.tap(); await within(page.locator(".v100-battle-report > div"));
@@ -641,8 +657,6 @@ for (const engine of engines) {
         }
       } else {
         row.nativeResult = false;
-        await capture(page, row, "native-pressure");
-        await page.getByRole("button", { name: "一時停止", exact: true }).tap();
       }
       assert.ok(row.native.inputs.length > 0);
     });

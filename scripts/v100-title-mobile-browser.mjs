@@ -160,6 +160,8 @@ try {
           assert.equal(await page.locator(".v100-start-screen").getAttribute("data-reduced-motion"), "true");
           await button(page, "クレジット").click(); await page.locator(".v100-staff-roll").waitFor({ state: "visible" });
           await button(page, "タイトルへ").click();
+          await page.locator('.v100-start-screen[data-title-intro="complete"]').waitFor();
+          assert.equal(await page.locator('audio[data-v100-title-voice]').count(), 0, "Returning from the credits must not load the completed title call again");
           await page.waitForFunction(() => window.__qaMedia.every(media => media.paused));
           if (viewport.height > viewport.width) {
             await page.setViewportSize({ width: viewport.height, height: viewport.width });
