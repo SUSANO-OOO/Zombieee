@@ -100,25 +100,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261114/vfx/futago-attack-six-r1.webp",
-      "bytes": 298854,
-      "hash": "sha256-7c1d32dee46c574ef4f4f94a4907b823058306d115d7f385b480e2c70b1862e6",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/quality-20261114/vfx/futago-rupture-six-r1.webp",
       "bytes": 351736,
       "hash": "sha256-ce33d15b927547529fc090c896203f6310f64340a53a31a3864a10b52d9fe3fa",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/gairen-attack-six-r1.webp",
-      "bytes": 402642,
-      "hash": "sha256-34d3ffdb384584651828e43842856d05208e2da08c455f80f07c1e14ecd42222",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -132,49 +116,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261114/vfx/gate-eater-attack-six-r1.webp",
-      "bytes": 231712,
-      "hash": "sha256-44fd6c6d61a74862e1bdc04e1b68141bb63cc3b98cf2c91fd82d08fd2e1f29e9",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/quality-20261114/vfx/gate-eater-rupture-six-r2.webp",
       "bytes": 432808,
       "hash": "sha256-16efa160c08d80e096231304aaf0ed13f8599c5be51339c97c474fb9c248ab2e",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
-      "bytes": 36388,
-      "hash": "sha256-942c1e16236d6cd4139d22d4767f855dbc986501587827b8be6c4a2434cbb0e1",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp",
-      "bytes": 84908,
-      "hash": "sha256-f86c4ca4a23ba866663005b21f864bc299f30283600e5b5f20053ddfbca82952",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
-      "bytes": 83570,
-      "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
-      "bytes": 309028,
-      "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -188,25 +132,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261114/vfx/mother-attack-six-r1.webp",
-      "bytes": 513616,
-      "hash": "sha256-eddc94285bc85fe207de17158386121c59c4e64aaa955a84a6f40993054a09ab",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/quality-20261114/vfx/mother-rupture-six-r2.webp",
       "bytes": 450298,
       "hash": "sha256-c89e894cc31cfb756d34a79ed7148904bf1c48a62fec37e38e5c545fa3f30530",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/mugarian-president-mutated-attack-six-r1.webp",
-      "bytes": 417756,
-      "hash": "sha256-f05265fe96e4c8b4aa3567398ae3213bf56fa636d6e98f7e5bec02ea815a6658",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -220,41 +148,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261114/vfx/ooguchi-attack-six-r1.webp",
-      "bytes": 309100,
-      "hash": "sha256-97918df7b487ca0a65be8929bc7621730941823d3f99b6096601f1bdcecaccba",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/quality-20261114/vfx/ooguchi-rupture-six-r1.webp",
       "bytes": 296620,
       "hash": "sha256-814c7fe264ea474613b90634a64f6f4b6d39b760c4c987dfdd4b540f0ad8ee36",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
-      "bytes": 80528,
-      "hash": "sha256-77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
-      "bytes": 320952,
-      "hash": "sha256-3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/takuya-omega-attack-six-r2.webp",
-      "bytes": 429024,
-      "hash": "sha256-c86084b9339836f86cf857da8c95bd07107b755250c6e239ffbad9aae4f38437",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -273,62 +169,6 @@
       "hash": "sha256-c765bb4a8e4d3ecb74e2abf0f35320756d37769f467a9ff6d71716b43b914050",
       "pack": "units",
       "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/tatara-ground-six-r1.webp",
-      "bytes": 278284,
-      "hash": "sha256-39fff2d40df64ae92800f98312db40c35aeec72da208b719ac8da462ad5d1c32",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp",
-      "bytes": 56496,
-      "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
-      "bytes": 141770,
-      "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
-      "bytes": 174274,
-      "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
-      "bytes": 160326,
-      "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
-      "bytes": 290176,
-      "hash": "sha256-03931eda8067e35ff1c2e41c232cc888a4d5f7c6c1c41035331eda6435b49e18",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261117/vfx/musashi-contact-six-r3.webp",
-      "bytes": 90324,
-      "hash": "sha256-3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2",
-      "pack": "units",
-      "category": "unit",
       "criticality": "critical"
     },
     {
@@ -457,46 +297,6 @@
       "hash": "sha256-7ba7735be39c8ba21a203b89fd4bfba5d50a04bab38b22f32b66eb902d36e167",
       "pack": "units",
       "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/mission-objects/s14-rail-evacuation-atlas-r1.webp",
-      "bytes": 54164,
-      "hash": "sha256-77a4890564c54a3bd235adf01835ea2f81b73dbbb4742281863e8b71761a2c98",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/mission-objects/s16-tunnel-gates-r1.webp",
-      "bytes": 62848,
-      "hash": "sha256-65851b0fbc092c4014c44f305a0874607f5ae856ee2b4fff7d24c4397804bcdc",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/mission-objects/s17-bay-evacuees-r1.webp",
-      "bytes": 66594,
-      "hash": "sha256-c47dc384bd3495af8631389b49457eae3af2a980835321a0bf4e615230b10331",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/mission-objects/s18-archive-extraction-r1.webp",
-      "bytes": 27898,
-      "hash": "sha256-e7b191fd540946076f1a144b51728d1228991060063a5ca9a5ae885e20c2443f",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/mission-objects/s19-coastal-bridge-escort-r1.webp",
-      "bytes": 271754,
-      "hash": "sha256-baa3285f649710d74829a824ac42dcde697201f7fb41636657f652de54cac29f",
-      "pack": "campaign-core",
-      "category": "object",
       "criticality": "critical"
     },
     {
@@ -1620,22 +1420,6 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/stages/s17-bay-emergency-gallery-r1.webp",
-      "bytes": 216910,
-      "hash": "sha256-02d445b47552ea77f15fa979ae127006a93ec561d5161c0bb9f0f266a6f49f4d",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/stages/s18-civic-archive-basement-r1.webp",
-      "bytes": 177150,
-      "hash": "sha256-e6d325d77d1a6c7239732fe18bd264b79f46add82f92ce83c19be876b2295762",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/v100/story-locations/clinical-corridor-r1.webp",
       "bytes": 84328,
       "hash": "sha256-78b905311d58e175f7d8d30e07a2af2f01cdcfc4127fb708c749385f4a7ca80d",
@@ -1676,14 +1460,6 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v102/combat-gore/ground-stains-r1.webp",
-      "bytes": 92352,
-      "hash": "sha256-351092e5b35b40517f30c610cfc1ef207b7e248e61505bd2c353cc207511b81c",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
       "path": "/audio/quality-20261028/babayaga-suppressed-r2.mp3",
       "bytes": 4878,
       "hash": "sha256-f3b735124aeed4452025a10da2b9a71371b688c970a4bb46e0ae754a3ea1a16b",
@@ -1697,21 +1473,6 @@
       "bundleOffset": 19351905,
       "bundleBytes": 4878,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261028/babayaga-suppressed-r2.ogg",
-      "bytes": 6974,
-      "hash": "sha256-af1fd7f42841099e42685f381524e5cfb91ffbca5d49d5a5e4bed00470caaa72",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261028-babayaga-suppressed-r2-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 1063222,
-      "bundleBytes": 6974,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261114/manual/babayaga-preparation-r1.mp3",
@@ -1729,51 +1490,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261114/manual/babayaga-preparation-r1.ogg",
-      "bytes": 6145,
-      "hash": "sha256-4fbc43ad0dbbd0eade4f37063754f81a9d3468b2e32fcdb7486b9a1d794e1ad3",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-babayaga-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2263096,
-      "bundleBytes": 6145,
-      "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/quality-20261114/manual/brawler-pressure-preparation-r1.mp3",
-      "bytes": 5780,
-      "hash": "sha256-098f5e996ce18975c5234971b36c12783c8b8638db2c710012239730d1cad0b2",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-brawler-pressure-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19012898,
-      "bundleBytes": 5780,
-      "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261114/manual/brawler-pressure-preparation-r1.ogg",
-      "bytes": 6319,
-      "hash": "sha256-b835b5e7e983dee80bd122e8d399e585b2a3586dc14f8bc6b91246ee2002d385",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-brawler-pressure-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 0,
-      "bundleBytes": 6319,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261114/manual/brute-preparation-r1.mp3",
       "bytes": 10580,
       "hash": "sha256-9aaaa252aa28f761b297ecd3b108b3cf43674190012d981207d72c1422e09676",
@@ -1787,21 +1503,6 @@
       "bundleOffset": 20125317,
       "bundleBytes": 10580,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261114/manual/brute-preparation-r1.ogg",
-      "bytes": 7854,
-      "hash": "sha256-acb86a962b4d58af83980bace2f630df6b56680cc189d3176db1e951da117261",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-brute-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2238337,
-      "bundleBytes": 7854,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261114/manual/engineer-preparation-r1.mp3",
@@ -1819,21 +1520,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261114/manual/engineer-preparation-r1.ogg",
-      "bytes": 7135,
-      "hash": "sha256-b19fa17455a645d326754355a67fd099a6134fed1230c89ac5e5778f2c90d76c",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-engineer-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2284656,
-      "bundleBytes": 7135,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261114/manual/guardian-preparation-r1.mp3",
       "bytes": 20660,
       "hash": "sha256-b8f5af55fb5353e38869e3f4fe52ea5a6597649af405125aadb2d1ac861b9fea",
@@ -1847,21 +1533,6 @@
       "bundleOffset": 20164060,
       "bundleBytes": 20660,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261114/manual/guardian-preparation-r1.ogg",
-      "bytes": 9780,
-      "hash": "sha256-9dfc84dc1103f003d518b84c8c0ccd24790fd28dedff7ba1d97aa66be4f8371b",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-guardian-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2274876,
-      "bundleBytes": 9780,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261114/manual/gunner-preparation-r1.mp3",
@@ -1879,21 +1550,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261114/manual/gunner-preparation-r1.ogg",
-      "bytes": 5635,
-      "hash": "sha256-0d7d69fbfd1681e42a098011bd164e52c1228433330e40fd06a7dd27ee64e332",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-gunner-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2269241,
-      "bundleBytes": 5635,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261114/manual/kumaverson-preparation-r1.mp3",
       "bytes": 7220,
       "hash": "sha256-76a25f389994c099571792c70ad90c4666d3806e4a1ce5c0d3570a85dc429fa2",
@@ -1907,21 +1563,6 @@
       "bundleOffset": 20145280,
       "bundleBytes": 7220,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261114/manual/kumaverson-preparation-r1.ogg",
-      "bytes": 6263,
-      "hash": "sha256-c3be50758569cb500d70c78af921f3a6c3bc385f8ef714b4583ff6e115f3a0c1",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-kumaverson-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2256833,
-      "bundleBytes": 6263,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261114/manual/medic-preparation-r1.mp3",
@@ -1939,21 +1580,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261114/manual/medic-preparation-r1.ogg",
-      "bytes": 10649,
-      "hash": "sha256-531ca576f7df2def41d1856e73b7d950d897b182f02ecf1ba315ebf61affcf7f",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-medic-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2227688,
-      "bundleBytes": 10649,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.mp3",
       "bytes": 4340,
       "hash": "sha256-061dc1d8031b1a87156254e9691d3e3bd670e96964acde86888710f09353799c",
@@ -1967,21 +1593,6 @@
       "bundleOffset": 20086357,
       "bundleBytes": 4340,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.ogg",
-      "bytes": 5384,
-      "hash": "sha256-e2075f6c925ac5f9ea36e56cd424a4eeaf33a919f08bddff4ede11b2d3db96e2",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-miyamoto-musashi-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2201510,
-      "bundleBytes": 5384,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261114/manual/mrs-chiha-preparation-r1.mp3",
@@ -1999,21 +1610,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261114/manual/mrs-chiha-preparation-r1.ogg",
-      "bytes": 8090,
-      "hash": "sha256-2ae239a9e007adbe0cb656ae761260b2a7be12bde988495cffba89b4cf998436",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-mrs-chiha-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2165738,
-      "bundleBytes": 8090,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261114/manual/ranger-preparation-r1.mp3",
       "bytes": 10100,
       "hash": "sha256-5dcd6eb079ab388286cf8f43f357f6da3da142ba5371dbdd60a6dbf18a1ac33d",
@@ -2027,21 +1623,6 @@
       "bundleOffset": 20095517,
       "bundleBytes": 10100,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261114/manual/ranger-preparation-r1.ogg",
-      "bytes": 7567,
-      "hash": "sha256-3dd2b3c42a1523cebcb62a23d77b74b89a6d953a95c4e8f065e1289e4042c508",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-ranger-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2220121,
-      "bundleBytes": 7567,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261114/manual/scout-preparation-r1.mp3",
@@ -2059,19 +1640,501 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261114/manual/scout-preparation-r1.ogg",
-      "bytes": 5638,
-      "hash": "sha256-32adbf35dc81daa662ef14de61cfb8ad02ebf0a02fb2e1146a1e74d81895ddd5",
+      "path": "/audio/quality-20261114/manual/zakimiya-preparation-r1.mp3",
+      "bytes": 8180,
+      "hash": "sha256-6f995b23392d9f897ade216695c1ca49bc32433828795ed0838883f6895953c3",
       "pack": "audio",
       "category": "audio",
       "criticality": "optional",
       "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-scout-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2214483,
-      "bundleBytes": 5638,
-      "bundleLength": 3805569
+      "audioId": "install-quality-20261114-manual-zakimiya-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20191940,
+      "bundleBytes": 8180,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/attack.mp3",
+      "bytes": 5864,
+      "hash": "sha256-ae441b8868f76dc2ff4f99c0944c77bd836ff12f7a596b4ec4f906101f90d638",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-attack",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19310036,
+      "bundleBytes": 5864,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/flesh-hit.mp3",
+      "bytes": 4585,
+      "hash": "sha256-d83c7422bf77ddeb45313bd9a372df69ffce8de35a40198713da2fefdec82d92",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-flesh-hit",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19315900,
+      "bundleBytes": 4585,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/hard-hit.mp3",
+      "bytes": 6099,
+      "hash": "sha256-5333370ba2a55767dea6174ac332c91dab013ad969778edde2fb0ef4fa0152b3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-hard-hit",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19320485,
+      "bundleBytes": 6099,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/idle-loop.wav",
+      "bytes": 176444,
+      "hash": "sha256-a7e7d42c5544e4e8c2272780aeaf85ac7fff47b8991c498af26b5fc42c041ac6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-idle-loop",
+      "audioType": "audio/wav",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19133592,
+      "bundleBytes": 176444,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/overdrive-activate.mp3",
+      "bytes": 9383,
+      "hash": "sha256-2193f0c40174818ebd28fab85c239995c3362f34e2ac61fb9281a906c17402f7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-overdrive-activate",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20135897,
+      "bundleBytes": 9383,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/overdrive-active.mp3",
+      "bytes": 8394,
+      "hash": "sha256-edaa744e3f83f5ca4b5c33b23e9e9efa35157f0c0ec3fd67365252de5cacaf65",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-overdrive-active",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20200120,
+      "bundleBytes": 8394,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/start.mp3",
+      "bytes": 13608,
+      "hash": "sha256-afe9cb54838de7132f59b629b89cbffc8569d238e0a9a18cdf3fdcf32206ceeb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-start",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19119984,
+      "bundleBytes": 13608,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/chainsaw/stop.mp3",
+      "bytes": 9126,
+      "hash": "sha256-2152b7e20dbf1dd588c746648586af9d15f6e6ad25f5384928cbd717fd5062ea",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-stop",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19326584,
+      "bundleBytes": 9126,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-crowbar-01.mp3",
+      "bytes": 8231,
+      "hash": "sha256-6864624c6ba828ea57b48e4ef42dcfba4485772dd2bc6908ef76abb43ecf5876",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-crowbar-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19057861,
+      "bundleBytes": 8231,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-crowbar-02.mp3",
+      "bytes": 7735,
+      "hash": "sha256-32451e631062797de5861b0a117d03f6bf0e2226da4563048ab8d38a729d3c12",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-crowbar-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19066092,
+      "bundleBytes": 7735,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-hammer-01.mp3",
+      "bytes": 3195,
+      "hash": "sha256-a7617083b83fe4b039a7b2430b3f98e77adb5ac1dd03146b003405c23e742379",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-hammer-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19086113,
+      "bundleBytes": 3195,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-hammer-02.mp3",
+      "bytes": 3143,
+      "hash": "sha256-30f14aabbf5cddb9ad32e9f34d87c86025fb6f86d1456ffffb717b54d3a58c5b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-hammer-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19089308,
+      "bundleBytes": 3143,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-unarmed-01.mp3",
+      "bytes": 2388,
+      "hash": "sha256-46c3435e3acddb2bce8342ea7e9afb6cafd17fd42c6a479c3910fda7b75c2d0f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-unarmed-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19113588,
+      "bundleBytes": 2388,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-unarmed-02.mp3",
+      "bytes": 4008,
+      "hash": "sha256-9867beaab172526ea4b79788f26da5f26180ae62069300d9eaa1cab02e34cd97",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-unarmed-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19115976,
+      "bundleBytes": 4008,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/recorded/v104-handgun.mp3",
+      "bytes": 5666,
+      "hash": "sha256-f8a06b9910bb19253354b533ce9ed1cf41988ca8226679a43e32d9e52cb4d541",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-v104-handgun",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19018678,
+      "bundleBytes": 5666,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-01.mp3",
+      "bytes": 6234,
+      "hash": "sha256-f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-gunner-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19073827,
+      "bundleBytes": 6234,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-02.mp3",
+      "bytes": 6052,
+      "hash": "sha256-eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-gunner-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19080061,
+      "bundleBytes": 6052,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-01.mp3",
+      "bytes": 6771,
+      "hash": "sha256-a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-rifle-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19100020,
+      "bundleBytes": 6771,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-02.mp3",
+      "bytes": 6797,
+      "hash": "sha256-b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-rifle-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19106791,
+      "bundleBytes": 6797,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-01.mp3",
+      "bytes": 5354,
+      "hash": "sha256-8509f2b80e625cd37562829c280474be88dcbc0a13e93ec67f51176232b0e358",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "weapon-smg-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 7813307,
+      "bundleBytes": 5354,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-02.mp3",
+      "bytes": 5222,
+      "hash": "sha256-46aee2cd8c892d749fa617344b2a8537f586fc36416a2d5bff40f6e604c3befd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "weapon-smg-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 7818661,
+      "bundleBytes": 5222,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/art/quality-20261114/vfx/futago-attack-six-r1.webp",
+      "bytes": 298854,
+      "hash": "sha256-7c1d32dee46c574ef4f4f94a4907b823058306d115d7f385b480e2c70b1862e6",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/gairen-attack-six-r1.webp",
+      "bytes": 402642,
+      "hash": "sha256-34d3ffdb384584651828e43842856d05208e2da08c455f80f07c1e14ecd42222",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/mother-attack-six-r1.webp",
+      "bytes": 513616,
+      "hash": "sha256-eddc94285bc85fe207de17158386121c59c4e64aaa955a84a6f40993054a09ab",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/mugarian-president-mutated-attack-six-r1.webp",
+      "bytes": 417756,
+      "hash": "sha256-f05265fe96e4c8b4aa3567398ae3213bf56fa636d6e98f7e5bec02ea815a6658",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/ooguchi-attack-six-r1.webp",
+      "bytes": 309100,
+      "hash": "sha256-97918df7b487ca0a65be8929bc7621730941823d3f99b6096601f1bdcecaccba",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-omega-attack-six-r2.webp",
+      "bytes": 429024,
+      "hash": "sha256-c86084b9339836f86cf857da8c95bd07107b755250c6e239ffbad9aae4f38437",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/tatara-ground-six-r1.webp",
+      "bytes": 278284,
+      "hash": "sha256-39fff2d40df64ae92800f98312db40c35aeec72da208b719ac8da462ad5d1c32",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/gate-eater-attack-six-r1.webp",
+      "bytes": 231712,
+      "hash": "sha256-44fd6c6d61a74862e1bdc04e1b68141bb63cc3b98cf2c91fd82d08fd2e1f29e9",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
+      "bytes": 309028,
+      "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
+      "bytes": 320952,
+      "hash": "sha256-3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
+      "bytes": 80528,
+      "hash": "sha256-77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
+      "bytes": 83570,
+      "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
+      "bytes": 36388,
+      "hash": "sha256-942c1e16236d6cd4139d22d4767f855dbc986501587827b8be6c4a2434cbb0e1",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp",
+      "bytes": 84908,
+      "hash": "sha256-f86c4ca4a23ba866663005b21f864bc299f30283600e5b5f20053ddfbca82952",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
+      "bytes": 141770,
+      "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp",
+      "bytes": 56496,
+      "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
+      "bytes": 160326,
+      "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
+      "bytes": 290176,
+      "hash": "sha256-03931eda8067e35ff1c2e41c232cc888a4d5f7c6c1c41035331eda6435b49e18",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+      "bytes": 174274,
+      "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/audio/quality-20261114/manual/brawler-pressure-preparation-r1.mp3",
+      "bytes": 5780,
+      "hash": "sha256-098f5e996ce18975c5234971b36c12783c8b8638db2c710012239730d1cad0b2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-brawler-pressure-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19012898,
+      "bundleBytes": 5780,
+      "bundleLength": 36241636
     },
     {
       "path": "/audio/quality-20261114/manual/tky-energy-preparation-r1.mp3",
@@ -2089,51 +2152,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261114/manual/tky-energy-preparation-r1.ogg",
-      "bytes": 8376,
-      "hash": "sha256-f8c6a2a8c6faf5a079ef14a713278e06fe1d0f6d55af79d5f44a8a6f154504f1",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-tky-energy-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2123419,
-      "bundleBytes": 8376,
-      "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/quality-20261114/manual/zakimiya-preparation-r1.mp3",
-      "bytes": 8180,
-      "hash": "sha256-6f995b23392d9f897ade216695c1ca49bc32433828795ed0838883f6895953c3",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-zakimiya-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20191940,
-      "bundleBytes": 8180,
-      "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261114/manual/zakimiya-preparation-r1.ogg",
-      "bytes": 7278,
-      "hash": "sha256-2bd78458cd9f8e651ea1143927bd9d267b58c5e85b4929b220ba30014a9e9417",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261114-manual-zakimiya-preparation-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 2291791,
-      "bundleBytes": 7278,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-finales/futago-collapse-r1.mp3",
       "bytes": 51380,
       "hash": "sha256-ba0c747b3558f57b0540bb029c87590f4854a6e78896e3cd27fabcb1b0b24a64",
@@ -2147,21 +2165,6 @@
       "bundleOffset": 35565655,
       "bundleBytes": 51380,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-finales/futago-collapse-r1.ogg",
-      "bytes": 21600,
-      "hash": "sha256-5e0639bc8e1d951162cfd3ae3379eb1fa5bd93317e7291a56e8fdd0bd01e9a3e",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-futago-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3540632,
-      "bundleBytes": 21600,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-finales/gairen-collapse-r1.mp3",
@@ -2179,21 +2182,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-finales/gairen-collapse-r1.ogg",
-      "bytes": 21737,
-      "hash": "sha256-0a30c705ce9a67c2ee5586c710c4e26df8c3b2c4bf06f0eeb8e8ccdb5ffb3d8a",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-gairen-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3469167,
-      "bundleBytes": 21737,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-finales/gate-eater-collapse-r1.mp3",
       "bytes": 51380,
       "hash": "sha256-fef4ada76d530273e6a2dbd5bf6008a0bf28a73676547e909f02d8104d40f1c8",
@@ -2207,21 +2195,6 @@
       "bundleOffset": 35205995,
       "bundleBytes": 51380,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-finales/gate-eater-collapse-r1.ogg",
-      "bytes": 26830,
-      "hash": "sha256-5d93302d465f8f509cb53bc6d5030588d986bac03495edd843e6e4c512e00906",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-gate-eater-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3377229,
-      "bundleBytes": 26830,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-finales/kurome-collapse-r1.mp3",
@@ -2239,21 +2212,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-finales/kurome-collapse-r1.ogg",
-      "bytes": 21859,
-      "hash": "sha256-75796d0b7df52ec05b57584f5a6e34caa50443ab0f8c04b48246b1900a5f604f",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-kurome-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3426499,
-      "bundleBytes": 21859,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-finales/mother-collapse-r1.mp3",
       "bytes": 51380,
       "hash": "sha256-7ac46292c9b9be361d96897a104de155a5f9d64e7d392b85f201ef2e5ca65403",
@@ -2267,21 +2225,6 @@
       "bundleOffset": 35257375,
       "bundleBytes": 51380,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-finales/mother-collapse-r1.ogg",
-      "bytes": 22440,
-      "hash": "sha256-144d7a11296676bf6a55d4d3e6c149f8d2416ded53cd883c1e4408b973d1d229",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-mother-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3404059,
-      "bundleBytes": 22440,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-finales/mugarian-president-mutated-collapse-r1.mp3",
@@ -2299,21 +2242,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-finales/mugarian-president-mutated-collapse-r1.ogg",
-      "bytes": 24161,
-      "hash": "sha256-7b655a8b7e91f7d5d43432eb6b35dba0b31acab11428e320b162bff8c2e2df9b",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-mugarian-president-mutated-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3516471,
-      "bundleBytes": 24161,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-finales/ooguchi-collapse-r1.mp3",
       "bytes": 51380,
       "hash": "sha256-1ffe938011b0688806feccb1764813fff24f47de8c5381b79ec194f1aee82faa",
@@ -2327,21 +2255,6 @@
       "bundleOffset": 35360135,
       "bundleBytes": 51380,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-finales/ooguchi-collapse-r1.ogg",
-      "bytes": 20809,
-      "hash": "sha256-4a439ccb7a649487e5299786687c1129305d4b1e1127e90cff224ad2d9610096",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-ooguchi-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3448358,
-      "bundleBytes": 20809,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-finales/takuya-collapse-r1.mp3",
@@ -2359,21 +2272,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-finales/takuya-collapse-r1.ogg",
-      "bytes": 25567,
-      "hash": "sha256-89e52c45919bed645910d80128b86ec10a44b483e35ce77349ce1e06b752f7cf",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-takuya-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3490904,
-      "bundleBytes": 25567,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-finales/takuya-omega-collapse-r1.mp3",
       "bytes": 51380,
       "hash": "sha256-a77fddfe5867da317cf0070dfdec3781452d04aa3465f2b2c356f3aa36d1b3ef",
@@ -2387,21 +2285,6 @@
       "bundleOffset": 35617035,
       "bundleBytes": 51380,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-finales/takuya-omega-collapse-r1.ogg",
-      "bytes": 27755,
-      "hash": "sha256-59aad82541914c105d5b6f211640e4e1b71696e7660eaaeee76649eb957e68f7",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-finales-takuya-omega-collapse-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3562232,
-      "bundleBytes": 27755,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/futago-impact-r1.mp3",
@@ -2419,21 +2302,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/futago-impact-r1.ogg",
-      "bytes": 9491,
-      "hash": "sha256-0975c9fdc27bc21cb800cc738891f710d0da63564468299611eb8f96b43e6c3c",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-futago-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3724777,
-      "bundleBytes": 9491,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/futago-warning-r1.mp3",
       "bytes": 18740,
       "hash": "sha256-950e25f845800fca0d3319010af450cadbf5937d7015b4239e2342fd3b2569eb",
@@ -2447,21 +2315,6 @@
       "bundleOffset": 35872175,
       "bundleBytes": 18740,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/futago-warning-r1.ogg",
-      "bytes": 10798,
-      "hash": "sha256-ca1d22898b76cd7d3c50fc901d55295939df94e5108c6573b17a1930161b0632",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-futago-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3713979,
-      "bundleBytes": 10798,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gairen-impact-r1.mp3",
@@ -2479,21 +2332,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/gairen-impact-r1.ogg",
-      "bytes": 11935,
-      "hash": "sha256-3b1ba1ce02b6a1f979f19c820f2f207279f39659d4015dee5859b0c4bdf3a379",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-gairen-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3702044,
-      "bundleBytes": 11935,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/gairen-warning-r1.mp3",
       "bytes": 18740,
       "hash": "sha256-b7b8fd8a45648264fff5f6fc9ea81d5c72e29ba6e98954cf20dc9e2bdb92b007",
@@ -2507,21 +2345,6 @@
       "bundleOffset": 35832295,
       "bundleBytes": 18740,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/gairen-warning-r1.ogg",
-      "bytes": 11432,
-      "hash": "sha256-8ca6bb7970e12e59cab11dbec2e125f01c9ece17c0806f94a1f66c8717930e1b",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-gairen-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3690612,
-      "bundleBytes": 11432,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gate-eater-impact-r1.mp3",
@@ -2539,21 +2362,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/gate-eater-impact-r1.ogg",
-      "bytes": 8386,
-      "hash": "sha256-513ad9bbc0e88e4bbcb8da1f3a07e7e94c6fb4bf6946d9769e7e1edc1565f61d",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-gate-eater-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3619120,
-      "bundleBytes": 8386,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/gate-eater-release-r1.mp3",
       "bytes": 15380,
       "hash": "sha256-66d7b3dea73575e2bc1a5952a5fff5d3fddb1eb983b3f6ad4eeb468e62f1a43a",
@@ -2567,21 +2375,6 @@
       "bundleOffset": 35985095,
       "bundleBytes": 15380,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/gate-eater-release-r1.ogg",
-      "bytes": 10316,
-      "hash": "sha256-a6cd5a6740e907b9f21cbc9440c08e803044dea5a6a58fba1669338ba24deb37",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-gate-eater-release-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3778600,
-      "bundleBytes": 10316,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gate-eater-warning-r1.mp3",
@@ -2599,21 +2392,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/gate-eater-warning-r1.ogg",
-      "bytes": 9773,
-      "hash": "sha256-21e84d7b54a651986b0aaa574af047eaf1f3dede6ee70a80290956e1ddfc1e00",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-gate-eater-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3609347,
-      "bundleBytes": 9773,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/kurome-impact-r1.mp3",
       "bytes": 10580,
       "hash": "sha256-4fc4c9c08d07baa1671d583050f210fec6bb72f66d577126f70858b3ff85f809",
@@ -2627,21 +2405,6 @@
       "bundleOffset": 35788075,
       "bundleBytes": 10580,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/kurome-impact-r1.ogg",
-      "bytes": 7896,
-      "hash": "sha256-12d49abc6e41ca514cdd5ed0ed80793ac8665241d8d1a3ef5445b1cf5770937e",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-kurome-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3662426,
-      "bundleBytes": 7896,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/kurome-warning-r1.mp3",
@@ -2659,21 +2422,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/kurome-warning-r1.ogg",
-      "bytes": 12988,
-      "hash": "sha256-121e42bdbf8536cf6f96ea80aa4682601e3f9938fd5a08197a7815d9e30afd70",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-kurome-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3649438,
-      "bundleBytes": 12988,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/mother-impact-r1.mp3",
       "bytes": 20180,
       "hash": "sha256-ccd67d08c2c7c56ff360bfc77ff06afda11706551d8bac044847db710e289654",
@@ -2687,21 +2435,6 @@
       "bundleOffset": 35746275,
       "bundleBytes": 20180,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/mother-impact-r1.ogg",
-      "bytes": 11567,
-      "hash": "sha256-1eca3ee28e35b3ba93998f9686c677bcb769643772c8550160ca8c00af049920",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-mother-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3637871,
-      "bundleBytes": 11567,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/mother-warning-r1.mp3",
@@ -2719,21 +2452,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/mother-warning-r1.ogg",
-      "bytes": 10365,
-      "hash": "sha256-54cb94ff205a4816c6bccd67b940c1d2b6d6ff57f2186e20f22486d084771b42",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-mother-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3627506,
-      "bundleBytes": 10365,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-impact-r1.mp3",
       "bytes": 17780,
       "hash": "sha256-3fc11bede1dd5f7a5e110601119165dbdf6ee09862074eb1e756166f28b3b624",
@@ -2747,21 +2465,6 @@
       "bundleOffset": 35924555,
       "bundleBytes": 17780,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-impact-r1.ogg",
-      "bytes": 9855,
-      "hash": "sha256-2b42ebbb2d142d67eb9447ee1874c0fdc480492f95ee2632f3551bd87149a6a4",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-mugarian-president-mutated-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3744140,
-      "bundleBytes": 9855,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-warning-r1.mp3",
@@ -2779,21 +2482,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-warning-r1.ogg",
-      "bytes": 9872,
-      "hash": "sha256-a1a4fae3ea8652861cbd3c178e877299a1fd97a19c2bafe6c80e46b5cfb1f5b2",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-mugarian-president-mutated-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3734268,
-      "bundleBytes": 9872,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/ooguchi-impact-r1.mp3",
       "bytes": 16820,
       "hash": "sha256-87ce4bfb80f7c87982f719310d059f9791d4787aafd07fc6f5beb3bfed3b97c3",
@@ -2807,21 +2495,6 @@
       "bundleOffset": 35815475,
       "bundleBytes": 16820,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/ooguchi-impact-r1.ogg",
-      "bytes": 10165,
-      "hash": "sha256-a3b2f46a0dbf3cffd2ff993fe807403976ce67b73b82fd23e314c1a354ed1c2f",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-ooguchi-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3680447,
-      "bundleBytes": 10165,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/ooguchi-warning-r1.mp3",
@@ -2839,21 +2512,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/ooguchi-warning-r1.ogg",
-      "bytes": 10125,
-      "hash": "sha256-6c89560e62584dd1a2069050e5cb35aa8bf6319c046347f19c9343736ba80fe0",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-ooguchi-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3670322,
-      "bundleBytes": 10125,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/takuya-impact-r1.mp3",
       "bytes": 17780,
       "hash": "sha256-b17e96ac6d5c4e1c24194c36986166200f5efd674169ded368c2bd2441e090aa",
@@ -2867,21 +2525,6 @@
       "bundleOffset": 35682835,
       "bundleBytes": 17780,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/takuya-impact-r1.ogg",
-      "bytes": 9977,
-      "hash": "sha256-8b591ab763c6488fe9de417fc94ed499014a768ab4e156395d37e2919dd713ec",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3599370,
-      "bundleBytes": 9977,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/boss-skills/takuya-omega-impact-r1.mp3",
@@ -2899,21 +2542,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/takuya-omega-impact-r1.ogg",
-      "bytes": 13250,
-      "hash": "sha256-ad5a7ae67514b65e2993d4e67abe40653add008c33eee0e3abf77c8f57f1e8cc",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-omega-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3765350,
-      "bundleBytes": 13250,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/takuya-omega-warning-r1.mp3",
       "bytes": 19220,
       "hash": "sha256-b688c3850e00b21ea6fdaa21cba50de2190f7f5cd84bd5dc8eab08e2b7199f19",
@@ -2929,21 +2557,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261116/boss-skills/takuya-omega-warning-r1.ogg",
-      "bytes": 11355,
-      "hash": "sha256-a1596679852d4fb23d6a16741aa0995833013dcbb51e86132714c1ce1fa7ca4a",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-omega-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3753995,
-      "bundleBytes": 11355,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261116/boss-skills/takuya-warning-r1.mp3",
       "bytes": 14420,
       "hash": "sha256-f250093ad2b73bd87339ecd02ad978ce99da0b879c1120517862a182f17c2795",
@@ -2957,21 +2570,6 @@
       "bundleOffset": 35668415,
       "bundleBytes": 14420,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261116/boss-skills/takuya-warning-r1.ogg",
-      "bytes": 9383,
-      "hash": "sha256-a83a48748ae06564058656722d67e5fadf56a026559661c58b98c2acbc178351",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3589987,
-      "bundleBytes": 9383,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261116/mayo/recorded-bark.wav",
@@ -3019,36 +2617,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261117/firearms/weapon-gunner-01.mp3",
-      "bytes": 9239,
-      "hash": "sha256-fe739fe7e5fcd264f92490e8e7457b188e9a3ba6564fcefdb378a414cf208e00",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261117-firearms-weapon-gunner-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 36159172,
-      "bundleBytes": 9239,
-      "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261117/firearms/weapon-gunner-02.mp3",
-      "bytes": 9239,
-      "hash": "sha256-1773734d3b4a1588e31611ae5f03e29c4f91bae543f19b36792eed88f3ae3b9c",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261117-firearms-weapon-gunner-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 36168411,
-      "bundleBytes": 9239,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/quality-20261117/firearms/weapon-rifle-01.mp3",
       "bytes": 10075,
       "hash": "sha256-5be850a6011413484e944b411bec84d797b9253851786b191ba3114b7a73aa23",
@@ -3076,6 +2644,36 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 36202859,
       "bundleBytes": 10075,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-gunner-01.mp3",
+      "bytes": 9239,
+      "hash": "sha256-fe739fe7e5fcd264f92490e8e7457b188e9a3ba6564fcefdb378a414cf208e00",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-gunner-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36159172,
+      "bundleBytes": 9239,
+      "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-gunner-02.mp3",
+      "bytes": 9239,
+      "hash": "sha256-1773734d3b4a1588e31611ae5f03e29c4f91bae543f19b36792eed88f3ae3b9c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-gunner-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36168411,
+      "bundleBytes": 9239,
       "bundleLength": 36241636
     },
     {
@@ -3124,6 +2722,144 @@
       "bundleLength": 36241636
     },
     {
+      "path": "/art/quality-20261117/vfx/musashi-contact-six-r3.webp",
+      "bytes": 90324,
+      "hash": "sha256-3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-hurt-02.ogg",
+      "bytes": 7407,
+      "hash": "sha256-c0cc30b68347a5b11a51e1d489279900b9d45f47c374e378d6d4243a96a39eb6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-runner-hurt-02-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-01.ogg",
+      "bytes": 11276,
+      "hash": "sha256-9267e0222f8e2b44c059973f3ce5c84e54e0fe84d3f05f2b2ca0b53f1b017de0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-turned-hurt-01-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-02.ogg",
+      "bytes": 15722,
+      "hash": "sha256-fca95a4d3a670daa1e37c44225e716552b7046ba82cc61516368d8c9d15eec9e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-turned-hurt-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-attack-01.ogg",
+      "bytes": 9454,
+      "hash": "sha256-75963c8af435ea4eb2ebae521a4dfaf95682b145d85d1e22b18a922c888bd265",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-human-male-light-attack-01-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/audio/v100/foley/treatment.ogg",
+      "bytes": 6792,
+      "hash": "sha256-4efcffe4936cd1e70f8fae904a1542d225ceacd82a2e8057c01b31caa9b63369",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-treatment-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/audio/v104/combat/armor-hit.ogg",
+      "bytes": 4965,
+      "hash": "sha256-06a6145784d8c2d7c4e24cc94c8a300491047aa175916e72a5d90bd61bc96c1d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-armor-hit-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/art/v100/mission-objects/s14-rail-evacuation-atlas-r1.webp",
+      "bytes": 54164,
+      "hash": "sha256-77a4890564c54a3bd235adf01835ea2f81b73dbbb4742281863e8b71761a2c98",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/s16-tunnel-gates-r1.webp",
+      "bytes": 62848,
+      "hash": "sha256-65851b0fbc092c4014c44f305a0874607f5ae856ee2b4fff7d24c4397804bcdc",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/s17-bay-evacuees-r1.webp",
+      "bytes": 66594,
+      "hash": "sha256-c47dc384bd3495af8631389b49457eae3af2a980835321a0bf4e615230b10331",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s17-bay-emergency-gallery-r1.webp",
+      "bytes": 216910,
+      "hash": "sha256-02d445b47552ea77f15fa979ae127006a93ec561d5161c0bb9f0f266a6f49f4d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/s18-archive-extraction-r1.webp",
+      "bytes": 27898,
+      "hash": "sha256-e7b191fd540946076f1a144b51728d1228991060063a5ca9a5ae885e20c2443f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s18-civic-archive-basement-r1.webp",
+      "bytes": 177150,
+      "hash": "sha256-e6d325d77d1a6c7239732fe18bd264b79f46add82f92ce83c19be876b2295762",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/s19-coastal-bridge-escort-r1.webp",
+      "bytes": 271754,
+      "hash": "sha256-baa3285f649710d74829a824ac42dcde697201f7fb41636657f652de54cac29f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v102/combat-gore/ground-stains-r1.webp",
+      "bytes": 92352,
+      "hash": "sha256-351092e5b35b40517f30c610cfc1ef207b7e248e61505bd2c353cc207511b81c",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3",
       "bytes": 9553,
       "hash": "sha256-d769f4904c51907ca1a0c334a93bb308fb5c27e5b51667bf4968cab9e13f36ad",
@@ -3137,21 +2873,6 @@
       "bundleOffset": 36226083,
       "bundleBytes": 9553,
       "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/quality-20261121/station-mud/floor-mud-impact-r1.ogg",
-      "bytes": 10594,
-      "hash": "sha256-4beb2716f4a16630e970790d153a5a0188bea3ed3720668ceefd0b0f0209704d",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261121-station-mud-floor-mud-impact-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3794975,
-      "bundleBytes": 10594,
-      "bundleLength": 3805569
     },
     {
       "path": "/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3",
@@ -3169,21 +2890,6 @@
       "bundleLength": 36241636
     },
     {
-      "path": "/audio/quality-20261121/station-mud/floor-mud-warning-r1.ogg",
-      "bytes": 6059,
-      "hash": "sha256-9b2d6c4a74d3f93139198b452840484e9c2857477dbe854e16662bdb702741b6",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-audio-quality-20261121-station-mud-floor-mud-warning-r1-ogg",
-      "audioType": "audio/ogg",
-      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
-      "bundleOffset": 3788916,
-      "bundleBytes": 6059,
-      "bundleLength": 3805569
-    },
-    {
       "path": "/audio/quality-20261124/manual/pan-guard-contact.mp3",
       "bytes": 6000,
       "hash": "sha256-4eb8ef7484b13c8a4f2b7ec3b86b459c558822b0c81aee4b2539950f7289e654",
@@ -3197,6 +2903,681 @@
       "bundleOffset": 36235636,
       "bundleBytes": 6000,
       "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/quality-20261028/babayaga-suppressed-r2.ogg",
+      "bytes": 6974,
+      "hash": "sha256-af1fd7f42841099e42685f381524e5cfb91ffbca5d49d5a5e4bed00470caaa72",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261028-babayaga-suppressed-r2-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 1063222,
+      "bundleBytes": 6974,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/babayaga-preparation-r1.ogg",
+      "bytes": 6145,
+      "hash": "sha256-4fbc43ad0dbbd0eade4f37063754f81a9d3468b2e32fcdb7486b9a1d794e1ad3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-babayaga-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2263096,
+      "bundleBytes": 6145,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/brawler-pressure-preparation-r1.ogg",
+      "bytes": 6319,
+      "hash": "sha256-b835b5e7e983dee80bd122e8d399e585b2a3586dc14f8bc6b91246ee2002d385",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-brawler-pressure-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 0,
+      "bundleBytes": 6319,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/brute-preparation-r1.ogg",
+      "bytes": 7854,
+      "hash": "sha256-acb86a962b4d58af83980bace2f630df6b56680cc189d3176db1e951da117261",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-brute-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2238337,
+      "bundleBytes": 7854,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/engineer-preparation-r1.ogg",
+      "bytes": 7135,
+      "hash": "sha256-b19fa17455a645d326754355a67fd099a6134fed1230c89ac5e5778f2c90d76c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-engineer-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2284656,
+      "bundleBytes": 7135,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/guardian-preparation-r1.ogg",
+      "bytes": 9780,
+      "hash": "sha256-9dfc84dc1103f003d518b84c8c0ccd24790fd28dedff7ba1d97aa66be4f8371b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-guardian-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2274876,
+      "bundleBytes": 9780,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/gunner-preparation-r1.ogg",
+      "bytes": 5635,
+      "hash": "sha256-0d7d69fbfd1681e42a098011bd164e52c1228433330e40fd06a7dd27ee64e332",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-gunner-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2269241,
+      "bundleBytes": 5635,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/kumaverson-preparation-r1.ogg",
+      "bytes": 6263,
+      "hash": "sha256-c3be50758569cb500d70c78af921f3a6c3bc385f8ef714b4583ff6e115f3a0c1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-kumaverson-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2256833,
+      "bundleBytes": 6263,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/medic-preparation-r1.ogg",
+      "bytes": 10649,
+      "hash": "sha256-531ca576f7df2def41d1856e73b7d950d897b182f02ecf1ba315ebf61affcf7f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-medic-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2227688,
+      "bundleBytes": 10649,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.ogg",
+      "bytes": 5384,
+      "hash": "sha256-e2075f6c925ac5f9ea36e56cd424a4eeaf33a919f08bddff4ede11b2d3db96e2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-miyamoto-musashi-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2201510,
+      "bundleBytes": 5384,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/mrs-chiha-preparation-r1.ogg",
+      "bytes": 8090,
+      "hash": "sha256-2ae239a9e007adbe0cb656ae761260b2a7be12bde988495cffba89b4cf998436",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-mrs-chiha-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2165738,
+      "bundleBytes": 8090,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/ranger-preparation-r1.ogg",
+      "bytes": 7567,
+      "hash": "sha256-3dd2b3c42a1523cebcb62a23d77b74b89a6d953a95c4e8f065e1289e4042c508",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-ranger-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2220121,
+      "bundleBytes": 7567,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/scout-preparation-r1.ogg",
+      "bytes": 5638,
+      "hash": "sha256-32adbf35dc81daa662ef14de61cfb8ad02ebf0a02fb2e1146a1e74d81895ddd5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-scout-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2214483,
+      "bundleBytes": 5638,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/tky-energy-preparation-r1.ogg",
+      "bytes": 8376,
+      "hash": "sha256-f8c6a2a8c6faf5a079ef14a713278e06fe1d0f6d55af79d5f44a8a6f154504f1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-tky-energy-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2123419,
+      "bundleBytes": 8376,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261114/manual/zakimiya-preparation-r1.ogg",
+      "bytes": 7278,
+      "hash": "sha256-2bd78458cd9f8e651ea1143927bd9d267b58c5e85b4929b220ba30014a9e9417",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261114-manual-zakimiya-preparation-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 2291791,
+      "bundleBytes": 7278,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/futago-collapse-r1.ogg",
+      "bytes": 21600,
+      "hash": "sha256-5e0639bc8e1d951162cfd3ae3379eb1fa5bd93317e7291a56e8fdd0bd01e9a3e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-futago-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3540632,
+      "bundleBytes": 21600,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/gairen-collapse-r1.ogg",
+      "bytes": 21737,
+      "hash": "sha256-0a30c705ce9a67c2ee5586c710c4e26df8c3b2c4bf06f0eeb8e8ccdb5ffb3d8a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-gairen-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3469167,
+      "bundleBytes": 21737,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/gate-eater-collapse-r1.ogg",
+      "bytes": 26830,
+      "hash": "sha256-5d93302d465f8f509cb53bc6d5030588d986bac03495edd843e6e4c512e00906",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-gate-eater-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3377229,
+      "bundleBytes": 26830,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/kurome-collapse-r1.ogg",
+      "bytes": 21859,
+      "hash": "sha256-75796d0b7df52ec05b57584f5a6e34caa50443ab0f8c04b48246b1900a5f604f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-kurome-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3426499,
+      "bundleBytes": 21859,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/mother-collapse-r1.ogg",
+      "bytes": 22440,
+      "hash": "sha256-144d7a11296676bf6a55d4d3e6c149f8d2416ded53cd883c1e4408b973d1d229",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-mother-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3404059,
+      "bundleBytes": 22440,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/mugarian-president-mutated-collapse-r1.ogg",
+      "bytes": 24161,
+      "hash": "sha256-7b655a8b7e91f7d5d43432eb6b35dba0b31acab11428e320b162bff8c2e2df9b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-mugarian-president-mutated-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3516471,
+      "bundleBytes": 24161,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/ooguchi-collapse-r1.ogg",
+      "bytes": 20809,
+      "hash": "sha256-4a439ccb7a649487e5299786687c1129305d4b1e1127e90cff224ad2d9610096",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-ooguchi-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3448358,
+      "bundleBytes": 20809,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/takuya-collapse-r1.ogg",
+      "bytes": 25567,
+      "hash": "sha256-89e52c45919bed645910d80128b86ec10a44b483e35ce77349ce1e06b752f7cf",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-takuya-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3490904,
+      "bundleBytes": 25567,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-finales/takuya-omega-collapse-r1.ogg",
+      "bytes": 27755,
+      "hash": "sha256-59aad82541914c105d5b6f211640e4e1b71696e7660eaaeee76649eb957e68f7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-finales-takuya-omega-collapse-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3562232,
+      "bundleBytes": 27755,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/futago-impact-r1.ogg",
+      "bytes": 9491,
+      "hash": "sha256-0975c9fdc27bc21cb800cc738891f710d0da63564468299611eb8f96b43e6c3c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-futago-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3724777,
+      "bundleBytes": 9491,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/futago-warning-r1.ogg",
+      "bytes": 10798,
+      "hash": "sha256-ca1d22898b76cd7d3c50fc901d55295939df94e5108c6573b17a1930161b0632",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-futago-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3713979,
+      "bundleBytes": 10798,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/gairen-impact-r1.ogg",
+      "bytes": 11935,
+      "hash": "sha256-3b1ba1ce02b6a1f979f19c820f2f207279f39659d4015dee5859b0c4bdf3a379",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-gairen-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3702044,
+      "bundleBytes": 11935,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/gairen-warning-r1.ogg",
+      "bytes": 11432,
+      "hash": "sha256-8ca6bb7970e12e59cab11dbec2e125f01c9ece17c0806f94a1f66c8717930e1b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-gairen-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3690612,
+      "bundleBytes": 11432,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/gate-eater-impact-r1.ogg",
+      "bytes": 8386,
+      "hash": "sha256-513ad9bbc0e88e4bbcb8da1f3a07e7e94c6fb4bf6946d9769e7e1edc1565f61d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-gate-eater-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3619120,
+      "bundleBytes": 8386,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/gate-eater-release-r1.ogg",
+      "bytes": 10316,
+      "hash": "sha256-a6cd5a6740e907b9f21cbc9440c08e803044dea5a6a58fba1669338ba24deb37",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-gate-eater-release-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3778600,
+      "bundleBytes": 10316,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/gate-eater-warning-r1.ogg",
+      "bytes": 9773,
+      "hash": "sha256-21e84d7b54a651986b0aaa574af047eaf1f3dede6ee70a80290956e1ddfc1e00",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-gate-eater-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3609347,
+      "bundleBytes": 9773,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/kurome-impact-r1.ogg",
+      "bytes": 7896,
+      "hash": "sha256-12d49abc6e41ca514cdd5ed0ed80793ac8665241d8d1a3ef5445b1cf5770937e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-kurome-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3662426,
+      "bundleBytes": 7896,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/kurome-warning-r1.ogg",
+      "bytes": 12988,
+      "hash": "sha256-121e42bdbf8536cf6f96ea80aa4682601e3f9938fd5a08197a7815d9e30afd70",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-kurome-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3649438,
+      "bundleBytes": 12988,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/mother-impact-r1.ogg",
+      "bytes": 11567,
+      "hash": "sha256-1eca3ee28e35b3ba93998f9686c677bcb769643772c8550160ca8c00af049920",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-mother-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3637871,
+      "bundleBytes": 11567,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/mother-warning-r1.ogg",
+      "bytes": 10365,
+      "hash": "sha256-54cb94ff205a4816c6bccd67b940c1d2b6d6ff57f2186e20f22486d084771b42",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-mother-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3627506,
+      "bundleBytes": 10365,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-impact-r1.ogg",
+      "bytes": 9855,
+      "hash": "sha256-2b42ebbb2d142d67eb9447ee1874c0fdc480492f95ee2632f3551bd87149a6a4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-mugarian-president-mutated-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3744140,
+      "bundleBytes": 9855,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-warning-r1.ogg",
+      "bytes": 9872,
+      "hash": "sha256-a1a4fae3ea8652861cbd3c178e877299a1fd97a19c2bafe6c80e46b5cfb1f5b2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-mugarian-president-mutated-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3734268,
+      "bundleBytes": 9872,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/ooguchi-impact-r1.ogg",
+      "bytes": 10165,
+      "hash": "sha256-a3b2f46a0dbf3cffd2ff993fe807403976ce67b73b82fd23e314c1a354ed1c2f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-ooguchi-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3680447,
+      "bundleBytes": 10165,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/ooguchi-warning-r1.ogg",
+      "bytes": 10125,
+      "hash": "sha256-6c89560e62584dd1a2069050e5cb35aa8bf6319c046347f19c9343736ba80fe0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-ooguchi-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3670322,
+      "bundleBytes": 10125,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/takuya-impact-r1.ogg",
+      "bytes": 9977,
+      "hash": "sha256-8b591ab763c6488fe9de417fc94ed499014a768ab4e156395d37e2919dd713ec",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3599370,
+      "bundleBytes": 9977,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/takuya-omega-impact-r1.ogg",
+      "bytes": 13250,
+      "hash": "sha256-ad5a7ae67514b65e2993d4e67abe40653add008c33eee0e3abf77c8f57f1e8cc",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-omega-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3765350,
+      "bundleBytes": 13250,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/takuya-omega-warning-r1.ogg",
+      "bytes": 11355,
+      "hash": "sha256-a1596679852d4fb23d6a16741aa0995833013dcbb51e86132714c1ce1fa7ca4a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-omega-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3753995,
+      "bundleBytes": 11355,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261116/boss-skills/takuya-warning-r1.ogg",
+      "bytes": 9383,
+      "hash": "sha256-a83a48748ae06564058656722d67e5fadf56a026559661c58b98c2acbc178351",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261116-boss-skills-takuya-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3589987,
+      "bundleBytes": 9383,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261121/station-mud/floor-mud-impact-r1.ogg",
+      "bytes": 10594,
+      "hash": "sha256-4beb2716f4a16630e970790d153a5a0188bea3ed3720668ceefd0b0f0209704d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261121-station-mud-floor-mud-impact-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3794975,
+      "bundleBytes": 10594,
+      "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261121/station-mud/floor-mud-warning-r1.ogg",
+      "bytes": 6059,
+      "hash": "sha256-9b2d6c4a74d3f93139198b452840484e9c2857477dbe854e16662bdb702741b6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-audio-quality-20261121-station-mud-floor-mud-warning-r1-ogg",
+      "audioType": "audio/ogg",
+      "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+      "bundleOffset": 3788916,
+      "bundleBytes": 6059,
+      "bundleLength": 3805569
     },
     {
       "path": "/audio/v060/sfx/corpse-burn-loop.ogg",
@@ -3482,17 +3863,6 @@
       "bundleOffset": 628117,
       "bundleBytes": 7008,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/v060/sfx/enemy-runner-hurt-02.ogg",
-      "bytes": 7407,
-      "hash": "sha256-c0cc30b68347a5b11a51e1d489279900b9d45f47c374e378d6d4243a96a39eb6",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "voice",
-      "audioId": "offline-runner-hurt-02-fallback",
-      "audioType": "audio/ogg"
     },
     {
       "path": "/audio/v060/sfx/enemy-shade-attack-01.ogg",
@@ -3825,28 +4195,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/v060/sfx/enemy-turned-hurt-01.ogg",
-      "bytes": 11276,
-      "hash": "sha256-9267e0222f8e2b44c059973f3ce5c84e54e0fe84d3f05f2b2ca0b53f1b017de0",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "voice",
-      "audioId": "offline-turned-hurt-01-fallback",
-      "audioType": "audio/ogg"
-    },
-    {
-      "path": "/audio/v060/sfx/enemy-turned-hurt-02.ogg",
-      "bytes": 15722,
-      "hash": "sha256-fca95a4d3a670daa1e37c44225e716552b7046ba82cc61516368d8c9d15eec9e",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "voice",
-      "audioId": "offline-turned-hurt-fallback",
-      "audioType": "audio/ogg"
-    },
-    {
       "path": "/audio/v060/sfx/enemy-walker-attack-01.ogg",
       "bytes": 6827,
       "hash": "sha256-914c5ed9336dbfd567187e129548c4c9d7dc9611dba8cd87e957465df2f3e942",
@@ -4115,17 +4463,6 @@
       "bundleOffset": 58571,
       "bundleBytes": 12838,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/v060/sfx/human-male-light-attack-01.ogg",
-      "bytes": 9454,
-      "hash": "sha256-75963c8af435ea4eb2ebae521a4dfaf95682b145d85d1e22b18a922c888bd265",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "voice",
-      "audioId": "offline-human-male-light-attack-01-fallback",
-      "audioType": "audio/ogg"
     },
     {
       "path": "/audio/v060/sfx/human-male-light-attack-02.ogg",
@@ -5013,17 +5350,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/v100/foley/treatment.ogg",
-      "bytes": 6792,
-      "hash": "sha256-4efcffe4936cd1e70f8fae904a1542d225ceacd82a2e8057c01b31caa9b63369",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-treatment-fallback",
-      "audioType": "audio/ogg"
-    },
-    {
       "path": "/audio/v100/r9/barrier-raise.ogg",
       "bytes": 16017,
       "hash": "sha256-7a5387bcf12d3c7f12654044f29d66be409ec7b45d08e5ec0940fb8718e907b5",
@@ -5489,17 +5815,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/v104/combat/armor-hit.ogg",
-      "bytes": 4965,
-      "hash": "sha256-06a6145784d8c2d7c4e24cc94c8a300491047aa175916e72a5d90bd61bc96c1d",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "offline-armor-hit-fallback",
-      "audioType": "audio/ogg"
-    },
-    {
       "path": "/audio/v104/combat/crossbow-release.ogg",
       "bytes": 6174,
       "hash": "sha256-8c07b17d816c0f74bc309615fbf82382eccbea4aa10b1a94d0fac7a5e4f67103",
@@ -5650,21 +5965,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/chainsaw/attack.mp3",
-      "bytes": 5864,
-      "hash": "sha256-ae441b8868f76dc2ff4f99c0944c77bd836ff12f7a596b4ec4f906101f90d638",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-attack",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19310036,
-      "bundleBytes": 5864,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/chainsaw/attack.ogg",
       "bytes": 7988,
       "hash": "sha256-100156a1a8482d0e5aec651051e1546c490e6e24e3b001a9826fa6e84268db92",
@@ -5678,21 +5978,6 @@
       "bundleOffset": 1010508,
       "bundleBytes": 7988,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/chainsaw/flesh-hit.mp3",
-      "bytes": 4585,
-      "hash": "sha256-d83c7422bf77ddeb45313bd9a372df69ffce8de35a40198713da2fefdec82d92",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-flesh-hit",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19315900,
-      "bundleBytes": 4585,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/chainsaw/flesh-hit.ogg",
@@ -5710,21 +5995,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/chainsaw/hard-hit.mp3",
-      "bytes": 6099,
-      "hash": "sha256-5333370ba2a55767dea6174ac332c91dab013ad969778edde2fb0ef4fa0152b3",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-hard-hit",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19320485,
-      "bundleBytes": 6099,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/chainsaw/hard-hit.ogg",
       "bytes": 8139,
       "hash": "sha256-04f08dbdeab51fa3659c250afe5cd42ec7aa1ee8a16cf8d7dc0687452127de55",
@@ -5738,36 +6008,6 @@
       "bundleOffset": 1025185,
       "bundleBytes": 8139,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/chainsaw/idle-loop.wav",
-      "bytes": 176444,
-      "hash": "sha256-a7e7d42c5544e4e8c2272780aeaf85ac7fff47b8991c498af26b5fc42c041ac6",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-idle-loop",
-      "audioType": "audio/wav",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19133592,
-      "bundleBytes": 176444,
-      "bundleLength": 36241636
-    },
-    {
-      "path": "/audio/weapons/chainsaw/overdrive-activate.mp3",
-      "bytes": 9383,
-      "hash": "sha256-2193f0c40174818ebd28fab85c239995c3362f34e2ac61fb9281a906c17402f7",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-overdrive-activate",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20135897,
-      "bundleBytes": 9383,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/chainsaw/overdrive-activate.ogg",
@@ -5785,21 +6025,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/chainsaw/overdrive-active.mp3",
-      "bytes": 8394,
-      "hash": "sha256-edaa744e3f83f5ca4b5c33b23e9e9efa35157f0c0ec3fd67365252de5cacaf65",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-overdrive-active",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20200120,
-      "bundleBytes": 8394,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/chainsaw/overdrive-active.ogg",
       "bytes": 9665,
       "hash": "sha256-40c1a5c5c7249ad96caa34d352f494cb7f9a825ebb55599882aca75f105f9cc2",
@@ -5813,21 +6038,6 @@
       "bundleOffset": 2299069,
       "bundleBytes": 9665,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/chainsaw/start.mp3",
-      "bytes": 13608,
-      "hash": "sha256-afe9cb54838de7132f59b629b89cbffc8569d238e0a9a18cdf3fdcf32206ceeb",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-start",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19119984,
-      "bundleBytes": 13608,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/chainsaw/start.ogg",
@@ -5845,21 +6055,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/chainsaw/stop.mp3",
-      "bytes": 9126,
-      "hash": "sha256-2152b7e20dbf1dd588c746648586af9d15f6e6ad25f5384928cbd717fd5062ea",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-stop",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19326584,
-      "bundleBytes": 9126,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/chainsaw/stop.ogg",
       "bytes": 10556,
       "hash": "sha256-ef87044640d9025f509e044124a0a6b38890fca57bf5ec92a276ecbdcee7eab9",
@@ -5873,21 +6068,6 @@
       "bundleOffset": 1033324,
       "bundleBytes": 10556,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-crowbar-01.mp3",
-      "bytes": 8231,
-      "hash": "sha256-6864624c6ba828ea57b48e4ef42dcfba4485772dd2bc6908ef76abb43ecf5876",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-crowbar-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19057861,
-      "bundleBytes": 8231,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/melee/weapon-crowbar-01.ogg",
@@ -5905,21 +6085,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/melee/weapon-crowbar-02.mp3",
-      "bytes": 7735,
-      "hash": "sha256-32451e631062797de5861b0a117d03f6bf0e2226da4563048ab8d38a729d3c12",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-crowbar-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19066092,
-      "bundleBytes": 7735,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/melee/weapon-crowbar-02.ogg",
       "bytes": 8468,
       "hash": "sha256-55186b0425bf9e3d781a6262b4a9a8887afc74ce3e0778ed269daf21c2a02980",
@@ -5933,21 +6098,6 @@
       "bundleOffset": 418354,
       "bundleBytes": 8468,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-hammer-01.mp3",
-      "bytes": 3195,
-      "hash": "sha256-a7617083b83fe4b039a7b2430b3f98e77adb5ac1dd03146b003405c23e742379",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-hammer-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19086113,
-      "bundleBytes": 3195,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/melee/weapon-hammer-01.ogg",
@@ -5965,21 +6115,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/melee/weapon-hammer-02.mp3",
-      "bytes": 3143,
-      "hash": "sha256-30f14aabbf5cddb9ad32e9f34d87c86025fb6f86d1456ffffb717b54d3a58c5b",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-hammer-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19089308,
-      "bundleBytes": 3143,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/melee/weapon-hammer-02.ogg",
       "bytes": 5110,
       "hash": "sha256-5a6aa75f417e7e101c87b5f45a50afffe6f11f8ba859ab164e23c1e52845f343",
@@ -5993,21 +6128,6 @@
       "bundleOffset": 461600,
       "bundleBytes": 5110,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-unarmed-01.mp3",
-      "bytes": 2388,
-      "hash": "sha256-46c3435e3acddb2bce8342ea7e9afb6cafd17fd42c6a479c3910fda7b75c2d0f",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-unarmed-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19113588,
-      "bundleBytes": 2388,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/melee/weapon-unarmed-01.ogg",
@@ -6025,21 +6145,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/melee/weapon-unarmed-02.mp3",
-      "bytes": 4008,
-      "hash": "sha256-9867beaab172526ea4b79788f26da5f26180ae62069300d9eaa1cab02e34cd97",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-unarmed-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19115976,
-      "bundleBytes": 4008,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/melee/weapon-unarmed-02.ogg",
       "bytes": 6291,
       "hash": "sha256-86e4eae6a944802d626915c3ce7477adb7af5df7f26502977816c9f3914d7f68",
@@ -6053,21 +6158,6 @@
       "bundleOffset": 498979,
       "bundleBytes": 6291,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/recorded/v104-handgun.mp3",
-      "bytes": 5666,
-      "hash": "sha256-f8a06b9910bb19253354b533ce9ed1cf41988ca8226679a43e32d9e52cb4d541",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-v104-handgun",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19018678,
-      "bundleBytes": 5666,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/recorded/v104-handgun.ogg",
@@ -6085,21 +6175,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/recorded/weapon-gunner-01.mp3",
-      "bytes": 6234,
-      "hash": "sha256-f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-gunner-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19073827,
-      "bundleBytes": 6234,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/recorded/weapon-gunner-01.ogg",
       "bytes": 7870,
       "hash": "sha256-9d5e63961a400f46f5bf9f2c533f8f79ba5dbb9ad24efdc3c7085088431f7227",
@@ -6113,21 +6188,6 @@
       "bundleOffset": 426822,
       "bundleBytes": 7870,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-gunner-02.mp3",
-      "bytes": 6052,
-      "hash": "sha256-eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-gunner-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19080061,
-      "bundleBytes": 6052,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/recorded/weapon-gunner-02.ogg",
@@ -6145,21 +6205,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/recorded/weapon-rifle-01.mp3",
-      "bytes": 6771,
-      "hash": "sha256-a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-rifle-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19100020,
-      "bundleBytes": 6771,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/recorded/weapon-rifle-01.ogg",
       "bytes": 8529,
       "hash": "sha256-806eebfff91518f84ba6d999b7937a06afc105d3f7a155e69d0285c957bbf5b6",
@@ -6173,21 +6218,6 @@
       "bundleOffset": 477723,
       "bundleBytes": 8529,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-rifle-02.mp3",
-      "bytes": 6797,
-      "hash": "sha256-b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-rifle-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19106791,
-      "bundleBytes": 6797,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/recorded/weapon-rifle-02.ogg",
@@ -6205,21 +6235,6 @@
       "bundleLength": 3805569
     },
     {
-      "path": "/audio/weapons/recorded/weapon-smg-01.mp3",
-      "bytes": 5354,
-      "hash": "sha256-8509f2b80e625cd37562829c280474be88dcbc0a13e93ec67f51176232b0e358",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "weapon-smg-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7813307,
-      "bundleBytes": 5354,
-      "bundleLength": 36241636
-    },
-    {
       "path": "/audio/weapons/recorded/weapon-smg-01.ogg",
       "bytes": 7154,
       "hash": "sha256-549f9d5fa423ab346484c7c0a35f70b314e34a6dfeaedfb5dc71e6a32f21befd",
@@ -6233,21 +6248,6 @@
       "bundleOffset": 442494,
       "bundleBytes": 7154,
       "bundleLength": 3805569
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-smg-02.mp3",
-      "bytes": 5222,
-      "hash": "sha256-46aee2cd8c892d749fa617344b2a8537f586fc36416a2d5bff40f6e604c3befd",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "weapon-smg-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7818661,
-      "bundleBytes": 5222,
-      "bundleLength": 36241636
     },
     {
       "path": "/audio/weapons/recorded/weapon-smg-02.ogg",
