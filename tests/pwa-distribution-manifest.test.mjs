@@ -258,6 +258,10 @@ test("the full install contains one preferred playable source for every audio cu
   for (const cue of V100_AUDIO_MANIFEST.assets) {
     const preferred = selectPreferredAudioSource(cue.sources);
     assert.ok(audioAssets.some(asset => asset.path === preferred.src), `V1 cue ${cue.id} is unavailable offline`);
+    if (cue.category === "bgm") continue;
+    for (const source of cue.sources) {
+      assert.equal(audioAssets.find(asset => asset.path === source.src)?.audioType, source.type, source.src);
+    }
   }
   for (const audioAsset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
     const preferred = selectPreferredAudioSource(audioAsset.sources);
@@ -289,7 +293,7 @@ test("transport optimizations preserve every runtime asset contract", async () =
     assert.notEqual(asset.path, asset.sourcePath);
   }
 
-  const bundled = manifest.assets.filter((asset) => asset.bundlePath);
+  const bundled = manifest.assets.filter((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin");
   assert.equal(bundled.length, 422, "411 retained files, eight authored gun takes, two station effects and one pan guard cue");
   const recordedMayo = bundled.filter((asset) => asset.path.startsWith("/audio/quality-20261116/mayo/"));
   assert.deepEqual(recordedMayo.map(asset => asset.path).sort(), [
@@ -324,6 +328,28 @@ test("transport optimizations preserve every runtime asset contract", async () =
     assert.equal(payload.byteLength, asset.bytes);
     assert.equal('sha256-' + createHash('sha256').update(payload).digest('hex'), asset.hash, asset.path);
   }
+});
+
+test("non-music audio alternatives share one separate download and preserve their source bytes", async () => {
+  const bundlePath = "/pwa-bundles/audio-fallback-v1.bin";
+  const alternatives = manifest.assets.filter(asset => asset.bundlePath === bundlePath);
+  assert.equal(alternatives.length, 224);
+  assert.ok(manifest.assets.every(asset => !asset.bundlePath || ["/pwa-bundles/audio-v1.bin", bundlePath].includes(asset.bundlePath)));
+  const bundle = await readFile(new URL("../public" + bundlePath, import.meta.url));
+  assert.equal(bundle.length, 3805569);
+  let offset = 0;
+  for (const asset of alternatives.sort((a, b) => a.bundleOffset - b.bundleOffset)) {
+    const original = await readFile(new URL("../public" + asset.path, import.meta.url));
+    assert.equal(asset.bundleOffset, offset, asset.path);
+    assert.equal(asset.bundleLength, bundle.length, asset.path);
+    assert.equal(asset.audioType, "audio/ogg", asset.path);
+    assert.ok(asset.audioChannel !== "bgm", asset.path);
+    assert.equal(asset.criticality, "optional", asset.path);
+    assert.equal(asset.bundleBytes, original.length, asset.path);
+    assert.ok(bundle.subarray(offset, offset + original.length).equals(original), asset.path);
+    offset += original.length;
+  }
+  assert.equal(offset, bundle.length);
 });
 
 test("battle-critical art is marked critical and audio never blocks play", () => {

@@ -33,3 +33,33 @@ export function inspectPwaContentTransportCoverage(paths, expected, { repeatable
   return { ok: !missing.length && !duplicate.length && !unexpected.length,
     expected: expectedKeys.size, observed: observed.size, missing, duplicate, unexpected };
 }
+
+export function inspectPwaRecoveryBundles(bundleAssets, cachedHashes, incidentRequests, recoveryRequests, stalledPath) {
+  const hashesByPath = new Map();
+  for (const { pathname, hash } of bundleAssets) {
+    if (!hashesByPath.has(pathname)) hashesByPath.set(pathname, new Set());
+    hashesByPath.get(pathname).add(hash);
+  }
+
+  const repeatablePaths = new Set([stalledPath]);
+  const pendingPaths = new Set();
+  const invalid = [];
+  const details = [];
+  for (const [pathname, hashes] of hashesByPath) {
+    const pending = [...hashes].filter(hash => !cachedHashes.has(hash)).length;
+    const incident = incidentRequests.filter(request => request === pathname).length;
+    const recovery = recoveryRequests.filter(request => request === pathname).length;
+    const row = { pathname, total: hashes.size, pending, incident, recovery };
+    details.push(row);
+
+    if (pending > 0) pendingPaths.add(pathname);
+    if (recovery === 0) continue;
+    const expectedAttempts = pathname === stalledPath ? 2 : 1;
+    if (pending === 0 || recovery !== expectedAttempts || (pathname !== stalledPath && incident > 1)) {
+      invalid.push(row);
+    } else if (incident === 1) {
+      repeatablePaths.add(pathname);
+    }
+  }
+  return { repeatablePaths, pendingPaths, invalid, details };
+}

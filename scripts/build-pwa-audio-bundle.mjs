@@ -1,10 +1,6 @@
-// Builds the transport bundle used by the complete first-install download.
-//
-// The audio mixer still addresses each cue by its original MP3/WAV path. The
-// bundle only removes request and header overhead: the PWA download session
-// slices, hashes, and stores each cue separately before it commits the full
-// manifest. OGG alternatives are intentionally not included in the offline
-// pack because Chromium, WebKit, and iPhone Safari support MPEG audio.
+// Transport bundles save request overhead. Every file is still hashed and stored
+// separately by the PWA. Keep the existing preferred-source transport intact so
+// an update that adds fallback sounds only downloads the small new bundle.
 
 import { createHash } from "node:crypto";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
@@ -12,67 +8,66 @@ import path from "node:path";
 
 import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
 import { selectPreferredAudioSource } from "../app/pwaAssetManifest.js";
+import { FALLBACK_AUDIO_BUNDLE_NAME, v100OfflineAudioFallbacks } from "./pwa-audio-fallbacks.mjs";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
 const bundleDir = path.join(publicDir, "pwa-bundles");
-const bundlePath = "/pwa-bundles/audio-v1.bin";
-const outputPath = path.join(publicDir, bundlePath.replace(/^\//, ""));
-const indexPath = path.join(bundleDir, "audio-v1.json");
 const checkOnly = process.argv.includes("--check");
 
-const chunks = [];
-const assets = {};
-let offset = 0;
+async function buildAudioBundle(name, entries) {
+  const bundlePath = "/pwa-bundles/" + name + ".bin";
+  const outputPath = path.join(bundleDir, name + ".bin");
+  const indexPath = path.join(bundleDir, name + ".json");
+  const chunks = [];
+  const assets = {};
+  let offset = 0;
 
-for (const audioAsset of INSTALL_AUDIO_ASSETS) {
-  const source = selectPreferredAudioSource(audioAsset.sources);
-  if (!source) throw new Error(`Audio cue ${audioAsset.id} has no playable source`);
-  const sourcePath = path.join(publicDir, source.src.replace(/^\//, ""));
-  const body = await readFile(sourcePath);
-  const hash = `sha256-${createHash("sha256").update(body).digest("hex")}`;
-  assets[source.src] = {
-    id: audioAsset.id,
-    offset,
+  for (const { id, source } of entries) {
+    if (!source) throw new Error(`Audio cue ${id} has no playable source`);
+    const sourcePath = path.join(publicDir, source.src.replace(/^\//, ""));
+    const body = await readFile(sourcePath);
+    const hash = `sha256-${createHash("sha256").update(body).digest("hex")}`;
+    assets[source.src] = { id, offset, bytes: body.byteLength, hash };
+    chunks.push(body);
+    offset += body.byteLength;
+  }
+
+  const body = Buffer.concat(chunks);
+  const index = { schema: "zombieee-pwa-audio-bundle/1", bundlePath, bytes: body.byteLength, assets };
+  const serialized = `${JSON.stringify(index, null, 2)}\n`;
+  const currentBody = await readFile(outputPath).catch((error) => {
+    if (error.code !== "ENOENT") throw error;
+    return null;
+  });
+  const currentIndex = await readFile(indexPath, "utf8").catch((error) => {
+    if (error.code !== "ENOENT") throw error;
+    return null;
+  });
+
+  const bodyChanged = !currentBody || !currentBody.equals(body);
+  const indexChanged = currentIndex !== serialized;
+  if (!checkOnly) {
+    await mkdir(bundleDir, { recursive: true });
+    if (bodyChanged) await writeFile(outputPath, body);
+    if (indexChanged) await writeFile(indexPath, serialized, "utf8");
+  }
+  await stat(outputPath);
+  await stat(indexPath);
+  if (checkOnly && (bodyChanged || indexChanged)) {
+    throw new Error(`The PWA audio transport bundle is out of date: ${bundlePath}`);
+  }
+  console.log(JSON.stringify({
+    checkOnly,
+    bundlePath,
     bytes: body.byteLength,
-    hash,
-  };
-  chunks.push(body);
-  offset += body.byteLength;
+    assetCount: Object.keys(assets).length,
+    savedFiles: Number(bodyChanged) + Number(indexChanged),
+  }, null, 2));
 }
 
-const body = Buffer.concat(chunks);
-const index = {
-  schema: "zombieee-pwa-audio-bundle/1",
-  bundlePath,
-  bytes: body.byteLength,
-  assets,
-};
-const serialized = `${JSON.stringify(index, null, 2)}\n`;
-
-let currentBody = null;
-let currentIndex = null;
-try { currentBody = await readFile(outputPath); } catch { /* generated below */ }
-try { currentIndex = await readFile(indexPath, "utf8"); } catch { /* generated below */ }
-
-const bodyChanged = !currentBody || !currentBody.equals(body);
-const indexChanged = currentIndex !== serialized;
-if (!checkOnly) {
-  await mkdir(bundleDir, { recursive: true });
-  if (bodyChanged) await writeFile(outputPath, body);
-  if (indexChanged) await writeFile(indexPath, serialized, "utf8");
-}
-
-await stat(outputPath);
-await stat(indexPath);
-if (checkOnly && (bodyChanged || indexChanged)) {
-  throw new Error("The PWA audio transport bundle is out of date");
-}
-
-console.log(JSON.stringify({
-  checkOnly,
-  bundlePath,
-  bytes: body.byteLength,
-  assetCount: Object.keys(assets).length,
-  savedFiles: Number(bodyChanged) + Number(indexChanged),
-}, null, 2));
+await buildAudioBundle("audio-v1", INSTALL_AUDIO_ASSETS.map(({ id, sources }) => ({
+  id,
+  source: selectPreferredAudioSource(sources),
+})));
+await buildAudioBundle(FALLBACK_AUDIO_BUNDLE_NAME, v100OfflineAudioFallbacks());

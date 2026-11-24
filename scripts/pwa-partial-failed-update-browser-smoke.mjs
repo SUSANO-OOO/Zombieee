@@ -26,7 +26,7 @@ import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry, markPartialBundleCancelIntent } from "./pwa-expected-abort.mjs";
 import { verifyEntryNativePreload } from "./pwa-entry-native-preload.mjs";
-import { partitionPwaUpdateTransportPaths, inspectPwaContentTransportCoverage } from "./pwa-update-request-ownership.mjs";
+import { partitionPwaUpdateTransportPaths, inspectPwaContentTransportCoverage, inspectPwaRecoveryBundles } from "./pwa-update-request-ownership.mjs";
 import { candidateDownloadProgressWindow, matchesCandidateDownloadProgress } from "./pwa-partial-progress-window.mjs";
 import { createPartialPwaProfileDirectory } from "./pwa-partial-profile-directory.mjs";
 
@@ -1306,20 +1306,27 @@ try {
     completeChangedRequests,
     completeChangedRequestBreakdown,
   });
+  const bundleRecovery = inspectPwaRecoveryBundles(
+    candidateManifest.assets.filter(asset => asset.bundlePath).map(asset => ({
+      pathname: transportPathFor(asset), hash: asset.hash,
+    })),
+    relaunchedHashes, incidentAssetRequests, recoveryAssetRequests, bundlePathname,
+  );
   const completeChangedCoverage = inspectPwaContentTransportCoverage(completeChangedRequests,
     candidatePendingReleaseDeltaAssets.map(asset => ({
       pathname: transportPathFor(asset),
       contentKey: asset.bundlePath ? `bundle:${transportPathFor(asset)}` : `hash:${asset.hash}`,
-    })), { repeatablePaths: new Set([bundlePathname]) });
+    })), { repeatablePaths: bundleRecovery.repeatablePaths });
   const successfulRefetches = recoveryAssetRequests.filter((pathname) => (
-    pathname !== bundlePathname && successfulBeforeRecoveryTransportPaths.has(pathname)
+    successfulBeforeRecoveryTransportPaths.has(pathname) && !bundleRecovery.pendingPaths.has(pathname)
   ));
   const unchangedHashRefetches = recoveryAssetRequests.filter((pathname) => (
     pathname !== bundlePathname && unchangedStoredDirectTransportPaths.has(pathname)
   ));
-  record("recovery fetches only failed or pending content, never re-fetches any successful asset, and does not fetch the bundle per slice", (
+  record("recovery fetches only pending content and each required bundle at most once per attempt", (
     recoveryOwnership.unexpected.length === 0
     && completeChangedCoverage.ok
+    && bundleRecovery.invalid.length === 0
     && successfulRefetches.length === 0
     && unchangedHashRefetches.length === 0
     && recoveryAssetRequests.filter((pathname) => pathname === bundlePathname).length === 2
@@ -1340,6 +1347,8 @@ try {
     candidateEntryChangedRequestBreakdown,
     expectedReleaseDeltaCount: candidatePendingReleaseDeltaTransportPaths.size,
     completeChangedCoverage,
+    bundlesAtRecovery: bundleRecovery.details,
+    invalidBundleRecovery: bundleRecovery.invalid,
     successfulRefetches,
     unchangedHashRefetches,
   });

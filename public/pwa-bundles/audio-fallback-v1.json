@@ -1,0 +1,1351 @@
+{
+  "schema": "zombieee-pwa-audio-bundle/1",
+  "bundlePath": "/pwa-bundles/audio-fallback-v1.bin",
+  "bytes": 3805569,
+  "assets": {
+    "/audio/quality-20261114/manual/brawler-pressure-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-brawler-pressure-preparation-r1-ogg",
+      "offset": 0,
+      "bytes": 6319,
+      "hash": "sha256-b835b5e7e983dee80bd122e8d399e585b2a3586dc14f8bc6b91246ee2002d385"
+    },
+    "/audio/v105/fist-wave-launch.ogg": {
+      "id": "offline-audio-v105-fist-wave-launch-ogg",
+      "offset": 6319,
+      "bytes": 4869,
+      "hash": "sha256-0b842868b660e3d821707316cdde01d5d9d0b2d68730f97372bf05b0572c0ab2"
+    },
+    "/audio/v105/fist-wave-impact.ogg": {
+      "id": "offline-audio-v105-fist-wave-impact-ogg",
+      "offset": 11188,
+      "bytes": 5370,
+      "hash": "sha256-98a1ef3ec44fc84777e3cef8e7d4a3c97245d616c9b41db8f168ed0503544937"
+    },
+    "/audio/weapons/recorded/v104-handgun.ogg": {
+      "id": "offline-audio-weapons-recorded-v104-handgun-ogg",
+      "offset": 16558,
+      "bytes": 7350,
+      "hash": "sha256-18781788953e75ad5f6bd6f76ea2f38ee74079999c1385e7eb219326a23851a7"
+    },
+    "/audio/v104/combat/crossbow-release.ogg": {
+      "id": "offline-audio-v104-combat-crossbow-release-ogg",
+      "offset": 23908,
+      "bytes": 6174,
+      "hash": "sha256-8c07b17d816c0f74bc309615fbf82382eccbea4aa10b1a94d0fac7a5e4f67103"
+    },
+    "/audio/v060/sfx/human-male-light-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-light-hurt-01-ogg",
+      "offset": 30082,
+      "bytes": 9676,
+      "hash": "sha256-b6bc600e565214935bbe14c48c3bf3235cb4301ffe79be7f09f22d49970b84b2"
+    },
+    "/audio/v060/sfx/human-male-light-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-light-death-01-ogg",
+      "offset": 39758,
+      "bytes": 12441,
+      "hash": "sha256-f82ec12ecc9c6d0dcd8460193bce87e7f364eac47481c0f194b921a7c719e9a8"
+    },
+    "/audio/v060/sfx/human-male-heavy-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-heavy-attack-02-ogg",
+      "offset": 52199,
+      "bytes": 6372,
+      "hash": "sha256-f1b5ab104452edf5bfb0406e6666d835f682578d5cbae919b77107777f6bf94e"
+    },
+    "/audio/v060/sfx/human-male-heavy-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-heavy-hurt-02-ogg",
+      "offset": 58571,
+      "bytes": 12838,
+      "hash": "sha256-a665591d633f8e35bc4e6313abcb6fe00ced070f36a7ca1d8a26658fd03d5158"
+    },
+    "/audio/v060/sfx/human-male-heavy-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-heavy-death-02-ogg",
+      "offset": 71409,
+      "bytes": 32970,
+      "hash": "sha256-515170c91c6d0186e6bd746ef58d901b0f2def81c086557953e59d1dbc228d83"
+    },
+    "/audio/v060/sfx/human-male-light-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-light-attack-02-ogg",
+      "offset": 104379,
+      "bytes": 10933,
+      "hash": "sha256-e04c33a5dee6adfd82a209ec69da0e91d80bfcf8a1d1292fc9d3bf047f78e600"
+    },
+    "/audio/v060/sfx/human-male-light-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-light-hurt-02-ogg",
+      "offset": 115312,
+      "bytes": 9804,
+      "hash": "sha256-48ab420165e32411f6e7f5eb7be17e44fd4d8d7c6876562a488f29b61896d047"
+    },
+    "/audio/v060/sfx/human-male-light-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-light-death-02-ogg",
+      "offset": 125116,
+      "bytes": 9653,
+      "hash": "sha256-068f277af9e94e0067e4aa8a48d96fb30f474e613c8b052eeaa17f48408f57c8"
+    },
+    "/audio/v060/sfx/human-male-heavy-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-heavy-attack-01-ogg",
+      "offset": 134769,
+      "bytes": 8678,
+      "hash": "sha256-c5238e7b9506614443da17f58543e15f0f86b7ebcd5deb24c9fab69f5b8c3a15"
+    },
+    "/audio/v060/sfx/human-male-heavy-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-heavy-hurt-01-ogg",
+      "offset": 143447,
+      "bytes": 12441,
+      "hash": "sha256-16c0ec9c115a7f1576f0b4fa41336839f620e89d8a3a2b19da017fdf72951ed8"
+    },
+    "/audio/v060/sfx/human-male-heavy-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-male-heavy-death-01-ogg",
+      "offset": 155888,
+      "bytes": 44697,
+      "hash": "sha256-24cb5e4338c068959858382726bd74981eee3225411fdc9f79bdabe43f65d5a9"
+    },
+    "/audio/v100/foley/story-glass.ogg": {
+      "id": "offline-audio-v100-foley-story-glass-ogg",
+      "offset": 200585,
+      "bytes": 5430,
+      "hash": "sha256-cda6bb5390d7cbe68c0181e26a39a1bf84c544f39cb9b9d2585aef145cab4251"
+    },
+    "/audio/v104/combat/eye-warning.ogg": {
+      "id": "offline-audio-v104-combat-eye-warning-ogg",
+      "offset": 206015,
+      "bytes": 5870,
+      "hash": "sha256-b7d83ccce1b09f63dd415b26fe45448415501eec85d7e415c71505bc6ebe7f01"
+    },
+    "/audio/v104/combat/eye-fire.ogg": {
+      "id": "offline-audio-v104-combat-eye-fire-ogg",
+      "offset": 211885,
+      "bytes": 6028,
+      "hash": "sha256-a1efa15b398a15112c61f0faaba56a6e4056ac8b1e314b79ec3046f6b54e871d"
+    },
+    "/audio/v100/foley/fall.ogg": {
+      "id": "offline-audio-v100-foley-fall-ogg",
+      "offset": 217913,
+      "bytes": 4565,
+      "hash": "sha256-0f64447be5ccf60db1beeba1c3c3ddb4716cd19c7600d5ddd22df93471caf945"
+    },
+    "/audio/v100/ui/v100-ui-advance.ogg": {
+      "id": "offline-audio-v100-ui-v100-ui-advance-ogg",
+      "offset": 222478,
+      "bytes": 5440,
+      "hash": "sha256-abcb6fa9acaaf74243e655bfd0b89a2aab8e39493d2d6072ad8bd8c5c7b56df0"
+    },
+    "/audio/v100/ui/v100-ui-navigate.ogg": {
+      "id": "offline-audio-v100-ui-v100-ui-navigate-ogg",
+      "offset": 227918,
+      "bytes": 4316,
+      "hash": "sha256-0b4912dcff4625bba0459aff5aceb2f53285af797f122779ced2d2e940c0f87f"
+    },
+    "/audio/v100/ui/v100-ui-cancel.ogg": {
+      "id": "offline-audio-v100-ui-v100-ui-cancel-ogg",
+      "offset": 232234,
+      "bytes": 5216,
+      "hash": "sha256-57861374ec9ffb6bed4dfbd04ed1b09a961f70a5279da1cdd919ff14c32a556c"
+    },
+    "/audio/v100/ui/v100-ui-confirm.ogg": {
+      "id": "offline-audio-v100-ui-v100-ui-confirm-ogg",
+      "offset": 237450,
+      "bytes": 5311,
+      "hash": "sha256-b56ad70f207c11e5fe611d20b51b0e9c6b00adedfeb1984278370bd669206bd6"
+    },
+    "/audio/v100/ui/v100-ui-reject.ogg": {
+      "id": "offline-audio-v100-ui-v100-ui-reject-ogg",
+      "offset": 242761,
+      "bytes": 4142,
+      "hash": "sha256-4dc2ff60e3dba1d729c5bd11ef0a635d6ddbd38847dacdd9f969dca6c2b93f4c"
+    },
+    "/audio/v060/sfx/radio-static-loop.ogg": {
+      "id": "offline-audio-v060-sfx-radio-static-loop-ogg",
+      "offset": 246903,
+      "bytes": 46395,
+      "hash": "sha256-0746dda730ee8f09c32301f2361fc2a9864abd7fc4f7a8516477ea53dc844a4a"
+    },
+    "/audio/v060/sfx/support-airstrike.ogg": {
+      "id": "offline-audio-v060-sfx-support-airstrike-ogg",
+      "offset": 293298,
+      "bytes": 29071,
+      "hash": "sha256-ffa3670e06b68a0f7125b68456eec1ac9a412bbf6507b743a2849c8556875522"
+    },
+    "/audio/v060/sfx/support-barrier.ogg": {
+      "id": "offline-audio-v060-sfx-support-barrier-ogg",
+      "offset": 322369,
+      "bytes": 10657,
+      "hash": "sha256-d66d96fbae8e1f379bf8976fb676c16c20a0065e3766c4acd6dbcb301c575333"
+    },
+    "/audio/v100/foley/explosion.ogg": {
+      "id": "offline-audio-v100-foley-explosion-ogg",
+      "offset": 333026,
+      "bytes": 19217,
+      "hash": "sha256-b5535dfe5320706988b7b9812ab62f40fdf691ed3fadd4d9f79ddd6042dad88f"
+    },
+    "/audio/v100/foley/mechanism.ogg": {
+      "id": "offline-audio-v100-foley-mechanism-ogg",
+      "offset": 352243,
+      "bytes": 6218,
+      "hash": "sha256-2f53cb283094951ee6edfd9622af1e6b4bf2e6e58218578f097f4375227f31a2"
+    },
+    "/audio/v060/sfx/infection-twitch-01.ogg": {
+      "id": "offline-audio-v060-sfx-infection-twitch-01-ogg",
+      "offset": 358461,
+      "bytes": 6303,
+      "hash": "sha256-e9f445edb0975b7d0cb90a8af73b370a04ce1f5254ab8aa2c50231e29c7acb33"
+    },
+    "/audio/v060/sfx/infection-warning-01.ogg": {
+      "id": "offline-audio-v060-sfx-infection-warning-01-ogg",
+      "offset": 364764,
+      "bytes": 8085,
+      "hash": "sha256-d6e23f2dbc8da7b88b31be76aa2228920288e8fbc32d3f71bc26dbb8127191f5"
+    },
+    "/audio/v060/sfx/corpse-ignite.ogg": {
+      "id": "offline-audio-v060-sfx-corpse-ignite-ogg",
+      "offset": 372849,
+      "bytes": 7532,
+      "hash": "sha256-9ad31a0b23313ae4ad29baf01dcea710ddded7cfd450e9b61a905715d2babf4f"
+    },
+    "/audio/v060/sfx/corpse-burn-loop.ogg": {
+      "id": "offline-audio-v060-sfx-corpse-burn-loop-ogg",
+      "offset": 380381,
+      "bytes": 29502,
+      "hash": "sha256-c777e1dfcb1e39924326618fcf6b73ea266df2bec9b16297e78cde6b320cf3ff"
+    },
+    "/audio/weapons/melee/weapon-crowbar-01.ogg": {
+      "id": "offline-audio-weapons-melee-weapon-crowbar-01-ogg",
+      "offset": 409883,
+      "bytes": 8471,
+      "hash": "sha256-8011e6779816106b8c97925bf89fd927a4820a75feaeb3a1f06ff0dd1067dc2f"
+    },
+    "/audio/weapons/melee/weapon-crowbar-02.ogg": {
+      "id": "offline-audio-weapons-melee-weapon-crowbar-02-ogg",
+      "offset": 418354,
+      "bytes": 8468,
+      "hash": "sha256-55186b0425bf9e3d781a6262b4a9a8887afc74ce3e0778ed269daf21c2a02980"
+    },
+    "/audio/weapons/recorded/weapon-gunner-01.ogg": {
+      "id": "offline-audio-weapons-recorded-weapon-gunner-01-ogg",
+      "offset": 426822,
+      "bytes": 7870,
+      "hash": "sha256-9d5e63961a400f46f5bf9f2c533f8f79ba5dbb9ad24efdc3c7085088431f7227"
+    },
+    "/audio/weapons/recorded/weapon-gunner-02.ogg": {
+      "id": "offline-audio-weapons-recorded-weapon-gunner-02-ogg",
+      "offset": 434692,
+      "bytes": 7802,
+      "hash": "sha256-e7bb126374166439eb65b8b3d8ca80a223f0fae46473467ecd9684537927afa7"
+    },
+    "/audio/weapons/recorded/weapon-smg-01.ogg": {
+      "id": "offline-audio-weapons-recorded-weapon-smg-01-ogg",
+      "offset": 442494,
+      "bytes": 7154,
+      "hash": "sha256-549f9d5fa423ab346484c7c0a35f70b314e34a6dfeaedfb5dc71e6a32f21befd"
+    },
+    "/audio/weapons/recorded/weapon-smg-02.ogg": {
+      "id": "offline-audio-weapons-recorded-weapon-smg-02-ogg",
+      "offset": 449648,
+      "bytes": 7146,
+      "hash": "sha256-a2f0aeafbaa6b28f739f5b6f6b26bbe5a9eff6145f18d224d6075a3c51cc1998"
+    },
+    "/audio/weapons/melee/weapon-hammer-01.ogg": {
+      "id": "offline-audio-weapons-melee-weapon-hammer-01-ogg",
+      "offset": 456794,
+      "bytes": 4806,
+      "hash": "sha256-8ac983828c7d50f6b14a10bdc57ab2e872d95c596e850f2726969826e9ebaade"
+    },
+    "/audio/weapons/melee/weapon-hammer-02.ogg": {
+      "id": "offline-audio-weapons-melee-weapon-hammer-02-ogg",
+      "offset": 461600,
+      "bytes": 5110,
+      "hash": "sha256-5a6aa75f417e7e101c87b5f45a50afffe6f11f8ba859ab164e23c1e52845f343"
+    },
+    "/audio/v100/foley/body.ogg": {
+      "id": "offline-audio-v100-foley-body-ogg",
+      "offset": 466710,
+      "bytes": 4508,
+      "hash": "sha256-bb245b63c31143889349660602ddc7cd7a6456e9f19a55737efe9946c56eb20d"
+    },
+    "/audio/v100/foley/swing.ogg": {
+      "id": "offline-audio-v100-foley-swing-ogg",
+      "offset": 471218,
+      "bytes": 6505,
+      "hash": "sha256-65a0eb1cc09c0cf445b3691c249c7e5c7f0e791a9a4449133d881f5510e4478b"
+    },
+    "/audio/weapons/recorded/weapon-rifle-01.ogg": {
+      "id": "offline-audio-weapons-recorded-weapon-rifle-01-ogg",
+      "offset": 477723,
+      "bytes": 8529,
+      "hash": "sha256-806eebfff91518f84ba6d999b7937a06afc105d3f7a155e69d0285c957bbf5b6"
+    },
+    "/audio/weapons/recorded/weapon-rifle-02.ogg": {
+      "id": "offline-audio-weapons-recorded-weapon-rifle-02-ogg",
+      "offset": 486252,
+      "bytes": 8433,
+      "hash": "sha256-00ee13f8c397369fa690eb1fc6132e47e659840b82ab8182b3219636fcfef477"
+    },
+    "/audio/weapons/melee/weapon-unarmed-01.ogg": {
+      "id": "offline-audio-weapons-melee-weapon-unarmed-01-ogg",
+      "offset": 494685,
+      "bytes": 4294,
+      "hash": "sha256-5d391b78c8357e8deef869971de356258798f026f3986b31954eb38ac7b97313"
+    },
+    "/audio/weapons/melee/weapon-unarmed-02.ogg": {
+      "id": "offline-audio-weapons-melee-weapon-unarmed-02-ogg",
+      "offset": 498979,
+      "bytes": 6291,
+      "hash": "sha256-86e4eae6a944802d626915c3ce7477adb7af5df7f26502977816c9f3914d7f68"
+    },
+    "/audio/v060/sfx/human-female-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-female-attack-01-ogg",
+      "offset": 505270,
+      "bytes": 6031,
+      "hash": "sha256-16f1845a22f165709f9b676a007fe040881e518e5b6edfda9cf14e2eb622ae35"
+    },
+    "/audio/v060/sfx/human-female-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-female-attack-02-ogg",
+      "offset": 511301,
+      "bytes": 6784,
+      "hash": "sha256-ff7dabfa11b0051dfdb07722bcfa779f7b9f80c9892ea51d0cf918bc32e80bc2"
+    },
+    "/audio/v060/sfx/human-female-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-female-hurt-01-ogg",
+      "offset": 518085,
+      "bytes": 7757,
+      "hash": "sha256-84a1d8cac4e4538e2371e4ead518fdb89cac7dad12be2786a0ffef4846187046"
+    },
+    "/audio/v060/sfx/human-female-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-female-hurt-02-ogg",
+      "offset": 525842,
+      "bytes": 6884,
+      "hash": "sha256-4ee5b21cff82c6619fbfa3a38ba3c6a73650471a02c5f8d1eda91f1f8c23934d"
+    },
+    "/audio/v060/sfx/human-female-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-human-female-death-01-ogg",
+      "offset": 532726,
+      "bytes": 19797,
+      "hash": "sha256-0995ac5341c60a8aed68beb410101ba2fae4ffd44bf85c7cfb3d31b52b4e95d3"
+    },
+    "/audio/v060/sfx/human-female-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-human-female-death-02-ogg",
+      "offset": 552523,
+      "bytes": 9031,
+      "hash": "sha256-3e8182ad96bc4fc787914afadd9d05d3b9a5f2ea81515c472ebd6363b74f626b"
+    },
+    "/audio/v060/sfx/enemy-walker-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-walker-attack-01-ogg",
+      "offset": 561554,
+      "bytes": 6827,
+      "hash": "sha256-914c5ed9336dbfd567187e129548c4c9d7dc9611dba8cd87e957465df2f3e942"
+    },
+    "/audio/v060/sfx/enemy-walker-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-walker-attack-02-ogg",
+      "offset": 568381,
+      "bytes": 6919,
+      "hash": "sha256-231852591bbef3a895123876676436cc101eda31e0ad8596a167e972f627dbbb"
+    },
+    "/audio/v060/sfx/enemy-walker-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-walker-hurt-01-ogg",
+      "offset": 575300,
+      "bytes": 8778,
+      "hash": "sha256-0f0fb05d8c4357f20bd3ce0eee86d5eb22900dc64a77f3e2a79ba718087d9350"
+    },
+    "/audio/v060/sfx/enemy-walker-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-walker-hurt-02-ogg",
+      "offset": 584078,
+      "bytes": 11230,
+      "hash": "sha256-d7c0e43d54810ee9aa582d2bb18604202d083d1603b47f8f46016157927baffa"
+    },
+    "/audio/v060/sfx/enemy-walker-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-walker-death-01-ogg",
+      "offset": 595308,
+      "bytes": 9747,
+      "hash": "sha256-e09d3e811b8e62d8feea0e2a3cc0cb903d5594ed3821e570c83de9accd5d2523"
+    },
+    "/audio/v060/sfx/enemy-walker-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-walker-death-02-ogg",
+      "offset": 605055,
+      "bytes": 6625,
+      "hash": "sha256-6bd4ffc8ffaed03fe87283b2c60f06473bb0c547351503e04e947c93610300f7"
+    },
+    "/audio/v060/sfx/enemy-runner-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-runner-attack-01-ogg",
+      "offset": 611680,
+      "bytes": 8638,
+      "hash": "sha256-3173f4f0aff6773e85dc55a47dff767451180fc2ef9954be0e409536ceea2a0d"
+    },
+    "/audio/v060/sfx/enemy-runner-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-runner-attack-02-ogg",
+      "offset": 620318,
+      "bytes": 7799,
+      "hash": "sha256-6b6e1734317467bc08aa724cb91b653ba06d709df0086077f5b24d45991cd51d"
+    },
+    "/audio/v060/sfx/enemy-runner-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-runner-hurt-01-ogg",
+      "offset": 628117,
+      "bytes": 7008,
+      "hash": "sha256-56fdd2ed4af1d8c33716b318d0cfa78d0a69d4bda5d2f53048cafe4fef09f378"
+    },
+    "/audio/v060/sfx/enemy-runner-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-runner-death-01-ogg",
+      "offset": 635125,
+      "bytes": 11110,
+      "hash": "sha256-cfedfba9376c55b4d0d4cad4e4028c74ecfbd7aa635697dd1c70c8bb186dddcf"
+    },
+    "/audio/v060/sfx/enemy-runner-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-runner-death-02-ogg",
+      "offset": 646235,
+      "bytes": 10877,
+      "hash": "sha256-76a59e4895eb9f3f88a251c49faa7eceada36e438eccb6dbda1dc292b2e4576c"
+    },
+    "/audio/v060/sfx/enemy-spitter-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-spitter-attack-01-ogg",
+      "offset": 657112,
+      "bytes": 7988,
+      "hash": "sha256-135bf7ebb111abf122a75cc1eed28e4fc9cf1b854b8577f12e3ed50d845efdcb"
+    },
+    "/audio/v060/sfx/enemy-spitter-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-spitter-attack-02-ogg",
+      "offset": 665100,
+      "bytes": 8953,
+      "hash": "sha256-1aba72495fb8e3a53c3be660c975a4a88796101956a2125df83db1ae9034b0ca"
+    },
+    "/audio/v060/sfx/enemy-spitter-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-spitter-hurt-01-ogg",
+      "offset": 674053,
+      "bytes": 5407,
+      "hash": "sha256-d5fd4c5a0657011a58ff4574f2a797b9324701e07606c57efebcfddb9b682aac"
+    },
+    "/audio/v060/sfx/enemy-spitter-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-spitter-hurt-02-ogg",
+      "offset": 679460,
+      "bytes": 6924,
+      "hash": "sha256-456e0dfccdb32eac57424caedc04fedce2588252e2dd8b0068acd7be5824fd57"
+    },
+    "/audio/v060/sfx/enemy-spitter-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-spitter-death-01-ogg",
+      "offset": 686384,
+      "bytes": 8262,
+      "hash": "sha256-813ee64c467d7467042605f4d173888b17bb8aba0b1601af8ddecde5abbdce8e"
+    },
+    "/audio/v060/sfx/enemy-spitter-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-spitter-death-02-ogg",
+      "offset": 694646,
+      "bytes": 6824,
+      "hash": "sha256-a7517caa724eec23fce07a518178240f0ccffdd3a32bc3b8555a649169b1bbed"
+    },
+    "/audio/v060/sfx/enemy-crusher-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-crusher-attack-01-ogg",
+      "offset": 701470,
+      "bytes": 7186,
+      "hash": "sha256-e4fa04b198801bdc0082322909c94d60c119d06437b653758cd7b248811df671"
+    },
+    "/audio/v060/sfx/enemy-crusher-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-crusher-attack-02-ogg",
+      "offset": 708656,
+      "bytes": 8940,
+      "hash": "sha256-97bdd9adaff441184beebdc97d91a1bfea858e18f82418e17ab8c02e22f9e2a6"
+    },
+    "/audio/v060/sfx/enemy-crusher-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-crusher-hurt-01-ogg",
+      "offset": 717596,
+      "bytes": 8686,
+      "hash": "sha256-d151ae9e571b0ab2a83ce46fc50c296e1a8c63848a563ceaa5e7fa46575d4cc4"
+    },
+    "/audio/v060/sfx/enemy-crusher-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-crusher-hurt-02-ogg",
+      "offset": 726282,
+      "bytes": 9135,
+      "hash": "sha256-ca7ac78d2bfd388f289f9e39eed6448d9ad432666b4515b958beb2225d4b4393"
+    },
+    "/audio/v060/sfx/enemy-crusher-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-crusher-death-01-ogg",
+      "offset": 735417,
+      "bytes": 6470,
+      "hash": "sha256-fe11ead4e86041e56d03506c9e5793348476504038e5f6fae15d5f6ae4c1162c"
+    },
+    "/audio/v060/sfx/enemy-crusher-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-crusher-death-02-ogg",
+      "offset": 741887,
+      "bytes": 11903,
+      "hash": "sha256-4bf0a15f665ca2689662955b95e577ccf6fc932873e0982b7c0704bb8fc4352e"
+    },
+    "/audio/v060/sfx/enemy-shade-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-shade-attack-01-ogg",
+      "offset": 753790,
+      "bytes": 7958,
+      "hash": "sha256-cc49c9de3edbc6964cdeda5867e8cb3df5d709c797c37ed181f420d35f4314fa"
+    },
+    "/audio/v060/sfx/enemy-shade-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-shade-attack-02-ogg",
+      "offset": 761748,
+      "bytes": 8124,
+      "hash": "sha256-440e0a7c56b43c050555c4a4bb29e9b3433b9139c5fc06a5e523f2ef121c42c9"
+    },
+    "/audio/v060/sfx/enemy-shade-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-shade-hurt-01-ogg",
+      "offset": 769872,
+      "bytes": 12017,
+      "hash": "sha256-8daf88dc154eb00f197f2e7ead4d09e90d56a9dd38fc61995fa3911d4603e526"
+    },
+    "/audio/v060/sfx/enemy-shade-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-shade-hurt-02-ogg",
+      "offset": 781889,
+      "bytes": 11925,
+      "hash": "sha256-ba216f28a209d0c2cbb9b547fda264cc5256cd5b8e3a9a67d70f139eb9b109e9"
+    },
+    "/audio/v060/sfx/enemy-shade-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-shade-death-01-ogg",
+      "offset": 793814,
+      "bytes": 8264,
+      "hash": "sha256-f325479e82369c1dbb17ae008bf63f337dbdc5793f5c1eb7ad4cb641932fc8e8"
+    },
+    "/audio/v060/sfx/enemy-shade-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-shade-death-02-ogg",
+      "offset": 802078,
+      "bytes": 8817,
+      "hash": "sha256-575a22c4c11f1ff5289449dbd92f566bb5b86aa19011359e0b7034ccca4aa4d8"
+    },
+    "/audio/v060/sfx/enemy-abomination-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-abomination-attack-01-ogg",
+      "offset": 810895,
+      "bytes": 6254,
+      "hash": "sha256-cd48c76a7d43d85db1ad47ea34750c7b4cbab1bb727fcd118f2ddb8f935c8ff9"
+    },
+    "/audio/v060/sfx/enemy-abomination-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-abomination-attack-02-ogg",
+      "offset": 817149,
+      "bytes": 10238,
+      "hash": "sha256-b3214f63a539c1c209fd27cc432ff8fa0fa4145bbd31c6ea922078d2b4409550"
+    },
+    "/audio/v060/sfx/enemy-abomination-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-abomination-hurt-01-ogg",
+      "offset": 827387,
+      "bytes": 9370,
+      "hash": "sha256-ff7cf1a2a3fe9f85df8ee480762970dd8356d2aa7540487e1a476699988f2e1d"
+    },
+    "/audio/v060/sfx/enemy-abomination-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-abomination-hurt-02-ogg",
+      "offset": 836757,
+      "bytes": 8896,
+      "hash": "sha256-1d4ebc77afcb568a9a562169a47ebf49598701893a2108f884631c6666130b9c"
+    },
+    "/audio/v060/sfx/enemy-abomination-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-abomination-death-01-ogg",
+      "offset": 845653,
+      "bytes": 12873,
+      "hash": "sha256-20caedfaa63dec2fd6d1a54455c68bb7e5bd56657f4f938e069638848d523a80"
+    },
+    "/audio/v060/sfx/enemy-abomination-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-abomination-death-02-ogg",
+      "offset": 858526,
+      "bytes": 8576,
+      "hash": "sha256-5f5edb0f658dae8e6863f86eeb983baf7c85e65ff0436138d131f057ac8a92e6"
+    },
+    "/audio/v060/sfx/enemy-turned-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-turned-attack-01-ogg",
+      "offset": 867102,
+      "bytes": 8809,
+      "hash": "sha256-c941e2db5182ac30f54bd516d35c01022a846ad1449db9af1c6b0e3f6a327d30"
+    },
+    "/audio/v060/sfx/enemy-turned-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-turned-attack-02-ogg",
+      "offset": 875911,
+      "bytes": 14326,
+      "hash": "sha256-5793b9915adefa3a9da63f0593539abe9ed2a6c8f8e974e7c35a28fb6fbd29c2"
+    },
+    "/audio/v060/sfx/enemy-turned-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-turned-death-01-ogg",
+      "offset": 890237,
+      "bytes": 18072,
+      "hash": "sha256-783a9655a06d2e7346fba15c611dc22ce8ce1b37edabab465f18f85b6cecd5e8"
+    },
+    "/audio/v060/sfx/enemy-turned-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-turned-death-02-ogg",
+      "offset": 908309,
+      "bytes": 22355,
+      "hash": "sha256-941f50d5a35d65567ba5b6459e059c170e739069bf095a1bf48bf84427037f3d"
+    },
+    "/audio/v060/sfx/enemy-takuya-attack-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-takuya-attack-01-ogg",
+      "offset": 930664,
+      "bytes": 11030,
+      "hash": "sha256-eaf696fb509ca8b10db9d75b971927b9be76eed7f8ee2fc426a50e84490e8d0e"
+    },
+    "/audio/v060/sfx/enemy-takuya-attack-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-takuya-attack-02-ogg",
+      "offset": 941694,
+      "bytes": 11992,
+      "hash": "sha256-685f739ff6030205699fa7ad2512764ca6d208c058ac5a220f73979d3e48732c"
+    },
+    "/audio/v060/sfx/enemy-takuya-hurt-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-takuya-hurt-01-ogg",
+      "offset": 953686,
+      "bytes": 10002,
+      "hash": "sha256-59775a77281e90a864587c0526a1e24c4b89711863d0323f380cfc677e94cff4"
+    },
+    "/audio/v060/sfx/enemy-takuya-hurt-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-takuya-hurt-02-ogg",
+      "offset": 963688,
+      "bytes": 10355,
+      "hash": "sha256-0f6e697c3e1902f037c48f7911bd8f3043e298a7bdbb36d6b4c65c00c2f53163"
+    },
+    "/audio/v060/sfx/enemy-takuya-death-01.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-takuya-death-01-ogg",
+      "offset": 974043,
+      "bytes": 11294,
+      "hash": "sha256-9a61c55f39bfc3d7482380bcda4887df4244ad08448c0b0ab0d79f4f4a4f2fd0"
+    },
+    "/audio/v060/sfx/enemy-takuya-death-02.ogg": {
+      "id": "offline-audio-v060-sfx-enemy-takuya-death-02-ogg",
+      "offset": 985337,
+      "bytes": 11655,
+      "hash": "sha256-392a1e07cefd01085d6f5c89cc6c416830a4f60e8953f918ec9d9b3ae72e3952"
+    },
+    "/audio/weapons/chainsaw/start.ogg": {
+      "id": "offline-audio-weapons-chainsaw-start-ogg",
+      "offset": 996992,
+      "bytes": 13516,
+      "hash": "sha256-87d6e3f10d9214f48ee13295c26f92d52c12f8d12b0a75f444ecdcf52e48d2cd"
+    },
+    "/audio/weapons/chainsaw/attack.ogg": {
+      "id": "offline-audio-weapons-chainsaw-attack-ogg",
+      "offset": 1010508,
+      "bytes": 7988,
+      "hash": "sha256-100156a1a8482d0e5aec651051e1546c490e6e24e3b001a9826fa6e84268db92"
+    },
+    "/audio/weapons/chainsaw/flesh-hit.ogg": {
+      "id": "offline-audio-weapons-chainsaw-flesh-hit-ogg",
+      "offset": 1018496,
+      "bytes": 6689,
+      "hash": "sha256-fb18227333b9902be0d38e5813953e89ce9fc83005f4bcadde3b0feca3ba9dea"
+    },
+    "/audio/weapons/chainsaw/hard-hit.ogg": {
+      "id": "offline-audio-weapons-chainsaw-hard-hit-ogg",
+      "offset": 1025185,
+      "bytes": 8139,
+      "hash": "sha256-04f08dbdeab51fa3659c250afe5cd42ec7aa1ee8a16cf8d7dc0687452127de55"
+    },
+    "/audio/weapons/chainsaw/stop.ogg": {
+      "id": "offline-audio-weapons-chainsaw-stop-ogg",
+      "offset": 1033324,
+      "bytes": 10556,
+      "hash": "sha256-ef87044640d9025f509e044124a0a6b38890fca57bf5ec92a276ecbdcee7eab9"
+    },
+    "/audio/v104/combat/pan-hit.ogg": {
+      "id": "offline-audio-v104-combat-pan-hit-ogg",
+      "offset": 1043880,
+      "bytes": 9441,
+      "hash": "sha256-c4dcf13b3ff41f2ad8a787cc0ed58f908aef728fcd7480bca5a7e00f1774abea"
+    },
+    "/audio/v104/combat/pan-heavy.ogg": {
+      "id": "offline-audio-v104-combat-pan-heavy-ogg",
+      "offset": 1053321,
+      "bytes": 9901,
+      "hash": "sha256-ee3d4daf299686365130e30a37ee961a3da50eb21138071a6a27b9054089afc5"
+    },
+    "/audio/quality-20261028/babayaga-suppressed-r2.ogg": {
+      "id": "offline-audio-quality-20261028-babayaga-suppressed-r2-ogg",
+      "offset": 1063222,
+      "bytes": 6974,
+      "hash": "sha256-af1fd7f42841099e42685f381524e5cfb91ffbca5d49d5a5e4bed00470caaa72"
+    },
+    "/audio/v100/foley/metal.ogg": {
+      "id": "offline-audio-v100-foley-metal-ogg",
+      "offset": 1070196,
+      "bytes": 5083,
+      "hash": "sha256-ed8079371dbfbf05f26ea3288a0dbf1d658346d78ef266d6824790a32246dd10"
+    },
+    "/audio/v104/combat/voice-crazy-king-deploy.ogg": {
+      "id": "offline-audio-v104-combat-voice-crazy-king-deploy-ogg",
+      "offset": 1075279,
+      "bytes": 7949,
+      "hash": "sha256-b968e659e7b7a8ec710b085028d8ee94a7b6966a0e1fa21936fafc803100fe1d"
+    },
+    "/audio/v104/combat/voice-kumaverson-deploy.ogg": {
+      "id": "offline-audio-v104-combat-voice-kumaverson-deploy-ogg",
+      "offset": 1083228,
+      "bytes": 10665,
+      "hash": "sha256-9778adeecdd2f7f4c33d5f193fbcf7ab8b21a97b9921dec05608a66fdba67145"
+    },
+    "/audio/v104/combat/voice-babayaga-deploy.ogg": {
+      "id": "offline-audio-v104-combat-voice-babayaga-deploy-ogg",
+      "offset": 1093893,
+      "bytes": 7223,
+      "hash": "sha256-f40faee285875a6f0a78d40f3938c9b3a701c6905bfd2eb3d9973c2579d1bf69"
+    },
+    "/audio/v100/ambience/kitchen.ogg": {
+      "id": "offline-audio-v100-ambience-kitchen-ogg",
+      "offset": 1101116,
+      "bytes": 162035,
+      "hash": "sha256-42d955d1b6a1048b5078b0a29bf3176630ec12ecfd3f53bf4fd56b0b3b457604"
+    },
+    "/audio/v070/ambience/ambience-v070-kumaya-crisis-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-kumaya-crisis-loop-ogg",
+      "offset": 1263151,
+      "bytes": 52156,
+      "hash": "sha256-abd5035d34f82386ec3812b626a1bcca35a98a9c149f10a6dde2a9f32ed1ba9a"
+    },
+    "/audio/v070/ambience/ambience-v070-rain-street-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-rain-street-loop-ogg",
+      "offset": 1315307,
+      "bytes": 52724,
+      "hash": "sha256-4da330cb57569fce3e09bc30b755c5974122bc2b867399671bc18918f033771a"
+    },
+    "/audio/v100/ambience/room.ogg": {
+      "id": "offline-audio-v100-ambience-room-ogg",
+      "offset": 1368031,
+      "bytes": 133911,
+      "hash": "sha256-7ef0c57688b4b1ffb82a74d70129eeaf76353ce764d9ffc12f1a9664363dc145"
+    },
+    "/audio/v100/ambience/medical.ogg": {
+      "id": "offline-audio-v100-ambience-medical-ogg",
+      "offset": 1501942,
+      "bytes": 140496,
+      "hash": "sha256-5e9ccc14981a6c1a2b9fb421c19d6e3befdf325775e9339135299f10bc8efdc1"
+    },
+    "/audio/v070/ambience/ambience-v070-stage3-wind-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-stage3-wind-loop-ogg",
+      "offset": 1642438,
+      "bytes": 31066,
+      "hash": "sha256-d775d1d7d599bf3f084a46ca6766fbeeaf1a1ab572bdd5dd0fe15b9c12ba15c9"
+    },
+    "/audio/v070/ambience/ambience-v070-collapse-city-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-collapse-city-loop-ogg",
+      "offset": 1673504,
+      "bytes": 40222,
+      "hash": "sha256-05797b2952964655ce1592f729e84f338b01d92de82a0d7e1cc89dfbf1ddae5c"
+    },
+    "/audio/v100/ambience/receiver.ogg": {
+      "id": "offline-audio-v100-ambience-receiver-ogg",
+      "offset": 1713726,
+      "bytes": 168535,
+      "hash": "sha256-f9ad6d3d6f5902e3b12478d50a53588ee47c87ed8373de0e53def374b01c18ae"
+    },
+    "/audio/v070/ambience/ambience-v070-station-gate-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-station-gate-loop-ogg",
+      "offset": 1882261,
+      "bytes": 32090,
+      "hash": "sha256-834143a73ccc2aae35cbaed02c986d883f0d1718daec55aaea2dcba08c2c3d44"
+    },
+    "/audio/v070/ambience/ambience-v070-station-platform-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-station-platform-loop-ogg",
+      "offset": 1914351,
+      "bytes": 24769,
+      "hash": "sha256-058171b475bdaff3b4f5ca3e7e452a7a165b5e561a0c119dc31aa63dd578932c"
+    },
+    "/audio/v070/ambience/ambience-v070-station-tunnel-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-station-tunnel-loop-ogg",
+      "offset": 1939120,
+      "bytes": 46316,
+      "hash": "sha256-0682f5bf0b3fdcfd68e68d720bd930062910ee607f0bfee2bc338dcac148ba87"
+    },
+    "/audio/v070/ambience/ambience-v070-station-seal-aftermath-loop.ogg": {
+      "id": "offline-audio-v070-ambience-ambience-v070-station-seal-aftermath-loop-ogg",
+      "offset": 1985436,
+      "bytes": 19541,
+      "hash": "sha256-91a85983a6968c07a7a8c4d1d20fbee2e8ddc3004de220e9df75119192dea80b"
+    },
+    "/audio/v070/sfx/sfx-v070-takuya-entrance.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-takuya-entrance-ogg",
+      "offset": 2004977,
+      "bytes": 25846,
+      "hash": "sha256-8b49ac2f74c47ab2acddd5875721a2dfba11fc7ff2d418d843ad57080b328fd3"
+    },
+    "/audio/v070/sfx/sfx-v070-station-warning.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-station-warning-ogg",
+      "offset": 2030823,
+      "bytes": 10266,
+      "hash": "sha256-68dbf27b66171357632de1df61cba7b6e2b3895b5bcf41edc81cab6cf36127f2"
+    },
+    "/audio/v070/sfx/sfx-v070-power-switch.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-power-switch-ogg",
+      "offset": 2041089,
+      "bytes": 8873,
+      "hash": "sha256-c759f92d69fc5c93477fa04034fa0c6541a1477d029d93850d4ff5cca3929ba7"
+    },
+    "/audio/v070/sfx/sfx-v070-cart-stall.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-cart-stall-ogg",
+      "offset": 2049962,
+      "bytes": 9779,
+      "hash": "sha256-abc654f9e87e7748508151b880631ad6cb1c7efe5d509978028d3bd0cf1d0540"
+    },
+    "/audio/v070/sfx/sfx-v070-seal-engage.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-seal-engage-ogg",
+      "offset": 2059741,
+      "bytes": 11983,
+      "hash": "sha256-31ebcb4322907ba7217706f8a3954daa6918ce4703ed665ae7c83af889540190"
+    },
+    "/audio/v070/sfx/sfx-v070-machine-stop.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-machine-stop-ogg",
+      "offset": 2071724,
+      "bytes": 8141,
+      "hash": "sha256-34e0760d7804efb976261e019d11416623903949bf277891e92765826ff94e3e"
+    },
+    "/audio/v070/sfx/sfx-v070-rescue-confirm.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-rescue-confirm-ogg",
+      "offset": 2079865,
+      "bytes": 8419,
+      "hash": "sha256-e4f1985f4e66bcc82aba69b8a9146615ca23962e103d8a7f1210ccb1b6ead83d"
+    },
+    "/audio/v070/sfx/sfx-v070-return-marker.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-return-marker-ogg",
+      "offset": 2088284,
+      "bytes": 8001,
+      "hash": "sha256-800faca0de8a4ee956d5f239669e9995bca0821fda48368d8ab64d2fbab97a2c"
+    },
+    "/audio/v070/sfx/sfx-v070-terminal-confirm.ogg": {
+      "id": "offline-audio-v070-sfx-sfx-v070-terminal-confirm-ogg",
+      "offset": 2096285,
+      "bytes": 7092,
+      "hash": "sha256-a9ef656162d0448d3d52351c2d81ca7393eb57e0acf89823ee39be8dc66d717f"
+    },
+    "/audio/v080/sfx/weapon-suppressed-carbine-01.ogg": {
+      "id": "offline-audio-v080-sfx-weapon-suppressed-carbine-01-ogg",
+      "offset": 2103377,
+      "bytes": 6646,
+      "hash": "sha256-a665e9bcafa443b65bfefa81e6303bb1e7f1caa96b0436b74ca395f80e5fdf26"
+    },
+    "/audio/v080/sfx/weapon-suppressed-carbine-02.ogg": {
+      "id": "offline-audio-v080-sfx-weapon-suppressed-carbine-02-ogg",
+      "offset": 2110023,
+      "bytes": 6782,
+      "hash": "sha256-8dff657cf8afee479b8ede40f8707c607b47825f450b95ee050254064a43d130"
+    },
+    "/audio/v090/sfx/weapon-tky-plasma-blade.ogg": {
+      "id": "offline-audio-v090-sfx-weapon-tky-plasma-blade-ogg",
+      "offset": 2116805,
+      "bytes": 6614,
+      "hash": "sha256-d0ccafcfd5b755897a188db543e41950e1f8b987d2d12119d74865bd5c0fb77e"
+    },
+    "/audio/quality-20261114/manual/tky-energy-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-tky-energy-preparation-r1-ogg",
+      "offset": 2123419,
+      "bytes": 8376,
+      "hash": "sha256-f8c6a2a8c6faf5a079ef14a713278e06fe1d0f6d55af79d5f44a8a6f154504f1"
+    },
+    "/audio/v090/sfx/ability-tky-light-blade-release.ogg": {
+      "id": "offline-audio-v090-sfx-ability-tky-light-blade-release-ogg",
+      "offset": 2131795,
+      "bytes": 7886,
+      "hash": "sha256-a91ce3f94db1302029062fbd6846e3a965a8fa39f9aede06065d86cace25c88f"
+    },
+    "/audio/v090/sfx/ability-tky-light-blade-impact.ogg": {
+      "id": "offline-audio-v090-sfx-ability-tky-light-blade-impact-ogg",
+      "offset": 2139681,
+      "bytes": 6528,
+      "hash": "sha256-67d46fedc70dfe18f6f0c234c846faa5c1b119457c1902cdc9339e6ae8228fc3"
+    },
+    "/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.ogg": {
+      "id": "offline-audio-v090-sfx-weapon-mrs-chiha-grenade-launcher-ogg",
+      "offset": 2146209,
+      "bytes": 6221,
+      "hash": "sha256-4a1b7c12eda33e369405487fbe18d2f6e50469142ae08be1e7a7c50eab0c9ba9"
+    },
+    "/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.ogg": {
+      "id": "offline-audio-v090-sfx-weapon-mrs-chiha-grenade-impact-ogg",
+      "offset": 2152430,
+      "bytes": 7085,
+      "hash": "sha256-ddd61c40b503020e9e2d0ecdda9e941f9966320a8c7b79a20c85fe242110e084"
+    },
+    "/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.ogg": {
+      "id": "offline-audio-v090-sfx-weapon-mrs-chiha-launcher-bash-ogg",
+      "offset": 2159515,
+      "bytes": 6223,
+      "hash": "sha256-8eb0b47c361b35d93f19239f1772f5492b3c20559525f90c29277a25f030c16e"
+    },
+    "/audio/quality-20261114/manual/mrs-chiha-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-mrs-chiha-preparation-r1-ogg",
+      "offset": 2165738,
+      "bytes": 8090,
+      "hash": "sha256-2ae239a9e007adbe0cb656ae761260b2a7be12bde988495cffba89b4cf998436"
+    },
+    "/audio/v090/sfx/ability-mrs-chiha-salvo-shot.ogg": {
+      "id": "offline-audio-v090-sfx-ability-mrs-chiha-salvo-shot-ogg",
+      "offset": 2173828,
+      "bytes": 6228,
+      "hash": "sha256-ff1de64634b8e1173a05c5092fba869122d8b38846a477b7e49c72bf174e9478"
+    },
+    "/audio/v090/sfx/ability-mrs-chiha-salvo-impact.ogg": {
+      "id": "offline-audio-v090-sfx-ability-mrs-chiha-salvo-impact-ogg",
+      "offset": 2180056,
+      "bytes": 7134,
+      "hash": "sha256-80d7815a96c65972cff58cbba918161cc5968965c457c42fdc1f7cc808d63684"
+    },
+    "/audio/v090/sfx/ability-mrs-chiha-salvo-final.ogg": {
+      "id": "offline-audio-v090-sfx-ability-mrs-chiha-salvo-final-ogg",
+      "offset": 2187190,
+      "bytes": 7775,
+      "hash": "sha256-c7745a75b898bfb85f2a89c1dd9293febfa7efe6abd0332fa7b26522708e16d6"
+    },
+    "/audio/v090/sfx/weapon-musashi-dual-katana.ogg": {
+      "id": "offline-audio-v090-sfx-weapon-musashi-dual-katana-ogg",
+      "offset": 2194965,
+      "bytes": 6545,
+      "hash": "sha256-9ab5c90fd17846392f96eff9d82df6483472e7ef594108c7019b878f8524f30b"
+    },
+    "/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-miyamoto-musashi-preparation-r1-ogg",
+      "offset": 2201510,
+      "bytes": 5384,
+      "hash": "sha256-e2075f6c925ac5f9ea36e56cd424a4eeaf33a919f08bddff4ede11b2d3db96e2"
+    },
+    "/audio/v090/sfx/ability-musashi-counter.ogg": {
+      "id": "offline-audio-v090-sfx-ability-musashi-counter-ogg",
+      "offset": 2206894,
+      "bytes": 7589,
+      "hash": "sha256-3a129b1f53b0f94639484146ea12514431d43a620f6f0c43c4ef748fb420db16"
+    },
+    "/audio/quality-20261114/manual/scout-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-scout-preparation-r1-ogg",
+      "offset": 2214483,
+      "bytes": 5638,
+      "hash": "sha256-32adbf35dc81daa662ef14de61cfb8ad02ebf0a02fb2e1146a1e74d81895ddd5"
+    },
+    "/audio/quality-20261114/manual/ranger-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-ranger-preparation-r1-ogg",
+      "offset": 2220121,
+      "bytes": 7567,
+      "hash": "sha256-3dd2b3c42a1523cebcb62a23d77b74b89a6d953a95c4e8f065e1289e4042c508"
+    },
+    "/audio/quality-20261114/manual/medic-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-medic-preparation-r1-ogg",
+      "offset": 2227688,
+      "bytes": 10649,
+      "hash": "sha256-531ca576f7df2def41d1856e73b7d950d897b182f02ecf1ba315ebf61affcf7f"
+    },
+    "/audio/quality-20261114/manual/brute-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-brute-preparation-r1-ogg",
+      "offset": 2238337,
+      "bytes": 7854,
+      "hash": "sha256-acb86a962b4d58af83980bace2f630df6b56680cc189d3176db1e951da117261"
+    },
+    "/audio/weapons/chainsaw/overdrive-activate.ogg": {
+      "id": "offline-audio-weapons-chainsaw-overdrive-activate-ogg",
+      "offset": 2246191,
+      "bytes": 10642,
+      "hash": "sha256-33b413d9fc0abe063f3c8a376a101358c08732845009c20e458a67d8124f90f5"
+    },
+    "/audio/quality-20261114/manual/kumaverson-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-kumaverson-preparation-r1-ogg",
+      "offset": 2256833,
+      "bytes": 6263,
+      "hash": "sha256-c3be50758569cb500d70c78af921f3a6c3bc385f8ef714b4583ff6e115f3a0c1"
+    },
+    "/audio/quality-20261114/manual/babayaga-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-babayaga-preparation-r1-ogg",
+      "offset": 2263096,
+      "bytes": 6145,
+      "hash": "sha256-4fbc43ad0dbbd0eade4f37063754f81a9d3468b2e32fcdb7486b9a1d794e1ad3"
+    },
+    "/audio/quality-20261114/manual/gunner-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-gunner-preparation-r1-ogg",
+      "offset": 2269241,
+      "bytes": 5635,
+      "hash": "sha256-0d7d69fbfd1681e42a098011bd164e52c1228433330e40fd06a7dd27ee64e332"
+    },
+    "/audio/quality-20261114/manual/guardian-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-guardian-preparation-r1-ogg",
+      "offset": 2274876,
+      "bytes": 9780,
+      "hash": "sha256-9dfc84dc1103f003d518b84c8c0ccd24790fd28dedff7ba1d97aa66be4f8371b"
+    },
+    "/audio/quality-20261114/manual/engineer-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-engineer-preparation-r1-ogg",
+      "offset": 2284656,
+      "bytes": 7135,
+      "hash": "sha256-b19fa17455a645d326754355a67fd099a6134fed1230c89ac5e5778f2c90d76c"
+    },
+    "/audio/quality-20261114/manual/zakimiya-preparation-r1.ogg": {
+      "id": "offline-audio-quality-20261114-manual-zakimiya-preparation-r1-ogg",
+      "offset": 2291791,
+      "bytes": 7278,
+      "hash": "sha256-2bd78458cd9f8e651ea1143927bd9d267b58c5e85b4929b220ba30014a9e9417"
+    },
+    "/audio/weapons/chainsaw/overdrive-active.ogg": {
+      "id": "offline-audio-weapons-chainsaw-overdrive-active-ogg",
+      "offset": 2299069,
+      "bytes": 9665,
+      "hash": "sha256-40c1a5c5c7249ad96caa34d352f494cb7f9a825ebb55599882aca75f105f9cc2"
+    },
+    "/audio/v100/foley/story-dish.ogg": {
+      "id": "offline-audio-v100-foley-story-dish-ogg",
+      "offset": 2308734,
+      "bytes": 8473,
+      "hash": "sha256-418f855b2f7f040bd1bec22ac385a4e957c6baf1f20c295064e3d74404c644d5"
+    },
+    "/audio/v100/foley/story-door-open.ogg": {
+      "id": "offline-audio-v100-foley-story-door-open-ogg",
+      "offset": 2317207,
+      "bytes": 11587,
+      "hash": "sha256-2976d47e310ebb09393302ebf1dfd8a66ad749b4ad4249589644b2ee39ca7afb"
+    },
+    "/audio/v100/foley/story-door-close.ogg": {
+      "id": "offline-audio-v100-foley-story-door-close-ogg",
+      "offset": 2328794,
+      "bytes": 8934,
+      "hash": "sha256-819df0e8ae8f4eae2909c123759c57d9604d7e6889ca9ddc2b8eaaadba283424"
+    },
+    "/audio/v100/foley/story-paper.ogg": {
+      "id": "offline-audio-v100-foley-story-paper-ogg",
+      "offset": 2337728,
+      "bytes": 7467,
+      "hash": "sha256-9d9715c2c85c12e622b6280ac6332bcec2174b7204c0af759d4b52bd86d4f326"
+    },
+    "/audio/v100/foley/story-fabric.ogg": {
+      "id": "offline-audio-v100-foley-story-fabric-ogg",
+      "offset": 2345195,
+      "bytes": 7167,
+      "hash": "sha256-50f9d8f2c13f99e9d70d1b986018500863ca5781d46e708ba7d9b695cab3a6a5"
+    },
+    "/audio/v100/foley/story-pan.ogg": {
+      "id": "offline-audio-v100-foley-story-pan-ogg",
+      "offset": 2352362,
+      "bytes": 9381,
+      "hash": "sha256-c1d776359a1aafe7e855fedb53d9857a0fbd83abcb80d16699d8d0af1f371dcf"
+    },
+    "/audio/v100/foley/story-latch.ogg": {
+      "id": "offline-audio-v100-foley-story-latch-ogg",
+      "offset": 2361743,
+      "bytes": 6129,
+      "hash": "sha256-1964660669e9a114e3e5b007561408828ccd5ac8d7905d6a1bed57da745656a2"
+    },
+    "/audio/v100/foley/story-footsteps.ogg": {
+      "id": "offline-audio-v100-foley-story-footsteps-ogg",
+      "offset": 2367872,
+      "bytes": 4505,
+      "hash": "sha256-adfe7caf0f223e1289d7cb370124e497894ca7d8a2d25da85d5e17382bbe958d"
+    },
+    "/audio/v100/r9/chair-scrape.ogg": {
+      "id": "offline-audio-v100-r9-chair-scrape-ogg",
+      "offset": 2372377,
+      "bytes": 12414,
+      "hash": "sha256-84a651bf6d680ec8137739873eec5cc58907ead027f25b36b8a1a3fbed300a67"
+    },
+    "/audio/v100/r9/extinguisher.ogg": {
+      "id": "offline-audio-v100-r9-extinguisher-ogg",
+      "offset": 2384791,
+      "bytes": 27984,
+      "hash": "sha256-2dfea1e637f40f333e96676122cb7883531a76e976936357a683a8778d44f7bc"
+    },
+    "/audio/v100/r9/cargo-door.ogg": {
+      "id": "offline-audio-v100-r9-cargo-door-ogg",
+      "offset": 2412775,
+      "bytes": 9341,
+      "hash": "sha256-e8e497a1b24946ab31c52e589f37465771e9e2c993c63b26ab1fe849c138c6ea"
+    },
+    "/audio/v100/r9/shutter-open.ogg": {
+      "id": "offline-audio-v100-r9-shutter-open-ogg",
+      "offset": 2422116,
+      "bytes": 22346,
+      "hash": "sha256-0ce146f0d7922cc4d14167e5d061f50c2b2ac6d9e571d7cf23da880609471b92"
+    },
+    "/audio/v100/r9/shutter-jam.ogg": {
+      "id": "offline-audio-v100-r9-shutter-jam-ogg",
+      "offset": 2444462,
+      "bytes": 15201,
+      "hash": "sha256-a19f604dc7be36b6a5e082d06e371e0c544695df51e48341b1a1af8c371aed89"
+    },
+    "/audio/v100/r9/cable-disconnect.ogg": {
+      "id": "offline-audio-v100-r9-cable-disconnect-ogg",
+      "offset": 2459663,
+      "bytes": 7710,
+      "hash": "sha256-39de83ee7a3073d523435dcbb52c86f7f2e38bed37a3a05b76ddea9c842a8ce4"
+    },
+    "/audio/v100/r9/glass-knock.ogg": {
+      "id": "offline-audio-v100-r9-glass-knock-ogg",
+      "offset": 2467373,
+      "bytes": 7539,
+      "hash": "sha256-af5d75cdfe4bab790f335d36734db0d35efc17bae28203fe597ae99d13a8ede5"
+    },
+    "/audio/v100/r9/ceiling-fall.ogg": {
+      "id": "offline-audio-v100-r9-ceiling-fall-ogg",
+      "offset": 2474912,
+      "bytes": 18621,
+      "hash": "sha256-bcb3332e68ecd373e28b26eddc5002ebaac2f939794fc9513be0f49661315a73"
+    },
+    "/audio/v100/r9/oxygen-valve.ogg": {
+      "id": "offline-audio-v100-r9-oxygen-valve-ogg",
+      "offset": 2493533,
+      "bytes": 23741,
+      "hash": "sha256-3cf9806b43710f2715bddb71159bfe19dc2a2f394bbed0048ddb3d97ed7b34f5"
+    },
+    "/audio/v100/r9/rail-strain.ogg": {
+      "id": "offline-audio-v100-r9-rail-strain-ogg",
+      "offset": 2517274,
+      "bytes": 16768,
+      "hash": "sha256-b6dd7ac086dd6da997b8788e0c7f3a61e6d5a438ae64da99f7cadaa5857a5a9b"
+    },
+    "/audio/v100/r9/coupler-release.ogg": {
+      "id": "offline-audio-v100-r9-coupler-release-ogg",
+      "offset": 2534042,
+      "bytes": 8767,
+      "hash": "sha256-2453260f9f98db27171c995c93a7f72ec1c997c0b3d9bd713dbbc91eff7a8da0"
+    },
+    "/audio/v100/r9/barrier-raise.ogg": {
+      "id": "offline-audio-v100-r9-barrier-raise-ogg",
+      "offset": 2542809,
+      "bytes": 16017,
+      "hash": "sha256-7a5387bcf12d3c7f12654044f29d66be409ec7b45d08e5ec0940fb8718e907b5"
+    },
+    "/audio/v100/r9/engine-pass.ogg": {
+      "id": "offline-audio-v100-r9-engine-pass-ogg",
+      "offset": 2558826,
+      "bytes": 25781,
+      "hash": "sha256-a6337e341f5ebf21b74a5fe1ea233c79ef95431a9e58bd2919f35b146d8faa13"
+    },
+    "/audio/v100/r9/vehicle-collision.ogg": {
+      "id": "offline-audio-v100-r9-vehicle-collision-ogg",
+      "offset": 2584607,
+      "bytes": 15594,
+      "hash": "sha256-175ee622f789a41695e15f747ff273b48c34b5314cb7da779adc223122781809"
+    },
+    "/audio/v100/r9/door-battering.ogg": {
+      "id": "offline-audio-v100-r9-door-battering-ogg",
+      "offset": 2600201,
+      "bytes": 8601,
+      "hash": "sha256-2dbc970b2abf0644eec39711332f885cced2551ed669a00c847aa4bcdaf7b852"
+    },
+    "/audio/v100/r9/card-burnout.ogg": {
+      "id": "offline-audio-v100-r9-card-burnout-ogg",
+      "offset": 2608802,
+      "bytes": 14828,
+      "hash": "sha256-cd7c4e5af1aba04a6bbddbaa875dbcfac21f9ab5da023b19cdd2c7afa53a7f34"
+    },
+    "/audio/v100/r9/weapon-handle.ogg": {
+      "id": "offline-audio-v100-r9-weapon-handle-ogg",
+      "offset": 2623630,
+      "bytes": 8514,
+      "hash": "sha256-d3478d24e9a023ef453d422727b335ee1f99a4b91d1c4748d7fe9a91a4a7ecbc"
+    },
+    "/audio/v100/r9/sample-lids.ogg": {
+      "id": "offline-audio-v100-r9-sample-lids-ogg",
+      "offset": 2632144,
+      "bytes": 9572,
+      "hash": "sha256-92fe8d0899dc240af4053ae4edea641caa9e001542a0f59a6e9d690e1f50a669"
+    },
+    "/audio/v100/r9/case-close.ogg": {
+      "id": "offline-audio-v100-r9-case-close-ogg",
+      "offset": 2641716,
+      "bytes": 11026,
+      "hash": "sha256-6643d9f500ecd7e3d2013e2d4cfa8ca3cdf4f0264c431c71a42f909bcf34c234"
+    },
+    "/audio/v100/r9/fire-catch.ogg": {
+      "id": "offline-audio-v100-r9-fire-catch-ogg",
+      "offset": 2652742,
+      "bytes": 24411,
+      "hash": "sha256-4618ea5ac344a2edf0b78129565606ed5440b495aaa0f53e096134d4563b4ac5"
+    },
+    "/audio/v100/r9/gas-ignition.ogg": {
+      "id": "offline-audio-v100-r9-gas-ignition-ogg",
+      "offset": 2677153,
+      "bytes": 18790,
+      "hash": "sha256-cbfac07c8ddc9b333a2abdfaafd8b9cd8d77145c68f7302102c133eb7f864cad"
+    },
+    "/audio/v100/r9/plate-stack.ogg": {
+      "id": "offline-audio-v100-r9-plate-stack-ogg",
+      "offset": 2695943,
+      "bytes": 14439,
+      "hash": "sha256-a391fc24bf806e95afa5591bdc23ee17449c64201018de9f641ca813f0ac95d9"
+    },
+    "/audio/v100/r9/lab-air.ogg": {
+      "id": "offline-audio-v100-r9-lab-air-ogg",
+      "offset": 2710382,
+      "bytes": 157845,
+      "hash": "sha256-5d450ba6b4e4df789ac0bee25b71bd31bd085dadc2dde6ce2b08eac0170e2ba6"
+    },
+    "/audio/v100/r9/bridge-wind.ogg": {
+      "id": "offline-audio-v100-r9-bridge-wind-ogg",
+      "offset": 2868227,
+      "bytes": 183269,
+      "hash": "sha256-f305e4bab0c82aaf4b921cfb208bed131ebe546af2974a146958bf16b3a571d8"
+    },
+    "/audio/v100/r9/vehicle-idle.ogg": {
+      "id": "offline-audio-v100-r9-vehicle-idle-ogg",
+      "offset": 3051496,
+      "bytes": 140542,
+      "hash": "sha256-b1d4044a3109e9c6e5dbec8fede80e3ab2652a515fd470e3dc853dc44f18c014"
+    },
+    "/audio/v100/r9/kitchen-air.ogg": {
+      "id": "offline-audio-v100-r9-kitchen-air-ogg",
+      "offset": 3192038,
+      "bytes": 185191,
+      "hash": "sha256-9b1561382ec76ddf7723debe66159aa512ac96ed213d956091c93f87b43fad6e"
+    },
+    "/audio/quality-20261116/boss-finales/gate-eater-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-gate-eater-collapse-r1-ogg",
+      "offset": 3377229,
+      "bytes": 26830,
+      "hash": "sha256-5d93302d465f8f509cb53bc6d5030588d986bac03495edd843e6e4c512e00906"
+    },
+    "/audio/quality-20261116/boss-finales/mother-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-mother-collapse-r1-ogg",
+      "offset": 3404059,
+      "bytes": 22440,
+      "hash": "sha256-144d7a11296676bf6a55d4d3e6c149f8d2416ded53cd883c1e4408b973d1d229"
+    },
+    "/audio/quality-20261116/boss-finales/kurome-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-kurome-collapse-r1-ogg",
+      "offset": 3426499,
+      "bytes": 21859,
+      "hash": "sha256-75796d0b7df52ec05b57584f5a6e34caa50443ab0f8c04b48246b1900a5f604f"
+    },
+    "/audio/quality-20261116/boss-finales/ooguchi-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-ooguchi-collapse-r1-ogg",
+      "offset": 3448358,
+      "bytes": 20809,
+      "hash": "sha256-4a439ccb7a649487e5299786687c1129305d4b1e1127e90cff224ad2d9610096"
+    },
+    "/audio/quality-20261116/boss-finales/gairen-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-gairen-collapse-r1-ogg",
+      "offset": 3469167,
+      "bytes": 21737,
+      "hash": "sha256-0a30c705ce9a67c2ee5586c710c4e26df8c3b2c4bf06f0eeb8e8ccdb5ffb3d8a"
+    },
+    "/audio/quality-20261116/boss-finales/takuya-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-takuya-collapse-r1-ogg",
+      "offset": 3490904,
+      "bytes": 25567,
+      "hash": "sha256-89e52c45919bed645910d80128b86ec10a44b483e35ce77349ce1e06b752f7cf"
+    },
+    "/audio/quality-20261116/boss-finales/mugarian-president-mutated-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-mugarian-president-mutated-collapse-r1-ogg",
+      "offset": 3516471,
+      "bytes": 24161,
+      "hash": "sha256-7b655a8b7e91f7d5d43432eb6b35dba0b31acab11428e320b162bff8c2e2df9b"
+    },
+    "/audio/quality-20261116/boss-finales/futago-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-futago-collapse-r1-ogg",
+      "offset": 3540632,
+      "bytes": 21600,
+      "hash": "sha256-5e0639bc8e1d951162cfd3ae3379eb1fa5bd93317e7291a56e8fdd0bd01e9a3e"
+    },
+    "/audio/quality-20261116/boss-finales/takuya-omega-collapse-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-finales-takuya-omega-collapse-r1-ogg",
+      "offset": 3562232,
+      "bytes": 27755,
+      "hash": "sha256-59aad82541914c105d5b6f211640e4e1b71696e7660eaaeee76649eb957e68f7"
+    },
+    "/audio/quality-20261116/boss-skills/takuya-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-takuya-warning-r1-ogg",
+      "offset": 3589987,
+      "bytes": 9383,
+      "hash": "sha256-a83a48748ae06564058656722d67e5fadf56a026559661c58b98c2acbc178351"
+    },
+    "/audio/quality-20261116/boss-skills/takuya-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-takuya-impact-r1-ogg",
+      "offset": 3599370,
+      "bytes": 9977,
+      "hash": "sha256-8b591ab763c6488fe9de417fc94ed499014a768ab4e156395d37e2919dd713ec"
+    },
+    "/audio/quality-20261116/boss-skills/gate-eater-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-gate-eater-warning-r1-ogg",
+      "offset": 3609347,
+      "bytes": 9773,
+      "hash": "sha256-21e84d7b54a651986b0aaa574af047eaf1f3dede6ee70a80290956e1ddfc1e00"
+    },
+    "/audio/quality-20261116/boss-skills/gate-eater-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-gate-eater-impact-r1-ogg",
+      "offset": 3619120,
+      "bytes": 8386,
+      "hash": "sha256-513ad9bbc0e88e4bbcb8da1f3a07e7e94c6fb4bf6946d9769e7e1edc1565f61d"
+    },
+    "/audio/quality-20261116/boss-skills/mother-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-mother-warning-r1-ogg",
+      "offset": 3627506,
+      "bytes": 10365,
+      "hash": "sha256-54cb94ff205a4816c6bccd67b940c1d2b6d6ff57f2186e20f22486d084771b42"
+    },
+    "/audio/quality-20261116/boss-skills/mother-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-mother-impact-r1-ogg",
+      "offset": 3637871,
+      "bytes": 11567,
+      "hash": "sha256-1eca3ee28e35b3ba93998f9686c677bcb769643772c8550160ca8c00af049920"
+    },
+    "/audio/quality-20261116/boss-skills/kurome-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-kurome-warning-r1-ogg",
+      "offset": 3649438,
+      "bytes": 12988,
+      "hash": "sha256-121e42bdbf8536cf6f96ea80aa4682601e3f9938fd5a08197a7815d9e30afd70"
+    },
+    "/audio/quality-20261116/boss-skills/kurome-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-kurome-impact-r1-ogg",
+      "offset": 3662426,
+      "bytes": 7896,
+      "hash": "sha256-12d49abc6e41ca514cdd5ed0ed80793ac8665241d8d1a3ef5445b1cf5770937e"
+    },
+    "/audio/quality-20261116/boss-skills/ooguchi-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-ooguchi-warning-r1-ogg",
+      "offset": 3670322,
+      "bytes": 10125,
+      "hash": "sha256-6c89560e62584dd1a2069050e5cb35aa8bf6319c046347f19c9343736ba80fe0"
+    },
+    "/audio/quality-20261116/boss-skills/ooguchi-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-ooguchi-impact-r1-ogg",
+      "offset": 3680447,
+      "bytes": 10165,
+      "hash": "sha256-a3b2f46a0dbf3cffd2ff993fe807403976ce67b73b82fd23e314c1a354ed1c2f"
+    },
+    "/audio/quality-20261116/boss-skills/gairen-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-gairen-warning-r1-ogg",
+      "offset": 3690612,
+      "bytes": 11432,
+      "hash": "sha256-8ca6bb7970e12e59cab11dbec2e125f01c9ece17c0806f94a1f66c8717930e1b"
+    },
+    "/audio/quality-20261116/boss-skills/gairen-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-gairen-impact-r1-ogg",
+      "offset": 3702044,
+      "bytes": 11935,
+      "hash": "sha256-3b1ba1ce02b6a1f979f19c820f2f207279f39659d4015dee5859b0c4bdf3a379"
+    },
+    "/audio/quality-20261116/boss-skills/futago-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-futago-warning-r1-ogg",
+      "offset": 3713979,
+      "bytes": 10798,
+      "hash": "sha256-ca1d22898b76cd7d3c50fc901d55295939df94e5108c6573b17a1930161b0632"
+    },
+    "/audio/quality-20261116/boss-skills/futago-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-futago-impact-r1-ogg",
+      "offset": 3724777,
+      "bytes": 9491,
+      "hash": "sha256-0975c9fdc27bc21cb800cc738891f710d0da63564468299611eb8f96b43e6c3c"
+    },
+    "/audio/quality-20261116/boss-skills/mugarian-president-mutated-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-mugarian-president-mutated-warning-r1-ogg",
+      "offset": 3734268,
+      "bytes": 9872,
+      "hash": "sha256-a1a4fae3ea8652861cbd3c178e877299a1fd97a19c2bafe6c80e46b5cfb1f5b2"
+    },
+    "/audio/quality-20261116/boss-skills/mugarian-president-mutated-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-mugarian-president-mutated-impact-r1-ogg",
+      "offset": 3744140,
+      "bytes": 9855,
+      "hash": "sha256-2b42ebbb2d142d67eb9447ee1874c0fdc480492f95ee2632f3551bd87149a6a4"
+    },
+    "/audio/quality-20261116/boss-skills/takuya-omega-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-takuya-omega-warning-r1-ogg",
+      "offset": 3753995,
+      "bytes": 11355,
+      "hash": "sha256-a1596679852d4fb23d6a16741aa0995833013dcbb51e86132714c1ce1fa7ca4a"
+    },
+    "/audio/quality-20261116/boss-skills/takuya-omega-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-takuya-omega-impact-r1-ogg",
+      "offset": 3765350,
+      "bytes": 13250,
+      "hash": "sha256-ad5a7ae67514b65e2993d4e67abe40653add008c33eee0e3abf77c8f57f1e8cc"
+    },
+    "/audio/quality-20261116/boss-skills/gate-eater-release-r1.ogg": {
+      "id": "offline-audio-quality-20261116-boss-skills-gate-eater-release-r1-ogg",
+      "offset": 3778600,
+      "bytes": 10316,
+      "hash": "sha256-a6cd5a6740e907b9f21cbc9440c08e803044dea5a6a58fba1669338ba24deb37"
+    },
+    "/audio/quality-20261121/station-mud/floor-mud-warning-r1.ogg": {
+      "id": "offline-audio-quality-20261121-station-mud-floor-mud-warning-r1-ogg",
+      "offset": 3788916,
+      "bytes": 6059,
+      "hash": "sha256-9b2d6c4a74d3f93139198b452840484e9c2857477dbe854e16662bdb702741b6"
+    },
+    "/audio/quality-20261121/station-mud/floor-mud-impact-r1.ogg": {
+      "id": "offline-audio-quality-20261121-station-mud-floor-mud-impact-r1-ogg",
+      "offset": 3794975,
+      "bytes": 10594,
+      "hash": "sha256-4beb2716f4a16630e970790d153a5a0188bea3ed3720668ceefd0b0f0209704d"
+    }
+  }
+}

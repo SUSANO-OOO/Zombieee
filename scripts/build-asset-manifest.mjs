@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { assertV100ArtAllowed } from './rejected-v100-art.mjs';
+import { DIRECT_AUDIO_FALLBACKS, FALLBACK_AUDIO_BUNDLE_NAME, v100OfflineAudioFallbacks } from "./pwa-audio-fallbacks.mjs";
 
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_SCENE_PORTRAITS, V100_R5_STORY_CUTS, V100_R9_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
@@ -338,26 +339,14 @@ record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", critic
 record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });
 
-// These short cues needed their alternate sources during offline play.
-// Save the original alternatives directly alongside the preferred bundled MP3s.
-for (const [path, audioId, audioChannel = "se"] of [
-  ["/audio/v100/foley/treatment.ogg", "offline-treatment-fallback"],
-  ["/audio/v104/combat/armor-hit.ogg", "offline-armor-hit-fallback"],
-  // Mobile battle playback has requested these recorded reactions via their alternate encoding.
-  ["/audio/v060/sfx/enemy-runner-hurt-02.ogg", "offline-runner-hurt-02-fallback", "voice"],
-  ["/audio/v060/sfx/enemy-turned-hurt-01.ogg", "offline-turned-hurt-01-fallback", "voice"],
-  ["/audio/v060/sfx/enemy-turned-hurt-02.ogg", "offline-turned-hurt-fallback", "voice"],
-  ["/audio/v060/sfx/human-male-light-attack-01.ogg", "offline-human-male-light-attack-01-fallback", "voice"],
-]) {
-  record(path, { pack: "audio", category: "audio", criticality: "optional",
+// Preserve the direct alternatives already present in installed packs.
+for (const [src, audioId, audioChannel = "se"] of DIRECT_AUDIO_FALLBACKS) {
+  record(src, { pack: "audio", category: "audio", criticality: "optional",
     audioChannel, audioId, audioType: "audio/ogg" });
 }
 
-for (const asset of INSTALL_AUDIO_ASSETS) {
-  const audioChannel = audioChannelFor(asset.category);
-  const source = selectPreferredAudioSource(asset.sources);
-  if (!source) continue;
-  const bundleEntry = audioBundleIndex.assets?.[source.src];
+function recordBundledAudio(source, audioId, audioChannel, index) {
+  const bundleEntry = index.assets?.[source.src];
   if (!bundleEntry) throw new Error(`Missing audio bundle entry for ${source.src}`);
   record(source.src, {
     pack: "audio",
@@ -365,13 +354,23 @@ for (const asset of INSTALL_AUDIO_ASSETS) {
     // Audio never blocks play; the 0.9.5.2 hotfix keeps categories separate.
     criticality: "optional",
     audioChannel,
-    audioId: asset.id,
+    audioId,
     audioType: source.type,
-        bundlePath: audioBundleIndex.bundlePath,
-        bundleOffset: bundleEntry.offset,
-        bundleBytes: bundleEntry.bytes,
-        bundleLength: audioBundleIndex.bytes,
+    bundlePath: index.bundlePath,
+    bundleOffset: bundleEntry.offset,
+    bundleBytes: bundleEntry.bytes,
+    bundleLength: index.bytes,
   });
+}
+for (const asset of INSTALL_AUDIO_ASSETS) {
+  const source = selectPreferredAudioSource(asset.sources);
+  if (source) recordBundledAudio(source, asset.id, audioChannelFor(asset.category), audioBundleIndex);
+}
+const fallbackBundle = JSON.parse(await readFile(
+  path.join(publicDir, "pwa-bundles", FALLBACK_AUDIO_BUNDLE_NAME + ".json"), "utf8",
+));
+for (const { id, channel, source } of v100OfflineAudioFallbacks()) {
+  recordBundledAudio(source, id, channel, fallbackBundle);
 }
 
 /**
