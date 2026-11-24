@@ -843,6 +843,14 @@
     [
       "  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);",
       "  if(g.definition.missionConfig.v100StageNumber){pruneV177CorpseJointPoses(g);"
+    ],
+    [
+      "      signal: controller.signal,\n      abort: () => controller.abort(),\n      onProgress: publishProgress,",
+      "      signal: controller.signal,\n      abort: () => controller.abort(),\n      retryDecodeOnce: externalSessionActive && !retryPaths,\n      onProgress: publishProgress,"
+    ],
+    [
+      "        total: criticalResult.total,\n        failures: criticalResult.failures,\n        deadlineReached: criticalResult.deadlineReached,",
+      "        total: criticalResult.total,\n        failures: criticalResult.failures,\n        decodeRetryPaths: criticalResult.decodeRetryPaths,\n        deadlineReached: criticalResult.deadlineReached,"
     ]
   ],
   "app/manualAbilities.js": [
