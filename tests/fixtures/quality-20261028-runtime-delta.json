@@ -1,7 +1,7 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
   "source": "96f6f399e13fedf5489b55e51bce9344e3b93fea adds dedicated Paisen pressure flight and impact to the previously reviewed quality delta; attack mechanics, optional verified loading, audio and save retained; preparation-only Paisen pressure and TKY energy additions from 2f019a7645b7c7c1db2ea74aaea70e8caea54eca, all previous content and voice/policy retained; nine non-vocal boss collapse materials with original voices, mechanics and retained payloads from05b69ccf unchanged; nineteen non-vocal boss warning/release/impact materials, existing timing, separate voices, all889 previous payloads and saved fallback sources retained from fddd2e7e; recorded Chihuahua reactions from 79447e00 and offline packaging e4d9c9b2: two CC0 Mayo files appended; original 409 payloads and every prior asset role, path and content retained; Stage 14 freight-yard evacuation adds one runtime atlas, with all 920 previous rows retained. Stage 16 adds the exact 62,848-byte tunnel gate atlas, retaining the 921 previous paths. Stage 17 adds only its interior and evacuee atlas",
-  "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval. The campaign bridge adds one 271,754-byte painted asset; all 926 earlier payload rows remain exact. Station contamination adds two short CC0 foley cues. Existing bundled audio bytes and offsets stay exact. The painted floor adds one exact 92,352-byte transparent atlas without changing retained payloads. The turned enemy's 15,722-byte hurt fallback is stored directly for offline play. Kumaverson adds one 6,000-byte Kenney CC0 guard effect at the end of the retained audio bank.",
+  "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval. The campaign bridge adds one 271,754-byte painted asset; all 926 earlier payload rows remain exact. Station contamination adds two short CC0 foley cues. Existing bundled audio bytes and offsets stay exact. The painted floor adds one exact 92,352-byte transparent atlas without changing retained payloads. The turned enemy's 15,722-byte hurt fallback is stored directly for offline play. Kumaverson adds one 6,000-byte Kenney CC0 guard effect at the end of the retained audio bank. Three existing voice alternatives requested during offline combat add 28,137 bytes without changing the audio bank.",
   "added": [
     {
       "path": "/art/quality-20261113/ui/materials-six-r1.webp",
@@ -2730,6 +2730,28 @@
       "criticality": "critical"
     },
     {
+      "path": "/audio/v060/sfx/enemy-runner-hurt-02.ogg",
+      "bytes": 7407,
+      "hash": "sha256-c0cc30b68347a5b11a51e1d489279900b9d45f47c374e378d6d4243a96a39eb6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-runner-hurt-02-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-01.ogg",
+      "bytes": 11276,
+      "hash": "sha256-9267e0222f8e2b44c059973f3ce5c84e54e0fe84d3f05f2b2ca0b53f1b017de0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-turned-hurt-01-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
       "path": "/audio/v060/sfx/enemy-turned-hurt-02.ogg",
       "bytes": 15722,
       "hash": "sha256-fca95a4d3a670daa1e37c44225e716552b7046ba82cc61516368d8c9d15eec9e",
@@ -2738,6 +2760,17 @@
       "criticality": "optional",
       "audioChannel": "voice",
       "audioId": "offline-turned-hurt-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-attack-01.ogg",
+      "bytes": 9454,
+      "hash": "sha256-75963c8af435ea4eb2ebae521a4dfaf95682b145d85d1e22b18a922c888bd265",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-human-male-light-attack-01-fallback",
       "audioType": "audio/ogg"
     },
     {
