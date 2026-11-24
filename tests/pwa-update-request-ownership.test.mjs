@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
-import {partitionPwaUpdateTransportPaths,inspectPwaContentTransportCoverage} from '../scripts/pwa-update-request-ownership.mjs';
+import {partitionPwaUpdateTransportPaths,inspectPwaContentTransportCoverage,inspectPwaRecoveryBundles} from '../scripts/pwa-update-request-ownership.mjs';
 const receipt=JSON.parse(await readFile(new URL('./fixtures/pwa-f989-recovery-logical-audio.json',import.meta.url)));
 const download=new Set(receipt.repairTransportPaths),logical=new Set(receipt.bundledRuntimeAudioSourcePaths);
 test('native f989 recovery keeps a preparation BGM source read separate from exact updater transports',()=>{
@@ -52,4 +52,28 @@ test('bundle retries remain explicit exceptions while unknown paths and ambiguou
  const unknown=inspectPwaContentTransportCoverage(['/warm.webp','/unknown.webp'],aliases);
  assert.equal(unknown.ok,false);assert.deepEqual(unknown.unexpected,['/unknown.webp']);
  assert.throws(()=>inspectPwaContentTransportCoverage([],[...aliases,{pathname:'/warm.webp',contentKey:'hash:other'}]),/Ambiguous/);
+});
+
+test('a bundle can be fetched once after reopening when some of its slices remain missing', () => {
+  const pathname = '/alternates.bin';
+  const assets = [{ pathname, hash: 'already-saved' }, { pathname, hash: 'still-pending' }];
+  const proof = inspectPwaRecoveryBundles(assets, new Set(['already-saved']), [pathname], [pathname], '/stalled.bin');
+  assert.deepEqual(proof.invalid, []);
+  assert.ok(proof.pendingPaths.has(pathname));
+  assert.ok(proof.repeatablePaths.has(pathname));
+  assert.deepEqual(proof.details, [{ pathname, total: 2, pending: 1, incident: 1, recovery: 1 }]);
+});
+
+test('recovering a fully stored bundle or making extra requests fails the transport check', () => {
+  const pathname = '/alternates.bin';
+  const assets = [{ pathname, hash: 'saved' }, { pathname, hash: 'other' }];
+  for (const [hashes, incident, recovery] of [
+    [['saved', 'other'], [pathname], [pathname]],
+    [['saved'], [pathname], [pathname, pathname]],
+    [['saved'], [pathname, pathname], [pathname]],
+  ]) {
+    const proof = inspectPwaRecoveryBundles(assets, new Set(hashes), incident, recovery, '/stalled.bin');
+    assert.equal(proof.invalid.length, 1);
+    assert.equal(proof.repeatablePaths.has(pathname), false);
+  }
 });
