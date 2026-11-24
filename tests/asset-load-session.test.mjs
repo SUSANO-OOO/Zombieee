@@ -12,6 +12,7 @@ import {
   IMAGE_LOAD_TIMEOUT_MS,
   REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
   REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+  battleImageRetryUrl,
 } from "../app/boundedImageLoader.js";
 
 const job = (path, run, category = "unit") => ({ path, category, run });
@@ -118,21 +119,33 @@ test("a battle can recover only the images that failed decoding after the first 
   let attempts = 0;
   const result = await runAssetLoadSession({
     jobs: [
-      job("/effects.webp", async () => {
-        calls.push("effects");
+      job("/effects.webp", async (_signal, decodeRetry) => {
+        calls.push(["effects", decodeRetry]);
         attempts += 1;
         if (attempts === 1) throw decodeError();
       }, "stage-object"),
-      job("/background.webp", async () => { calls.push("background"); }),
+      job("/background.webp", async (_signal, decodeRetry) => { calls.push(["background", decodeRetry]); }),
     ],
     concurrency: 1,
     retryDecodeOnce: true,
   });
-  assert.deepEqual(calls, ["effects", "background", "effects"]);
+  assert.deepEqual(calls, [["effects", false], ["background", false], ["effects", true]]);
   assert.equal(result.status, "ready");
   assert.equal(result.completed, 2);
   assert.deepEqual(result.failures, []);
   assert.deepEqual(result.decodeRetryPaths, ["/effects.webp"]);
+});
+
+test("a renewed image request uses the same installed asset path", () => {
+  const page = "https://example.test/Zombieee/";
+  const src = "/Zombieee/art/unit.webp?variant=1";
+  const firstRetry = new URL(battleImageRetryUrl(src, page, "17-1"));
+  assert.equal(firstRetry.pathname, "/Zombieee/art/unit.webp");
+  assert.equal(firstRetry.searchParams.get("variant"), "1");
+  assert.equal(firstRetry.searchParams.get("battle-decode-retry"), "17-1");
+  assert.notEqual(firstRetry.href, battleImageRetryUrl(src, page, "18-1"));
+  const external = "https://assets.example.test/unit.webp";
+  assert.equal(battleImageRetryUrl(external, page, "17-1"), external);
 });
 
 test("a persistent decode failure and a missing file still block battle readiness", async () => {
@@ -160,7 +173,9 @@ test("an automatic decode retry stays inside the original session deadline", asy
   let timerStarts = 0;
   let attempts = 0;
   let markRetry;
+  let markPause;
   const retryStarted = new Promise((resolve) => { markRetry = resolve; });
+  const pauseStarted = new Promise((resolve) => { markPause = resolve; });
   const session = runAssetLoadSession({
     jobs: [job("/effects.webp", async () => {
       attempts += 1;
@@ -171,21 +186,56 @@ test("an automatic decode retry stays inside the original session deadline", asy
     retryDecodeOnce: true,
     signal: controller.signal,
     abort: () => controller.abort(),
-    setTimer: (callback) => {
+    setTimer: (callback, ms) => {
       timerStarts += 1;
-      deadline = callback;
-      return 1;
+      if (ms === ASSET_LOAD_SESSION_DEADLINE_MS) deadline = callback;
+      else markPause({ callback, ms });
+      return timerStarts;
     },
     clearTimer: () => {},
   });
+  const pause = await pauseStarted;
+  assert.equal(pause.ms, 1_000);
+  assert.equal(attempts, 1);
+  pause.callback();
   assert.equal(await Promise.race([retryStarted.then(() => true), session.then(() => false)]), true);
   deadline();
   const result = await session;
-  assert.equal(timerStarts, 1);
+  assert.equal(timerStarts, 2);
   assert.equal(controller.signal.aborted, true);
   assert.equal(result.deadlineReached, true);
   assert.equal(result.status, "error");
   assert.deepEqual(result.failures, [{ path: "/effects.webp", category: "unit", reason: "timeout" }]);
+});
+
+test("a deadline during the decode pause cancels the retry while retaining the failure", async () => {
+  let attempts = 0;
+  let deadline;
+  let markPause;
+  const pauseStarted = new Promise((resolve) => { markPause = resolve; });
+  const cleared = [];
+  const session = runAssetLoadSession({
+    jobs: [job("/effects.webp", async () => {
+      attempts += 1;
+      throw decodeError();
+    })],
+    retryDecodeOnce: true,
+    setTimer: (callback, ms) => {
+      if (ms === ASSET_LOAD_SESSION_DEADLINE_MS) deadline = callback;
+      else markPause();
+      return ms;
+    },
+    clearTimer: (timer) => { cleared.push(timer); },
+  });
+  await pauseStarted;
+  deadline();
+  const result = await session;
+  assert.equal(attempts, 1);
+  assert.equal(result.status, "error");
+  assert.equal(result.deadlineReached, true);
+  assert.deepEqual(result.decodeRetryPaths, []);
+  assert.deepEqual(result.failures, [{ path: "/effects.webp", category: "unit", reason: "decode" }]);
+  assert.deepEqual(cleared, [1_000]);
 });
 
 test("deduplicated shared paths notify every image consumer", async () => {

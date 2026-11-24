@@ -859,6 +859,26 @@
     [
       "    const fighterVoiceEvent = options.ownerId === undefined ? undefined\n      : options.fighterVoiceEvent ?? (options.semantic === \"battle-hurt\" ? \"hurt\" : undefined);",
       "    const fighterVoiceEvent = options.ownerId === undefined ? undefined\n      : options.fighterVoiceEvent ?? (options.semantic === \"battle-hurt\" ? \"hurt\" : undefined)\n        ?? (externalSessionRef.current ? v104MonsterVoiceEvent(productionMixer.manifest, cueId) : undefined);"
+    ],
+    [
+      "  REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,\n  loadImageWithTimeout,",
+      "  REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,\n  battleImageRetryUrl,\n  loadImageWithTimeout,"
+    ],
+    [
+      "    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void, signal = controller.signal) => (\n      loadImageWithTimeout({\n        src,",
+      "    const retryToken = String(sessionStartedAt) + \"-\" + generation;\n    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void, signal = controller.signal, decodeRetry = false) => (\n      loadImageWithTimeout({\n        src: decodeRetry ? battleImageRetryUrl(src, window.location.href, retryToken) : src,"
+    ],
+    [
+      "      onReady: (image: HTMLImageElement) => void,\n      signal = controller.signal,\n    ) => {\n      if (current?.naturalWidth && decodedBattleImagesRef.current.has(current)) {",
+      "      onReady: (image: HTMLImageElement) => void,\n      signal = controller.signal,\n      decodeRetry = false,\n    ) => {\n      if (current?.naturalWidth && decodedBattleImagesRef.current.has(current)) {"
+    ],
+    [
+      "      return loadImage(src, onReady, signal);\n    };\n    const releaseImage",
+      "      return loadImage(src, onReady, signal, decodeRetry);\n    };\n    const releaseImage"
+    ],
+    [
+      "      run: () => ensureImageLoaded(loadedImageByPath.get(path) ?? existing, path, (image) => {\n        loadedImageByPath.set(path, image);\n        onReady(image);\n      }),",
+      "      run: (signal?: AbortSignal, decodeRetry = false) => ensureImageLoaded(\n        loadedImageByPath.get(path) ?? existing, path, (image) => {\n          loadedImageByPath.set(path, image);\n          onReady(image);\n        }, signal, decodeRetry,\n      ),"
     ]
   ],
   "app/manualAbilities.js": [

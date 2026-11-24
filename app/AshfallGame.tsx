@@ -476,6 +476,7 @@ import { describeSaveEnvironment } from "./saveEnvironment.js";
 import {
   REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
   REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+  battleImageRetryUrl,
   loadImageWithTimeout,
 } from "./boundedImageLoader.js";
 import { runAssetLoadSession, selectRetryAssetJobs, OPTIONAL_ASSET_LOAD_DEADLINE_MS } from "./assetLoadSession.js";
@@ -15541,9 +15542,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         failureReason: "",
       });
     });
-    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void, signal = controller.signal) => (
+    const retryToken = String(sessionStartedAt) + "-" + generation;
+    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void, signal = controller.signal, decodeRetry = false) => (
       loadImageWithTimeout({
-        src,
+        src: decodeRetry ? battleImageRetryUrl(src, window.location.href, retryToken) : src,
         signal,
         requireDecode: true,
         decodeAttempts: REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
@@ -15579,6 +15581,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       src: string,
       onReady: (image: HTMLImageElement) => void,
       signal = controller.signal,
+      decodeRetry = false,
     ) => {
       if (current?.naturalWidth && decodedBattleImagesRef.current.has(current)) {
         const parameters = new URLSearchParams(window.location.search);
@@ -15589,7 +15592,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           return Promise.resolve();
         }
       }
-      return loadImage(src, onReady, signal);
+      return loadImage(src, onReady, signal, decodeRetry);
     };
     const releaseImage = (image: HTMLImageElement | null | undefined) => {
       if (!image) return;
@@ -15731,10 +15734,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ) => ({
       path,
       category,
-      run: () => ensureImageLoaded(loadedImageByPath.get(path) ?? existing, path, (image) => {
-        loadedImageByPath.set(path, image);
-        onReady(image);
-      }),
+      run: (signal?: AbortSignal, decodeRetry = false) => ensureImageLoaded(
+        loadedImageByPath.get(path) ?? existing, path, (image) => {
+          loadedImageByPath.set(path, image);
+          onReady(image);
+        }, signal, decodeRetry,
+      ),
     });
     const allCriticalJobs = [
       imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {
