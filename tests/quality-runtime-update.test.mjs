@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,293);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,517);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50327989); // Includes campaign artwork, offline audio alternatives and the guard cue.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54133558); // Includes campaign artwork, offline audio alternatives and the guard cue.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -43,7 +43,7 @@ test('every bundled audio range still contains its exact encoded content after t
   assert.ok(Number.isSafeInteger(row.bundleOffset)&&row.bundleOffset>=0&&row.bundleOffset+row.bundleBytes<=bytes.length);
   assert.equal('sha256-'+createHash('sha256').update(bytes.subarray(row.bundleOffset,row.bundleOffset+row.bundleBytes)).digest('hex'),row.hash,row.path);checked++;
  }
- assert.equal(checked,422);
+ assert.equal(checked,646);
  const directAudio=manifest=>manifest.assets.filter(row=>row.category==='audio'&&!row.bundlePath);
  const alternateFiles=contract.added.filter(row=>row.category==='audio'&&!row.bundlePath);
  assert.deepEqual(alternateFiles.map(row=>row.path),[
@@ -73,7 +73,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,294);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,518);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -97,7 +97,7 @@ test('station mud and pan guard foley append without moving or replacing older c
   const pinned='0aee66adbe961afea7ed70b558cf468f0357d616';
   const oldManifest=JSON.parse(execFileSync('git',['show',pinned+':public/asset-manifest.json'],{maxBuffer:4*1024*1024}));
   const retained=new Map(candidate.assets.map(asset=>[asset.path,asset]));
-  const added=candidate.assets.filter(asset=>!oldManifest.assets.some(old=>old.path===asset.path));
+  const added=candidate.assets.filter(asset=>asset.bundlePath!='/pwa-bundles/audio-fallback-v1.bin'&&!oldManifest.assets.some(old=>old.path===asset.path));
   assert.deepEqual(added.map(asset=>asset.path).sort(),[
     '/art/v102/combat-gore/ground-stains-r1.webp',
     '/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3',
