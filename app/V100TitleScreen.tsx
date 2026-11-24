@@ -58,7 +58,7 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
     cancelAnimationFrame(rafRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     audio.pause();
-    audio.currentTime = 0;
+    if (audio.currentTime !== 0) audio.currentTime = 0;
     elapsedRef.current = 0;
     setElapsed(0);
     setPhase("intro");
@@ -135,7 +135,7 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
     "--title-version": frame.version, "--title-menu": frame.menu,
   } as CSSProperties;
   return <section className="v100-start-screen" data-v100-surface="title" data-reduced-motion={quietMotion} data-title-intro={phase} data-title-time={elapsed.toFixed(3)} style={style} aria-labelledby="v100-start-title">
-    <audio ref={audioRef} src={V100_TITLE_VOICE.src} preload="auto" data-v100-title-voice="true" />
+    {phase !== "complete" && <audio ref={audioRef} src={V100_TITLE_VOICE.src} preload="auto" data-v100-title-voice="true" />}
     <V100TitleMusic settings={settings} voiceActive={phase !== "complete"} />
     <img className="v100-start-art" src={PRODUCTION_VISUALS.title} alt="" fetchPriority="high" />
     <div className="v100-start-shade" aria-hidden="true" />
