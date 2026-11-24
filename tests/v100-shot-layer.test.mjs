@@ -103,3 +103,33 @@ test("prefix failure unwinds owned raw saves without popping caller save", () =>
   assert.throws(() => layer.draw(main, (ctx) => { ctx.save(); ctx.beginPath(); ctx.stroke(); ctx.clip(); }), /prefix failure/);
   assert.equal(main.stackDepth, 1); assert.equal(layer.snapshot().callbackCount, 1); assert.equal(layer.snapshot().errors, 1);
 });
+
+
+test("ordinary direct-draw effects reuse one scratch surface without changing paint", () => {
+  const main = mainCanvas();
+  const layer = createV100ShotLayer({ createCanvas: () => canvas(0, 0) });
+  let callbacks = 0;
+
+  for (let frame = 0; frame < 6; frame += 1) {
+    layer.draw(main, (ctx) => {
+      callbacks += 1;
+      helper(ctx);
+      ctx.clip();
+      ctx.fill();
+    });
+  }
+
+  assert.equal(callbacks, 6);
+  assert.equal(layer.snapshot().fallbacks, 6);
+  assert.equal(layer.snapshot().frames, 0);
+  assert.equal(layer.snapshot().surfaceAllocations, 1);
+  assert.equal(main.state.calls.filter(([name]) => name === "stroke").length, 6);
+  assert.equal(main.state.calls.filter(([name]) => name === "fill").length, 6);
+  assert.equal(main.stackDepth, 0);
+
+  layer.draw(main, helper);
+  assert.equal(layer.snapshot().surfaceAllocations, 1);
+  assert.equal(layer.snapshot().frames, 1);
+  layer.clear();
+  assert.equal(layer.snapshot().bytes, 0);
+});
