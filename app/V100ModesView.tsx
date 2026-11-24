@@ -20,7 +20,12 @@ type Props = { save: Save; onBack: () => void; onLoadout: (tab?: ModeTab) => voi
 const runId = () => `v100-outbreak:${crypto.randomUUID()}`;
 
 export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "overview" }: Props) {
-  const [tab, setTab] = useState<ModeTab>(initialTab);
+  const [tab, setTab] = useState<ModeTab>(() => {
+    // A restored battle or result should return to its own mode when closed.
+    if (save.survival.view !== "hub") return "survival";
+    if (save.outbreak.view !== "hub") return "outbreak";
+    return initialTab;
+  });
   const [unsaved, setUnsaved] = useState<AshfallBattleResult | null>(null);
   const bosses: Encounter[] = v100OutbreakEncounters(save);
   const defeatCounts: Record<string, number> = save.bosses.defeatCounts;
