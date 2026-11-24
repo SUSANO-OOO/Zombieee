@@ -615,7 +615,22 @@ for (const engine of engines) {
       assert.ok(row.abilityText.numericDraws > 0, 'Numerical battle feedback remains visible');
       assert.ok(row.abilityText.observedBanners > 0, 'Transient mission banners were observed throughout native battle');
       assert.deepEqual(row.abilityText.forbidden, [], 'Only actual-start owner-bound short names are allowed; old banners and labels remain forbidden');
-      if (await page.locator(".v100-result-panel").isVisible()) {
+      const resultPanel = page.locator(".v100-result-panel");
+      if (!await resultPanel.isVisible()) {
+        await capture(page, row, "native-pressure");
+        const pause = page.getByRole("button", { name: "一時停止", exact: true });
+        if (await pause.isVisible()) {
+          try {
+            await pause.tap();
+          } catch (error) {
+            // The battle can finish while the native tap is being dispatched.
+            if (error.name !== "TimeoutError" || !await resultPanel.isVisible()) throw error;
+          }
+        }
+        const pauseMenu = page.getByRole("dialog", { name: "一時停止メニュー", exact: true });
+        await resultPanel.or(pauseMenu).first().waitFor();
+      }
+      if (await resultPanel.isVisible()) {
         row.nativeResult = true;
         const summary = page.locator(".v100-battle-report summary");
         await within(summary, 44); await summary.tap(); await within(page.locator(".v100-battle-report > div"));
@@ -642,8 +657,6 @@ for (const engine of engines) {
         }
       } else {
         row.nativeResult = false;
-        await capture(page, row, "native-pressure");
-        await page.getByRole("button", { name: "一時停止", exact: true }).tap();
       }
       assert.ok(row.native.inputs.length > 0);
     });
