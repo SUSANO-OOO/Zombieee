@@ -34,9 +34,9 @@ function normalizedJobs(jobs) {
     }
     byPath.set(job.path, {
       ...previous,
-      run: async (signal) => {
-        const result = await previous.run(signal);
-        await job.run(signal);
+      run: async (signal, decodeRetry) => {
+        const result = await previous.run(signal, decodeRetry);
+        await job.run(signal, decodeRetry);
         return result;
       },
     });
@@ -111,7 +111,7 @@ export async function runAssetLoadSession({
     settleDeadline("deadline");
   }, Math.max(1, Math.floor(deadlineMs) || ASSET_LOAD_SESSION_DEADLINE_MS));
 
-  const runBatch = (batch) => {
+  const runBatch = (batch, decodeRetry = false) => {
     let cursor = 0;
     const worker = async () => {
       while (!deadlineReached && !signal?.aborted) {
@@ -121,7 +121,7 @@ export async function runAssetLoadSession({
         const job = batch[index];
         publish(job);
         try {
-          await job.run(signal);
+          await job.run(signal, decodeRetry);
           failures.delete(job.path);
         } catch (error) {
           failures.set(job.path, {
@@ -148,7 +148,7 @@ export async function runAssetLoadSession({
       decodeRetryPaths.push(job.path);
       completed.delete(job.path);
     }
-    return runBatch(retryJobs);
+    return runBatch(retryJobs, true);
   });
   await Promise.race([workersDone, deadline]);
 

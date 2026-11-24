@@ -27,6 +27,14 @@ function imageLoadError(name, message) {
   return error;
 }
 
+// Renew the browser image request while keeping the installed asset pathname.
+export function battleImageRetryUrl(src, pageUrl, token) {
+  const request = new URL(src, pageUrl);
+  if (request.origin !== new URL(pageUrl).origin) return src;
+  request.searchParams.set("battle-decode-retry", token);
+  return request.href;
+}
+
 export function loadImageWithTimeout({
   src,
   onReady,

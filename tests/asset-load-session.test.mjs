@@ -12,6 +12,7 @@ import {
   IMAGE_LOAD_TIMEOUT_MS,
   REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
   REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+  battleImageRetryUrl,
 } from "../app/boundedImageLoader.js";
 
 const job = (path, run, category = "unit") => ({ path, category, run });
@@ -118,21 +119,33 @@ test("a battle can recover only the images that failed decoding after the first 
   let attempts = 0;
   const result = await runAssetLoadSession({
     jobs: [
-      job("/effects.webp", async () => {
-        calls.push("effects");
+      job("/effects.webp", async (_signal, decodeRetry) => {
+        calls.push(["effects", decodeRetry]);
         attempts += 1;
         if (attempts === 1) throw decodeError();
       }, "stage-object"),
-      job("/background.webp", async () => { calls.push("background"); }),
+      job("/background.webp", async (_signal, decodeRetry) => { calls.push(["background", decodeRetry]); }),
     ],
     concurrency: 1,
     retryDecodeOnce: true,
   });
-  assert.deepEqual(calls, ["effects", "background", "effects"]);
+  assert.deepEqual(calls, [["effects", false], ["background", false], ["effects", true]]);
   assert.equal(result.status, "ready");
   assert.equal(result.completed, 2);
   assert.deepEqual(result.failures, []);
   assert.deepEqual(result.decodeRetryPaths, ["/effects.webp"]);
+});
+
+test("a renewed image request uses the same installed asset path", () => {
+  const page = "https://example.test/Zombieee/";
+  const src = "/Zombieee/art/unit.webp?variant=1";
+  const firstRetry = new URL(battleImageRetryUrl(src, page, "17-1"));
+  assert.equal(firstRetry.pathname, "/Zombieee/art/unit.webp");
+  assert.equal(firstRetry.searchParams.get("variant"), "1");
+  assert.equal(firstRetry.searchParams.get("battle-decode-retry"), "17-1");
+  assert.notEqual(firstRetry.href, battleImageRetryUrl(src, page, "18-1"));
+  const external = "https://assets.example.test/unit.webp";
+  assert.equal(battleImageRetryUrl(external, page, "17-1"), external);
 });
 
 test("a persistent decode failure and a missing file still block battle readiness", async () => {
