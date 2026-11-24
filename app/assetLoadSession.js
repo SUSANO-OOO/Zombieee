@@ -22,6 +22,7 @@
 export const ASSET_LOAD_SESSION_DEADLINE_MS = 90_000;
 export const OPTIONAL_ASSET_LOAD_DEADLINE_MS = 20_000;
 export const ASSET_LOAD_MAX_CONCURRENCY = 2;
+const BATTLE_DECODE_RETRY_PAUSE_MS = 1_000;
 
 function normalizedJobs(jobs) {
   const byPath = new Map();
@@ -79,6 +80,7 @@ export async function runAssetLoadSession({
   const decodeRetryPaths = [];
   let deadlineReached = false;
   let deadlineTimer = null;
+  let releaseDecodeRetryPause = null;
 
   const snapshot = (active = null) => ({
     generation,
@@ -140,19 +142,36 @@ export async function runAssetLoadSession({
       () => worker(),
     ));
   };
-  const workersDone = runBatch(queue).then(() => {
+  const workersDone = runBatch(queue).then(async () => {
     if (!retryDecodeOnce || deadlineReached || signal?.aborted) return;
-    // Use a fresh image request after the first batch settles, within the same session deadline.
     const retryJobs = queue.filter((job) => failures.get(job.path)?.reason === "decode");
+    if (retryJobs.length === 0) return;
+
+    // During a warm stage change the decoder can reject a whole batch, even
+    // on fresh requests. Let it settle before the one automatic retry, inside
+    // the original deadline. This matches the successful same-screen retry.
+    await new Promise((resolve) => {
+      const resume = () => {
+        clearTimer(timer);
+        signal?.removeEventListener("abort", resume);
+        releaseDecodeRetryPause = null;
+        resolve();
+      };
+      const timer = setTimer(resume, BATTLE_DECODE_RETRY_PAUSE_MS);
+      releaseDecodeRetryPause = resume;
+      signal?.addEventListener("abort", resume, { once: true });
+    });
+    if (deadlineReached || signal?.aborted) return;
     for (const job of retryJobs) {
       decodeRetryPaths.push(job.path);
       completed.delete(job.path);
     }
-    return runBatch(retryJobs, true);
+    await runBatch(retryJobs, true);
   });
   await Promise.race([workersDone, deadline]);
 
   if (deadlineReached) {
+    releaseDecodeRetryPause?.();
     abort?.();
     for (const job of queue) {
       if (completed.has(job.path)) continue;

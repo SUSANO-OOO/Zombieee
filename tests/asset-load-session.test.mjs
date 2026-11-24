@@ -173,7 +173,9 @@ test("an automatic decode retry stays inside the original session deadline", asy
   let timerStarts = 0;
   let attempts = 0;
   let markRetry;
+  let markPause;
   const retryStarted = new Promise((resolve) => { markRetry = resolve; });
+  const pauseStarted = new Promise((resolve) => { markPause = resolve; });
   const session = runAssetLoadSession({
     jobs: [job("/effects.webp", async () => {
       attempts += 1;
@@ -184,21 +186,56 @@ test("an automatic decode retry stays inside the original session deadline", asy
     retryDecodeOnce: true,
     signal: controller.signal,
     abort: () => controller.abort(),
-    setTimer: (callback) => {
+    setTimer: (callback, ms) => {
       timerStarts += 1;
-      deadline = callback;
-      return 1;
+      if (ms === ASSET_LOAD_SESSION_DEADLINE_MS) deadline = callback;
+      else markPause({ callback, ms });
+      return timerStarts;
     },
     clearTimer: () => {},
   });
+  const pause = await pauseStarted;
+  assert.equal(pause.ms, 1_000);
+  assert.equal(attempts, 1);
+  pause.callback();
   assert.equal(await Promise.race([retryStarted.then(() => true), session.then(() => false)]), true);
   deadline();
   const result = await session;
-  assert.equal(timerStarts, 1);
+  assert.equal(timerStarts, 2);
   assert.equal(controller.signal.aborted, true);
   assert.equal(result.deadlineReached, true);
   assert.equal(result.status, "error");
   assert.deepEqual(result.failures, [{ path: "/effects.webp", category: "unit", reason: "timeout" }]);
+});
+
+test("a deadline during the decode pause cancels the retry while retaining the failure", async () => {
+  let attempts = 0;
+  let deadline;
+  let markPause;
+  const pauseStarted = new Promise((resolve) => { markPause = resolve; });
+  const cleared = [];
+  const session = runAssetLoadSession({
+    jobs: [job("/effects.webp", async () => {
+      attempts += 1;
+      throw decodeError();
+    })],
+    retryDecodeOnce: true,
+    setTimer: (callback, ms) => {
+      if (ms === ASSET_LOAD_SESSION_DEADLINE_MS) deadline = callback;
+      else markPause();
+      return ms;
+    },
+    clearTimer: (timer) => { cleared.push(timer); },
+  });
+  await pauseStarted;
+  deadline();
+  const result = await session;
+  assert.equal(attempts, 1);
+  assert.equal(result.status, "error");
+  assert.equal(result.deadlineReached, true);
+  assert.deepEqual(result.decodeRetryPaths, []);
+  assert.deepEqual(result.failures, [{ path: "/effects.webp", category: "unit", reason: "decode" }]);
+  assert.deepEqual(cleared, [1_000]);
 });
 
 test("deduplicated shared paths notify every image consumer", async () => {
