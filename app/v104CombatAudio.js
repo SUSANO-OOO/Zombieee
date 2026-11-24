@@ -1,4 +1,5 @@
 import {v177JointActorKey} from './v177JointActorHistory.js';
+import {PWA_PAN_GUARD_FILE} from './pwaPanGuardFile.js';
 const recordedMayoVoices=Object.freeze({
  'voice-mayo-deploy':'recorded-bark',
  'voice-mayo-attack':'recorded-bark',
@@ -42,9 +43,9 @@ export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sour
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
 export const V104_CROSSBOW_AUDIO={id:'weapon-crossbow-release',category:'weapons',sources:sources('crossbow-release'),gain:.68,priority:70,cooldownMs:90,maxInstances:4};
 export const V104_PAN_GUARD_AUDIO = {
-  id: 'ability-kumaverson-pan-guard-contact',
+  id: PWA_PAN_GUARD_FILE.id,
   category: 'melee',
-  sources: [{src: '/audio/quality-20261124/manual/pan-guard-contact.mp3', type: 'audio/mpeg'}],
+  sources: [{src: PWA_PAN_GUARD_FILE.path, type: 'audio/mpeg'}],
   gain: .58,
   priority: 78,
   cooldownMs: 80,
