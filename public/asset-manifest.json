@@ -5282,6 +5282,17 @@
       "bundleLength": 36241636
     },
     {
+      "path": "/audio/v060/sfx/enemy-runner-hurt-02.ogg",
+      "bytes": 7407,
+      "hash": "sha256-c0cc30b68347a5b11a51e1d489279900b9d45f47c374e378d6d4243a96a39eb6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-runner-hurt-02-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
       "path": "/audio/v060/sfx/enemy-shade-attack-01.mp3",
       "bytes": 5756,
       "hash": "sha256-1496b79a2b6cc52e5cf067c7631bbed8fe83be3149ad51bb02a09971e4369fc2",
@@ -5627,6 +5638,17 @@
       "bundleLength": 36241636
     },
     {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-01.ogg",
+      "bytes": 11276,
+      "hash": "sha256-9267e0222f8e2b44c059973f3ce5c84e54e0fe84d3f05f2b2ca0b53f1b017de0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-turned-hurt-01-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
       "path": "/audio/v060/sfx/enemy-turned-hurt-02.mp3",
       "bytes": 14965,
       "hash": "sha256-590f6146b10ac8e852e459a04b2ae82a483c114afd48b26c1c63522e56bc9d7b",
@@ -5936,6 +5958,17 @@
       "bundleOffset": 8017885,
       "bundleBytes": 8207,
       "bundleLength": 36241636
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-attack-01.ogg",
+      "bytes": 9454,
+      "hash": "sha256-75963c8af435ea4eb2ebae521a4dfaf95682b145d85d1e22b18a922c888bd265",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "offline-human-male-light-attack-01-fallback",
+      "audioType": "audio/ogg"
     },
     {
       "path": "/audio/v060/sfx/human-male-light-attack-02.mp3",

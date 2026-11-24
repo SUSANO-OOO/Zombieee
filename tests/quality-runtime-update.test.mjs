@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,290);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,293);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50299852); // Includes campaign artwork, offline audio alternatives and the guard cue.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),50327989); // Includes campaign artwork, offline audio alternatives and the guard cue.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -47,7 +47,10 @@ test('every bundled audio range still contains its exact encoded content after t
  const directAudio=manifest=>manifest.assets.filter(row=>row.category==='audio'&&!row.bundlePath);
  const alternateFiles=contract.added.filter(row=>row.category==='audio'&&!row.bundlePath);
  assert.deepEqual(alternateFiles.map(row=>row.path),[
+  '/audio/v060/sfx/enemy-runner-hurt-02.ogg',
+  '/audio/v060/sfx/enemy-turned-hurt-01.ogg',
   '/audio/v060/sfx/enemy-turned-hurt-02.ogg',
+  '/audio/v060/sfx/human-male-light-attack-01.ogg',
   '/audio/v100/foley/treatment.ogg',
   '/audio/v104/combat/armor-hit.ogg',
  ]);
@@ -70,7 +73,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,291);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,294);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -100,7 +103,10 @@ test('station mud and pan guard foley append without moving or replacing older c
     '/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3',
     '/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3',
     '/audio/quality-20261124/manual/pan-guard-contact.mp3',
+    '/audio/v060/sfx/enemy-runner-hurt-02.ogg',
+    '/audio/v060/sfx/enemy-turned-hurt-01.ogg',
     '/audio/v060/sfx/enemy-turned-hurt-02.ogg',
+    '/audio/v060/sfx/human-male-light-attack-01.ogg',
   ]);
   for(const asset of oldManifest.assets){
     const next=retained.get(asset.path);
