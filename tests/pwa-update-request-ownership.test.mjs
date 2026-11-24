@@ -77,3 +77,20 @@ test('recovering a fully stored bundle or making extra requests fails the transp
     assert.equal(proof.repeatablePaths.has(pathname), false);
   }
 });
+
+test('incident repair distinguishes a shared bundle from one already stored in full', () => {
+  const mixedPath = '/Zombieee/pwa-bundles/audio-fallback-v1.bin';
+  const completePath = '/Zombieee/pwa-bundles/complete.bin';
+  const pendingPath = '/Zombieee/pwa-bundles/audio-v1.bin';
+  const assets = [
+    { pathname: mixedPath, hash: 'saved-fallback' },
+    { pathname: mixedPath, hash: 'pending-fallback' },
+    { pathname: completePath, hash: 'saved-complete' },
+    { pathname: pendingPath, hash: 'pending-primary' },
+  ];
+  const hashes = new Set(['saved-fallback', 'saved-complete']);
+  const paths = [mixedPath, completePath, pendingPath, completePath];
+  const repair = inspectPwaRecoveryBundles(assets, hashes, paths, [], pendingPath);
+  assert.deepEqual([...repair.pendingPaths], [mixedPath, pendingPath]);
+  assert.deepEqual(paths.filter(path => repair.fullyCachedPaths.has(path)), [completePath, completePath]);
+});
