@@ -343,8 +343,11 @@ record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", critic
 for (const [path, audioId, audioChannel = "se"] of [
   ["/audio/v100/foley/treatment.ogg", "offline-treatment-fallback"],
   ["/audio/v104/combat/armor-hit.ogg", "offline-armor-hit-fallback"],
-  // Mobile Chromium requested this 15,722-byte voice alternate during an offline battle.
+  // Mobile battle playback has requested these recorded reactions via their alternate encoding.
+  ["/audio/v060/sfx/enemy-runner-hurt-02.ogg", "offline-runner-hurt-02-fallback", "voice"],
+  ["/audio/v060/sfx/enemy-turned-hurt-01.ogg", "offline-turned-hurt-01-fallback", "voice"],
   ["/audio/v060/sfx/enemy-turned-hurt-02.ogg", "offline-turned-hurt-fallback", "voice"],
+  ["/audio/v060/sfx/human-male-light-attack-01.ogg", "offline-human-male-light-attack-01-fallback", "voice"],
 ]) {
   record(path, { pack: "audio", category: "audio", criticality: "optional",
     audioChannel, audioId, audioType: "audio/ogg" });

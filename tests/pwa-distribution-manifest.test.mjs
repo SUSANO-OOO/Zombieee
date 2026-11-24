@@ -242,7 +242,10 @@ test("the full install contains one preferred playable source for every audio cu
   for (const [prefix, channel] of [
     ["/audio/v100/foley/treatment", "se"],
     ["/audio/v104/combat/armor-hit", "se"],
+    ["/audio/v060/sfx/enemy-runner-hurt-02", "voice"],
+    ["/audio/v060/sfx/enemy-turned-hurt-01", "voice"],
     ["/audio/v060/sfx/enemy-turned-hurt-02", "voice"],
+    ["/audio/v060/sfx/human-male-light-attack-01", "voice"],
   ]) {
     const preferred = audioAssets.find(asset => asset.path === prefix + ".mp3");
     const alternate = audioAssets.find(asset => asset.path === prefix + ".ogg");

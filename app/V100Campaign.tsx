@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { FormEvent, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { RELEASE_LABEL } from "./releaseIdentity.js";
 import { V100LockChain } from "./V100LockChain";
 import { V100AssetCredits } from "./V100AssetCredits";
@@ -1386,6 +1386,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   const showChargeAdvice = stage?.number === 5;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
+  const absenceDescriptionId = useId();
   const absence = v100StageAbsenceReason(stageId, "unit-paisen");
   const requestedUnit = requestedUnitId && save.ownedUnitIds.includes(requestedUnitId) && !save.formationSlots.includes(requestedUnitId) ? UNIT_BY_ID.get(requestedUnitId) ?? null : null;
   const requestedAbsence = requestedUnit ? v100StageAbsenceReason(stageId, requestedUnit.id) : null;
@@ -1403,7 +1404,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
           <div className="v100-field-map-pane" tabIndex={0}>
             <span className="v100-field-map-title"><strong>{stage ? "S" + String(stage.number).padStart(2, "0") + " / " + stageDisplayNameFor(stage) : "異常発生・サバイバル / 出撃準備"}</strong></span>
             <div className="v100-field-map-intel"><strong>{modePreparation ? "仲間を選び、次の迎撃に備える" : objectiveLabelFor(stage)}</strong></div>
-            {absence && <p className="v100-stage-absence" role="note">{absence}</p>}
+            {absence && <p id={absenceDescriptionId} className="v100-stage-absence" role="note">{absence}</p>}
             {activeUnit && activePresentation ? <div className="v100-briefing-person" data-v100-focused-unit={activeUnit.id}>
               <CrewPortrait unitId={activeUnit.id} label={activeUnit.displayName} />
               <div aria-label={activeUnit.displayName + "の役割・手動アビリティ"}>
@@ -1457,9 +1458,9 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
             const unit = unitId ? UNIT_BY_ID.get(unitId) : null;
             const info = unitId ? v100UnitPresentation(save, unitId) : null;
             const unavailable = v100StageAbsenceReason(stageId, unitId);
-            return <button type="button" key={"slot-" + index} data-crew-role={unit?.role} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); if (placingUnit) { onSlotChange(index, placingUnit.id); setPickerOpen(false); } else setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")}>
+            return <button type="button" key={"slot-" + index} data-crew-role={unit?.role} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); if (placingUnit) { onSlotChange(index, placingUnit.id); setPickerOpen(false); } else setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")} aria-describedby={unavailable ? absenceDescriptionId : undefined}>
               <span className="v100-slot-portrait">{art && unitId ? <CrewPortrait unitId={unitId} /> : <i aria-hidden="true">＋</i>}</span>
-              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き枠"}</strong><b>{unavailable ? "救助中・出撃不可" : info ? `指揮 ${info.commandCost}` : placingUnit ? <>ここに<wbr />配置</> : <>仲間を<wbr />選ぶ</>}</b></span>
+              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き枠"}</strong><b className={unavailable ? "v100-slot-unavailable" : undefined}>{unavailable ? "出撃不可" : info ? `指揮 ${info.commandCost}` : placingUnit ? <>ここに<wbr />配置</> : <>仲間を<wbr />選ぶ</>}</b></span>
             </button>;
           })}</div>
         </div>
