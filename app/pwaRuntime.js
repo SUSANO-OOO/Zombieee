@@ -263,7 +263,7 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
 
   return {
     headline: "西新世紀末物語をインストール",
-    body: "ホーム画面に追加して、ゲームをダウンロードしましょう。",
+    body: "保存後は通信なしで遊べます。",
     sizeLine: totalAssets > 0
       ? `ダウンロード容量：${formatBytes(totalBytes)}`
       : null,

@@ -11,11 +11,14 @@ import { v100RuntimeAssetPathList } from "../app/v100RuntimeAssetManifest.js";
 const root = process.cwd();
 
 test("V1 gameplay route is behind the durable PWA gate", async () => {
-  const [page, campaign] = await Promise.all([
+  const [page, entry, campaign] = await Promise.all([
     readFile(path.join(root, "app/v100/page.tsx"), "utf8"),
+    readFile(path.join(root, "app/GameEntry.tsx"), "utf8"),
     readFile(path.join(root, "app/V100Campaign.tsx"), "utf8"),
   ]);
-  assert.match(page, /<PwaGate>\s*<LandscapeGate>\s*<FictionNotice>\s*<V100Campaign \/>\s*<\/FictionNotice>\s*<\/LandscapeGate>\s*<\/PwaGate>/u);
+  assert.match(page, /<PwaGate>\s*<LandscapeGate>\s*<FictionNotice>\s*<GameEntry campaignOnly \/>\s*<\/FictionNotice>\s*<\/LandscapeGate>\s*<\/PwaGate>/u);
+  assert.doesNotMatch(page, /from "\.\.\/V100Campaign"/u);
+  assert.match(entry, /const Campaign = lazy\(\(\) => import\("\.\/V100Campaign"\)/u);
   assert.match(campaign, /data\.pwaScreen|dataset\.pwaScreen/u);
   assert.match(campaign, /pwaBattleActive = String\(battleActive\)/u);
   assert.match(campaign, /pwaResultSaving = String\(resultSaving\)/u);
