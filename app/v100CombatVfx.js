@@ -36,6 +36,7 @@ export const V100_COMBAT_VFX_ART=Object.freeze({
  'v100-countercut':'/art/v100/combat-vfx/countercut-six-frames-r1.webp',
  'v100-ground-fire':'/art/v100/combat-vfx/ground-fire-smoke-r1.webp',
  [V100_GROUND_FIRE_BED_ART.burn.id]:V100_GROUND_FIRE_BED_ART.burn.path,
+ [V100_GROUND_FIRE_BED_ART.drum.id]:V100_GROUND_FIRE_BED_ART.drum.path,
  [V100_BALLISTIC_MATERIAL_ART.materials.id]:V100_BALLISTIC_MATERIAL_ART.materials.path,
 });
 

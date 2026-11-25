@@ -1,0 +1,36 @@
+{
+  "creator": "OpenAI built-in image_gen; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true
+  },
+  "producerApproval": "Current smartphone goal requests distinct smoke, fire, and embers. Candidate awaiting final acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261126/vfx/incendiary-drum-r1/master-r1.png",
+    "bytes": 1790581,
+    "sha256": "b465fd43e2a227a7f541cc31b4119cb35209127d711a1e1dc4dffb700e1c0efa"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261126/vfx/incendiary-drum-r1/prompt.txt",
+    "sha256": "fcb631e2fdf2283ed84903db8b880b4a96b72d27cc2915b5d9721235a49a9518"
+  },
+  "calibration": "Six source cells at 512 pixels each. Resize each cell separately to 224 and pad it by 16 transparent pixels on all sides in the 256-pixel runtime sheet. The bottom of the original flame, approximately y=477, sits at runtime y=225.",
+  "output": {
+    "id": "v100-drum-fire-column",
+    "path": "/art/quality-20261126/vfx/incendiary-drum-column-six-r1.webp",
+    "hash": "sha256-42f54f446e533f781b57a20750b5c261514fbd950894be4127cf24094abf236e",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "bytes": 75882
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 75882,
+  "distinctBytes": 75882,
+  "estimatedDecodedRgbaBytes": 1572864
+}
