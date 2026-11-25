@@ -40,7 +40,7 @@ const RELEASES=Object.freeze({
  mother:{size:192,beats:[[0,-42],[.08,0],[.16,42]]},
  ooguchi:{size:220,beats:[[0,18]]},
  gairen:{size:230,beats:[[0,-24],[.1,24]]},
- futago:{size:214,beats:[[0,-30],[.12,30]]},
+ futago:{size:238,beats:[[0,-8],[.045,8]]},
  'mugarian-president-mutated':{size:208,beats:[[0,-62],[.04,-20],[.08,20],[.12,62]]},
  'takuya-omega':{size:312,beats:[[0,0]]},
 });
@@ -50,6 +50,9 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
  const {art,image:source}=bossAttackReleaseSource(objects,kind,world,ownerId);
  if(!source?.complete||!source.naturalWidth||!source.naturalHeight)return false;
  const cw=source.naturalWidth/3,ch=source.naturalHeight/2;
+ const bladeSweep = kind === 'takuya-omega' && Boolean(art);
+ const twinStrike = kind === 'futago' && Boolean(art);
+ const anchorX = bladeSweep ? .35 : twinStrike ? .33 : art?.anchorX ?? .5;
  // The sheet is a square painted camera. Keep its height and the authored
  // ground anchor instead of flattening every burst into a shallow ellipse.
  // Bound the union of staggered beats, not each individual image.
@@ -58,11 +61,11 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
   const {viewportWidth,viewportHeight,worldScale}=viewport;
   const offsets=p.beats.map(([,offset])=>offset),spread=Math.max(...offsets)-Math.min(...offsets);
   const budget=viewportWidth*viewportHeight*.18/(worldScale*worldScale);
-  size=Math.min(size,(Math.sqrt(spread*spread+4*budget)-spread)/2);
+  const widthInCells = twinStrike ? 2 * (1 - anchorX) : 1;
+  size=Math.min(size,(Math.sqrt(spread*spread+4*widthInCells*budget)-spread)/(2*widthInCells));
  }
  // The painted debris travels right from its impact point. Place that point
  // beneath the blade's reach and mirror the burst for a leftward strike.
- const bladeSweep = kind === 'takuya-omega' && Boolean(art);
  const strikeX = bladeSweep ? x + direction * size * .58 : x;
  for(const [delay,offset] of p.beats){
   const age=elapsed-delay;if(age<0||age>=.54)continue;
@@ -71,7 +74,6 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
   ctx.translate(strikeX+(kind==='ooguchi'?-direction:1)*offset,y+4);
   if ((bladeSweep && direction < 0) || (kind === 'futago' && offset < 0)) ctx.scale(-1, 1);
   if(art){
-   const anchorX = bladeSweep ? .35 : art.anchorX;
    const position=progress*5,first=Math.floor(position),next=Math.min(5,first+1),blend=position-first;
    const fade=ctx.globalAlpha;
    for(const [cell,weight]of [[first,1-blend],[next,blend]]){
@@ -96,8 +98,12 @@ export function drawV100BossReleaseFields(ctx,objects,world,viewport={}){
   const tuning=BOSS_ANOMALY_TUNING[f.kind];
   if(!RELEASES[f.kind]||!tuning||!f.combatReady||!(f.hp>0)||f.stationAbility?.phase!=='active')continue;
   const elapsed=tuning.activeSeconds-f.stationAbility.remainingSeconds;
-  if(![f.x,f.y,elapsed].every(Number.isFinite)||elapsed<0)continue;
-  if(drawRelease(ctx,objects,{kind:f.kind,x:f.x,y:f.y,elapsed,world,ownerId:f.id,viewport,
+  // Futago damages the locked crossing point. Its darker movement dust still
+  // follows the fighters' feet in the actor pass.
+  const x = f.kind === 'futago' ? Number(f.stationAbility.targetX) || f.x : f.x;
+  const y = f.kind === 'futago' ? Number(f.stationAbility.targetY) || f.y : f.y;
+  if(![x,y,elapsed].every(Number.isFinite)||elapsed<0)continue;
+  if(drawRelease(ctx,objects,{kind:f.kind,x,y,elapsed,world,ownerId:f.id,viewport,
    direction:f.kind==='ooguchi'?-1:Number(f.stationAbility.targetX)>f.x?1:-1}))drawn++;
  }
  return drawn;

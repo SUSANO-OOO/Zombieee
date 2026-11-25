@@ -93,5 +93,23 @@ export const V100_MANUAL_IMPACT_ART=Object.freeze({
     "impactWorldSize": 184,
     "flightCycleSeconds": 0.15,
     "impactSeconds": 0.3
+  },
+  "scout": {
+    "id": "v100-hachi-intercept-impact",
+    "path": "/art/quality-20261126/vfx/hachi-intercept-six-r1.webp",
+    "hash": "sha256-e3579346951cd87904a9e6686e2211126a94d8a625288300cdb877a58ef7a273",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "worldSize": 174,
+    "anchors": [
+      [0.30912989, 0.68444647],
+      [0.3350626, 0.66353837],
+      [0.2842911, 0.68263953],
+      [0.2842911, 0.68263953],
+      [0.2842911, 0.68263953],
+      [0.2842911, 0.68263953]
+    ]
   }
 });
