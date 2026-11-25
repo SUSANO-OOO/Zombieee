@@ -22,11 +22,11 @@ function assertDelta(next){
   }
 }
 
-test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
+test('quality candidate contains exactly the reviewed art, audio and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,517);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,519);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54133558); // Includes campaign artwork, offline audio alternatives and the guard cue.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54344444); // Includes campaign artwork, offline audio alternatives, guard foley and both defeat reactions.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -53,6 +53,8 @@ test('every bundled audio range still contains its exact encoded content after t
   '/audio/v060/sfx/human-male-light-attack-01.ogg',
   '/audio/v100/foley/treatment.ogg',
   '/audio/v104/combat/armor-hit.ogg',
+  '/audio/quality-20261125/voices/human-male-heavy-death-01.wav',
+  '/audio/quality-20261125/voices/human-male-heavy-death-02.wav',
  ]);
  assert.deepEqual(ordered(directAudio(candidate)),ordered([...directAudio(baseline),...alternateFiles]));
 });
@@ -73,7 +75,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,518);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,520);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -93,7 +95,7 @@ test('only the producer-selected Kuma retained payload changes; every other reta
  const wrong=structuredClone(candidate);wrong.assets.find(r=>r.path===path).hash=before.get(path).hash;assert.throws(()=>assertDelta(wrong));
 });
 
-test('station mud and pan guard foley append without moving or replacing older clips',()=>{
+test('late foley and defeat reactions append without moving or replacing older clips',()=>{
   const pinned='0aee66adbe961afea7ed70b558cf468f0357d616';
   const oldManifest=JSON.parse(execFileSync('git',['show',pinned+':public/asset-manifest.json'],{maxBuffer:4*1024*1024}));
   const retained=new Map(candidate.assets.map(asset=>[asset.path,asset]));
@@ -103,6 +105,8 @@ test('station mud and pan guard foley append without moving or replacing older c
     '/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3',
     '/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3',
     '/audio/quality-20261124/manual/pan-guard-contact.mp3',
+    '/audio/quality-20261125/voices/human-male-heavy-death-01.wav',
+    '/audio/quality-20261125/voices/human-male-heavy-death-02.wav',
     '/audio/v060/sfx/enemy-runner-hurt-02.ogg',
     '/audio/v060/sfx/enemy-turned-hurt-01.ogg',
     '/audio/v060/sfx/enemy-turned-hurt-02.ogg',
