@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, audio and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,520);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,521);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54448428); // Includes Hachi's six-frame contact.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54524310);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -75,7 +75,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,521);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,522);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -102,6 +102,7 @@ test('late effects and recordings append without moving or replacing older files
   const added=candidate.assets.filter(asset=>asset.bundlePath!='/pwa-bundles/audio-fallback-v1.bin'&&!oldManifest.assets.some(old=>old.path===asset.path));
   assert.deepEqual(added.map(asset=>asset.path).sort(),[
     '/art/quality-20261126/vfx/hachi-intercept-six-r1.webp',
+    '/art/quality-20261126/vfx/incendiary-drum-column-six-r1.webp',
     '/art/v102/combat-gore/ground-stains-r1.webp',
     '/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3',
     '/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3',

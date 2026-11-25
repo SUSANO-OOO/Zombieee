@@ -1,0 +1,8 @@
+{
+  "masterPath": "assets/source/quality-20261126/vfx/incendiary-drum-r1/master-r1.png",
+  "masterSha256": "b465fd43e2a227a7f541cc31b4119cb35209127d711a1e1dc4dffb700e1c0efa",
+  "promptPath": "assets/source/quality-20261126/vfx/incendiary-drum-r1/prompt.txt",
+  "anchorX": 0.5,
+  "anchorY": 0.87890625,
+  "calibration": "Six source cells at 512 pixels each. Resize each cell separately to 224 and pad it by 16 transparent pixels on all sides in the 256-pixel runtime sheet. The bottom of the original flame, approximately y=477, sits at runtime y=225."
+}

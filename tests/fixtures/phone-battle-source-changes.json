@@ -915,6 +915,18 @@
     [
       "            play: () => {\n              if (voice.event !== \"attack\") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });\n              return productionMixer.play(voice.asset.id, {\n                pan,\n                instanceKey,\n",
       "            play: () => {\n              if (voice.event !== \"attack\") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });\n              return productionMixer.play(voice.cueId, {\n                pan,\n                instanceKey,\n"
+    ],
+    [
+      "\n  const departureCrewKind = externalSession ? v100DepartureCrewKind(externalSession) : undefined;\n  const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === \"survival\" || (screen === \"battle\" && survivalHud !== null);\n  const survivalAssetBossKindKey = (\n",
+      "\n  const departureCrewKind = externalSession ? v100DepartureCrewKind(externalSession) : undefined;\n  const incendiaryDrumEquipped = externalSession?.equippedSupportId === \"support-incendiary-drum\";\n  const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === \"survival\" || (screen === \"battle\" && survivalHud !== null);\n  const survivalAssetBossKindKey = (\n"
+    ],
+    [
+      "      operationId: assetOperationId,\n      useCharacterPortraitCards: externalSessionActive,\n      basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,\n      formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],\n",
+      "      operationId: assetOperationId,\n      useCharacterPortraitCards: externalSessionActive,\n      incendiaryDrumEquipped,\n      basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,\n      formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],\n"
+    ],
+    [
+      "      controller.abort();\n    };\n  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);\n\n  const retryAssets = useCallback(() => {\n",
+      "      controller.abort();\n    };\n  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, incendiaryDrumEquipped, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);\n\n  const retryAssets = useCallback(() => {\n"
     ]
   ],
   "app/manualAbilities.js": [

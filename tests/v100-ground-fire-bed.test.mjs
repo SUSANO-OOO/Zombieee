@@ -12,6 +12,7 @@ import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 import {selectBattleArtworkPolicy} from '../app/pwaBattleArtworkContext.js';
 
 const art=V100_GROUND_FIRE_BED_ART.burn;
+const drumArt=V100_GROUND_FIRE_BED_ART.drum;
 const modern={complete:true,naturalWidth:768,naturalHeight:512};
 const legacy={complete:true,naturalWidth:768,naturalHeight:640};
 const effect=(change={})=>({id:7,kind:'burn',phase:'active',x:300,y:200,radius:88,remaining:2,...change});
@@ -71,9 +72,37 @@ test('all six fire cells animate inside the real footprint and fade out without 
  }
 });
 
+test('only a drum gets the rising fire, which animates above its ground bed and fades out',()=>{
+ const column={...modern};
+ const objects={[art.id]:modern,[drumArt.id]:column};
+ const drum=effect({sourceSupplyId:4}),whisky=effect({id:8,sourceSupplyId:-100004,sourceUnitKind:'zakimiya'});
+ const world={areaEffects:[drum,whisky]};
+ const cells=new Set();
+ for(let time=0;time<2;time+=1/30){
+  const {calls}=render(objects,drum,time,world);
+  const ground=calls.filter(c=>c.args[0]===modern),smoke=calls.filter(c=>c.args[0]===column);
+  assert.ok(ground.length>0&&smoke.length>0&&calls.length<=4);
+  assert.equal(calls[0],ground[0]);
+  for(const {args} of smoke){
+   const [,sx,sy,,,x,,width,height]=args;
+   assert.ok(height>ground[0].args[8]&&Math.abs(x)+width/2<drum.radius*1.6);
+   cells.add(sy/256*3+sx/256);
+  }
+ }
+ assert.deepEqual([...cells].sort(),[0,1,2,3,4,5]);
+ assert.ok(render(objects,whisky,1,world).calls.every(c=>c.args[0]===modern));
+ const full=render(objects,drum,1,world).calls;
+ const fade=render(objects,{...drum,remaining:.225},1,world).calls;
+ assert.deepEqual(fade.map(c=>c.alpha),full.map(c=>c.alpha/2));
+ assert.ok(fade.find(c=>c.args[0]===column).args[8]<full.find(c=>c.args[0]===column).args[8]);
+ const lateWorld={areaEffects:[drum]};
+ render({[art.id]:modern},drum,0,lateWorld);
+ assert.ok(render(objects,drum,1,lateWorld).calls.every(c=>c.args[0]===modern));
+});
+
 test('old, partial and unverified installed packs cannot request the fire; exact offline bytes can',()=>{
  const installedManifest={assets:[{path:art.path,hash:art.hash}]},storedHashes=new Set([art.hash]);
- const facts={artworks:V100_GROUND_FIRE_BED_ART,installedManifest,storedHashes,gameBlocked:false};
+ const facts={artworks:{burn:art},installedManifest,storedHashes,gameBlocked:false};
  const valid=verifiedPwaArtworkPaths(facts);assert.equal(valid,art.path);
  for(const changes of [{installedManifest:{assets:[]}},{storedHashes:new Set()},{gameBlocked:true},
   {installedManifest:{assets:[{path:art.path,hash:'previous-content'}]}}]){
@@ -84,20 +113,31 @@ test('old, partial and unverified installed packs cannot request the fire; exact
  const locked=selectBattleArtworkPolicy(null,'same-stage','');
  assert.equal(selectBattleArtworkPolicy(locked,'same-stage',valid).paths,'','no mid-battle preparation expansion');
  assert.equal(selectBattleArtworkPolicy(locked,'next-stage',valid).paths,valid);
+ const newInstalled={...facts,artworks:V100_GROUND_FIRE_BED_ART,
+  installedManifest:{assets:[...installedManifest.assets,{path:drumArt.path,hash:drumArt.hash}]}};
+ assert.equal(verifiedPwaArtworkPaths(newInstalled),art.path);
+ const both=verifiedPwaArtworkPaths({...newInstalled,storedHashes:new Set([art.hash,drumArt.hash])}).split('\n');
+ assert.deepEqual(new Set(both),new Set([art.path,drumArt.path]));
  for(const stageId of V100_STAGE_IDS){
   const old=requiredBattleAssetPlan({stageId}),current=requiredBattleAssetPlan({stageId,verifiedGroundFirePaths:[valid]});
   assert.ok(!old.stageObjects.some(a=>a.id===art.id));assert.ok(!old.paths.includes(art.path));
   const row=current.stageObjects.find(a=>a.id===art.id);assert.ok(row?.optional);
   assert.ok(current.optionalPaths.includes(art.path));assert.ok(!current.paths.includes(art.path));
+  assert.ok(!requiredBattleAssetPlan({stageId,verifiedGroundFirePaths:both}).optionalPaths.includes(drumArt.path));
+  assert.ok(!requiredBattleAssetPlan({stageId,verifiedGroundFirePaths:[valid],incendiaryDrumEquipped:true}).optionalPaths.includes(drumArt.path));
+  const equipped=requiredBattleAssetPlan({stageId,verifiedGroundFirePaths:both,incendiaryDrumEquipped:true});
+  assert.ok(equipped.optionalPaths.includes(drumArt.path));assert.ok(!equipped.paths.includes(drumArt.path));
  }
 });
 
 test('the selected fire source reproduces the exact runtime and offline manifest entry',async()=>{
  execFileSync(process.execPath,['scripts/build-v100-ground-fire-art.mjs','--check'],{timeout:30000});
- const bytes=await readFile('public'+art.path),manifest=JSON.parse(await readFile('public/asset-manifest.json'));
- const row=manifest.assets.find(a=>a.path===art.path);
- assert.equal(row.hash,'sha256-'+createHash('sha256').update(bytes).digest('hex'));assert.equal(row.bytes,bytes.length);
- assert.equal(row.criticality,'critical');assert.equal(row.hash,art.hash);
+ const manifest=JSON.parse(await readFile('public/asset-manifest.json'));
+ for(const entry of [art,drumArt]){
+  const bytes=await readFile('public'+entry.path),row=manifest.assets.find(a=>a.path===entry.path);
+  assert.equal(row.hash,'sha256-'+createHash('sha256').update(bytes).digest('hex'));assert.equal(row.bytes,bytes.length);
+  assert.equal(row.criticality,'critical');assert.equal(row.hash,entry.hash);
+ }
  const gate=await readFile('app/PwaGate.tsx','utf8'),game=await readFile('app/AshfallGame.tsx','utf8');
  assert.ok(gate.includes('artworks: V100_GROUND_FIRE_BED_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl'));
  assert.ok(game.includes("verifiedGroundFirePaths: battleArtworkPolicyRef.current.paths.split('\\n').filter(Boolean)"));

@@ -15501,6 +15501,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [cleanupAllBattlefieldPointerGestures]);
 
   const departureCrewKind = externalSession ? v100DepartureCrewKind(externalSession) : undefined;
+  const incendiaryDrumEquipped = externalSession?.equippedSupportId === "support-incendiary-drum";
   const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === "survival" || (screen === "battle" && survivalHud !== null);
   const survivalAssetBossKindKey = (
     externalSession?.survivalRun?.bossPool
@@ -15670,6 +15671,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       stageId: assetStageId,
       operationId: assetOperationId,
       useCharacterPortraitCards: externalSessionActive,
+      incendiaryDrumEquipped,
       basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
@@ -15947,7 +15949,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       window.clearTimeout(slowTimer);
       controller.abort();
     };
-  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
+  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, incendiaryDrumEquipped, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
 
   const retryAssets = useCallback(() => {
     const retryPaths = new Set([

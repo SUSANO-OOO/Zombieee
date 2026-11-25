@@ -69,6 +69,7 @@ export function requiredBattleAssetPlan({
   includeV100Sprites = true,
   basePresentationStageNumber = null,
   useCharacterPortraitCards = false,
+  incendiaryDrumEquipped = false,
   verifiedBossDefeatPaths = [],
   verifiedBossAttackPaths = [],
   verifiedManualImpactPaths = [],
@@ -132,7 +133,7 @@ export function requiredBattleAssetPlan({
   const combatVfx = includeV100Sprites && v100Stage
     // Retain the archived file for old generations without decoding the unused
     // 1536x1024 glyph for every current smartphone battle.
-    ? Object.entries(V100_COMBAT_VFX_ART).filter(([id])=>id!=='v100-countercut'&&id!==V100_GROUND_FIRE_BED_ART.burn.id&&id!==V100_BALLISTIC_MATERIAL_ART.materials.id)
+    ? Object.entries(V100_COMBAT_VFX_ART).filter(([id])=>id!=='v100-countercut'&&id!==V100_GROUND_FIRE_BED_ART.burn.id&&id!==V100_GROUND_FIRE_BED_ART.drum.id&&id!==V100_BALLISTIC_MATERIAL_ART.materials.id)
       .map(([id,path])=>({id,path,runtimeUsage:"battle-overlay"})) : [];
   const tataraObjects = includeV100Sprites && v100Stage && requiredKinds.includes("brute")
     ? [{ id: TATARA_GROUND_ART.id, path: TATARA_GROUND_ART.path, runtimeUsage: "battle-overlay" }] : [];
@@ -157,7 +158,8 @@ export function requiredBattleAssetPlan({
     ? Object.entries(V100_GUARD_IMPACT_ART).filter(([kind,art])=>formationKinds.includes(kind)&&verifiedGuardImpactPaths.includes(art.path))
       .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
   const groundFireObjects = includeV100Sprites && v100Stage
-    ? Object.values(V100_GROUND_FIRE_BED_ART).filter(art=>verifiedGroundFirePaths.includes(art.path))
+    ? [V100_GROUND_FIRE_BED_ART.burn, ...(incendiaryDrumEquipped ? [V100_GROUND_FIRE_BED_ART.drum] : [])]
+      .filter(art=>verifiedGroundFirePaths.includes(art.path))
       .map(art=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
   const ballisticMaterialObjects = includeV100Sprites && v100Stage
     ? Object.values(V100_BALLISTIC_MATERIAL_ART).filter(art=>verifiedBallisticMaterialPaths.includes(art.path))

@@ -105,6 +105,7 @@ export function v100TacticalHintFor(stage) {
   if (!stage) return "前衛が敵を引き受け、後ろから射撃で援護しよう。";
   if (Number(stage.number) === 1) return "クマバーソンが敵を引き受け、ババヤガが射撃で援護。「鉄鍋仁王立ち」を使うと、クマバーソンは自分のHPを少しずつ回復できる。敵が増えたら前衛を追加で出撃させよう。";
   if (Number(stage.number) === 2) return "射撃役を早めに出そう。車両に迫る前に、集まった敵を航空支援で狙おう。着弾まで少しかかる。";
+  if (Number(stage.number) === 3) return "前衛を射撃と回復で支えよう。大剣の予告にはクマバーソンの「鉄鍋仁王立ち」。増援が集まったら車両砲撃で迎え撃とう。";
   if (Number(stage.number) === 5) return "床がオレンジに光ったら突進が来る。クマバーソンの「鉄鍋仁王立ち」で前線を守ろう。";
   if (Number(stage.number) === 11) return "前衛を出撃させて供給弁の周りを確保。仲間が弁のそばにいると復旧が進む。復旧したらMOTHERを倒そう。";
   if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いたユニットをタップで回避。";
