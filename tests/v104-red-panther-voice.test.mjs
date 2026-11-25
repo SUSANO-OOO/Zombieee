@@ -5,7 +5,9 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {createHash} from 'node:crypto';
 import {createAudioRequestGate,runGuardedAudioRequest} from '../app/audioMixer.js';
-import {V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
+import {PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
+import {PWA_PAN_GUARD_FILE} from '../app/pwaPanGuardFile.js';
+import {v177JointActorKey} from '../app/v177JointActorHistory.js';
 import {playV104FighterVoice,v104MonsterVoiceEvent,v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
 const kinds=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander'];
 const events=['attack','hurt','death'];
@@ -95,6 +97,41 @@ test('generic heavy voice reactions prefer the matching short recording and reta
       assert.equal(data.readUInt16LE(22), 1);
       assert.equal(data.readUInt32LE(24), 44100);
     }
+  }
+});
+test('the game served under the Pages base still picks the short defeat recordings and the matching fallbacks', () => {
+  const prefix = source => source.replaceAll('/audio/', '/Zombieee/audio/');
+  const moduleSource = fs.readFileSync('app/v104CombatAudio.js', 'utf8');
+  // The Pages build prefixes absolute audio paths in the emitted JavaScript.
+  const compiled = ts.transpileModule(prefix(moduleSource), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+  }).outputText;
+  const imports = { './pwaPanGuardFile.js': {PWA_PAN_GUARD_FILE}, './v177JointActorHistory.js': {v177JointActorKey} };
+  const exports = {};
+  vm.runInNewContext(compiled, { exports, require(id) {
+    assert.ok(Object.hasOwn(imports, id), id);
+    return imports[id];
+  }});
+  const scopedAssets = PRODUCTION_AUDIO_MANIFEST.assets.map(asset => ({
+    ...asset,
+    sources: asset.sources.map(source => ({ ...source, src: prefix(source.src) })),
+  }));
+  const manifest = exports.withV104CombatAudio({ assets: scopedAssets });
+  const takes = [
+    ['human-male-heavy-death-01', '01'],
+    ['human-male-heavy-death-02', '02'],
+    ...Object.entries(shortDeathTake).map(([kind, take]) => ['voice-' + kind + '-death', take]),
+    ['voice-red-panther-shield-death-alternate', '01'],
+    ['voice-red-panther-commander-death-alternate', '02'],
+  ];
+  for (const [id, take] of takes) {
+    const actual = manifest.assets.find(asset => asset.id === id).sources;
+    const name = 'human-male-heavy-death-' + take;
+    assert.deepEqual(plain(actual.map(source => source.src)), [
+      '/Zombieee/audio/quality-20261125/voices/' + name + '.wav',
+      '/Zombieee/audio/v060/sfx/' + name + '.mp3',
+      '/Zombieee/audio/v060/sfx/' + name + '.ogg',
+    ], id);
   }
 });
 test('Red Panther combat cues alternate recordings from the same voice family at the original intensity', () => {

@@ -12,8 +12,9 @@ const shortHeavyDeathFileByTake = Object.freeze({
 });
 export const V104_SHORT_HEAVY_DEATH_PATHS = Object.freeze(Object.values(shortHeavyDeathFileByTake));
 
-function shortHeavyDeathSources(sources) {
-  const take = /^\/audio\/v060\/sfx\/human-male-heavy-death-(0[12])\.(?:mp3|ogg)$/.exec(sources[0]?.src ?? '')?.[1];
+function shortHeavyDeathSources(recordingId, sources) {
+  // Pages can prefix source URLs. Recording IDs stay constant.
+  const take = /^human-male-heavy-death-(0[12])$/.exec(recordingId)?.[1];
   return take ? [{ src: shortHeavyDeathFileByTake[take], type: 'audio/wav' }, ...sources] : sources;
 }
 
@@ -33,8 +34,9 @@ const recordedSources=(name,take)=>{
  if(recordedMayoVoices[name])return[{src:`/audio/quality-20261116/mayo/${recordedMayoVoices[name]}.wav`,type:'audio/wav'}];
  const match=/^voice-(.+)-(attack|hurt|death)$/.exec(name);
  const actor=match&&recordedHumanVoices[match[1]];
- const root=actor?`/audio/v060/sfx/human-${actor.profile}-${match[2]}-${take ?? actor.take}`:`/audio/v104/combat/${name}`;
- return shortHeavyDeathSources(['mp3','ogg'].map(ext=>({src:`${root}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'})));
+ const recordingId=actor?`human-${actor.profile}-${match[2]}-${take ?? actor.take}`:name;
+ const folder=actor?'/audio/v060/sfx':'/audio/v104/combat';
+ return shortHeavyDeathSources(recordingId,['mp3','ogg'].map(ext=>({src:`${folder}/${recordingId}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'})));
 };
 const replacements={
  ...Object.fromEntries(Object.keys(recordedMayoVoices).map(id=>[id,id])),
@@ -52,7 +54,7 @@ const redPantherReactionPoolId = (assetId) => `${assetId}-takes`;
 export function withV104CombatAudio(base) {
   const assets = base.assets.map(asset => {
     const replacement = replacements[asset.id];
-    const updatedSources = replacement ? recordedSources(replacement) : shortHeavyDeathSources(asset.sources);
+    const updatedSources = replacement ? recordedSources(replacement) : shortHeavyDeathSources(asset.id, asset.sources);
     return updatedSources === asset.sources ? asset : { ...asset, sources: updatedSources };
   });
   // Keep the first performance for each role and vary subsequent reactions
