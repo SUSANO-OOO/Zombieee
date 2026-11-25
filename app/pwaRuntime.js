@@ -231,18 +231,13 @@ export function formatFailureDiagnostics(diagnostics) {
 /** Player-facing copy for the first-install prompt. */
 export function describeInstall(plan, storage) {
   if (!plan) return null;
-  const lines = [
-    `${plan.pendingCount}件・${formatBytes(plan.pendingBytes)}をこの端末へ保存します`,
-  ];
-  if (storage?.available != null) {
-    lines.push(`空き容量の目安 ${formatBytes(storage.available)}`);
-  }
+  // The browser estimates this site's allowance, not the device's free space.
   const shortOnSpace = storage?.available != null && storage.available < plan.pendingBytes * 1.1;
   return {
     headline: "ゲームデータをダウンロードします",
-    lines,
+    lines: [`${plan.pendingCount}件・${formatBytes(plan.pendingBytes)}をこの端末へ保存します`],
     shortOnSpace,
-    warning: shortOnSpace ? "空き容量が不足している可能性があります" : null,
+    warning: shortOnSpace ? "ゲームの保存に使える容量が足りない可能性があります。端末の空き容量を確認してください。" : null,
     wifiHint: "Wi-Fi接続を推奨します",
   };
 }
