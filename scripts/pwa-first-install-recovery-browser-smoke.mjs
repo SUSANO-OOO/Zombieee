@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
-import { planInstall } from "../app/pwaAssetManifest.js";
+import { formatBytes, planInstall } from "../app/pwaAssetManifest.js";
+import { ASSET_CACHE_NAME, assetCacheKey, resolveAssetUrl } from "../app/pwaAssetStore.js";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 import { assertPwaInstallCapacity } from "./pwa-install-capacity-qa.mjs";
 
@@ -83,6 +84,79 @@ try {
       results.push({ mode, status: "passed", retryInPlace: true, gameDataDownloaded: false, physicalPhone: false, layout });
     } finally { await context.close(); }
   }
+  if (metadataCases.length) {
+    const context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true, isMobile: true });
+    try {
+      const artwork = shipped.assets.filter(asset => asset.path.endsWith(".webp"));
+      const uniqueArtwork = [...new Map(artwork.map(asset => [asset.hash, asset])).values()];
+      const assets = uniqueArtwork.sort((a, b) => a.bytes - b.bytes).slice(0, 3)
+        .map(asset => Object.fromEntries(Object.entries(asset).filter(([key]) => !key.startsWith("bundle"))));
+      assert.equal(assets.length, 3);
+      const [retained, ...pending] = assets;
+      const assetPaths = assets.map(asset => new URL(resolveAssetUrl(asset.sourcePath ?? asset.path, base)).pathname);
+      assert.equal(new Set(assetPaths).size, assets.length);
+      const remainingPaths = assetPaths.slice(1);
+      const partialBytes = planInstall({ assets: pending }).pendingBytes;
+      await context.addInitScript(({ pack, assetPaths, remainingPaths }) => {
+        Object.defineProperty(navigator, "standalone", { configurable: true, value: true });
+        window.__pwaResumeRequests = [];
+        const fetchOriginal = window.fetch.bind(window);
+        window.fetch = (...args) => {
+          const address = typeof args[0] === "string" ? args[0] : args[0].url ?? args[0].href;
+          const url = new URL(address, location.href);
+          if (url.pathname.endsWith("/asset-manifest.json")) {
+            return Promise.resolve(new Response(JSON.stringify(pack), { headers: { "content-type": "application/json" } }));
+          }
+          if (assetPaths.includes(url.pathname)) {
+            window.__pwaResumeRequests.push(url.pathname);
+            if (window.__pwaInterruptFirstDownload && remainingPaths.includes(url.pathname)) {
+              return new Promise(() => {});
+            }
+          }
+          return fetchOriginal(...args);
+        };
+      }, { pack: { ...shipped, assets }, assetPaths, remainingPaths });
+
+      const first = await context.newPage();
+      await first.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await first.evaluate(() => { window.__pwaInterruptFirstDownload = true; });
+      await first.getByRole("button", { name: "ダウンロードを開始", exact: true }).tap({ timeout: 30000 });
+      const cacheKey = assetCacheKey(retained.hash, base);
+      const saveDeadline = Date.now() + 30_000;
+      let storedHash = null;
+      while (!storedHash && Date.now() < saveDeadline) {
+        storedHash = await first.evaluate(async ({ name, key }) => {
+          const cache = await caches.open(name);
+          return (await cache.match(key))?.headers.get("x-pwa-asset-hash") ?? null;
+        }, { name: ASSET_CACHE_NAME, key: cacheKey });
+        if (!storedHash) await first.waitForTimeout(100);
+      }
+      assert.equal(storedHash, retained.hash, "close only after a verified file has been saved");
+      await first.close();
+
+      const reopened = await context.newPage();
+      const errors = [];
+      reopened.on("pageerror", error => errors.push(String(error)));
+      await reopened.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
+      const resume = reopened.getByRole("button", { name: "ダウンロードを再開", exact: true });
+      await resume.waitFor({ timeout: 30000 });
+      await reopened.getByRole("heading", { name: "ダウンロードの続き", exact: true }).waitFor();
+      assert.equal(await reopened.getByRole("button", { name: "ダウンロードを開始", exact: true }).count(), 0);
+      assert.equal((await reopened.locator(".pwa-gate .pwa-plan-capacity").textContent()).trim(),
+        `残り2件・${formatBytes(partialBytes)}をこの端末へ保存します`);
+      if (output) await reopened.screenshot({ path: path.join(output, "partial-reopened.png") });
+      await resume.tap();
+      await reopened.getByRole("heading", { name: "ダウンロードが完了しました", exact: true }).waitFor({ timeout: 60000 });
+      const fetched = await reopened.evaluate(() => window.__pwaResumeRequests);
+      assert.deepEqual(fetched.sort(), remainingPaths.sort(), "request each missing file once and keep the saved file");
+      const cached = await reopened.evaluate(async name => (await (await caches.open(name)).keys()).map(request => request.url), ASSET_CACHE_NAME);
+      assert.deepEqual(cached.sort(), assets.map(asset => assetCacheKey(asset.hash, base)).sort());
+      assert.deepEqual(errors, []);
+      results.push({ mode: "partial-first-install-resume", status: "passed", retained: retained.path,
+        remaining: pending.length, remainingBytes: partialBytes, fetched, syntheticPack: true, physicalPhone: false });
+    } finally { await context.close(); }
+  }
+
   // Hold the final cache read after all transport work finishes. Download
   // completion must remain behind durable generation commit, even across frames.
   const context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true, isMobile: true });

@@ -231,11 +231,15 @@ export function formatFailureDiagnostics(diagnostics) {
 /** Player-facing copy for the first-install prompt. */
 export function describeInstall(plan, storage) {
   if (!plan) return null;
+  const resuming = Boolean(plan.satisfied?.length && plan.pendingCount > 0);
+  const capacityPrefix = resuming ? "残り" : "";
   // The browser estimates this site's allowance, not the device's free space.
   const shortOnSpace = storage?.available != null && storage.available < plan.pendingBytes * 1.1;
   return {
-    headline: "ゲームデータをダウンロードします",
-    lines: [`${plan.pendingCount}件・${formatBytes(plan.pendingBytes)}をこの端末へ保存します`],
+    headline: resuming ? "ダウンロードの続き" : "ゲームデータをダウンロードします",
+    actionLabel: resuming ? "ダウンロードを再開" : "ダウンロードを開始",
+    capacityPrefix,
+    lines: [`${capacityPrefix}${plan.pendingCount}件・${formatBytes(plan.pendingBytes)}をこの端末へ保存します`],
     shortOnSpace,
     warning: shortOnSpace ? "ゲームの保存に使える容量が足りない可能性があります。端末の空き容量を確認してください。" : null,
     wifiHint: "Wi-Fi接続を推奨します",

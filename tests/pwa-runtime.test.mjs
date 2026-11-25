@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ASSET_CATEGORY_LABELS, ASSET_MANIFEST_SCHEMA } from "../app/pwaAssetManifest.js";
+import { ASSET_CATEGORY_LABELS, ASSET_MANIFEST_SCHEMA, planInstall } from "../app/pwaAssetManifest.js";
 import { assessCommitRecovery, manifestCacheComplete, manifestsEqual } from "../app/pwaManifestCommit.js";
 import {
   assessPwaState,
@@ -366,10 +366,29 @@ test("the install prompt shows the download size without the browser quota", () 
     { pendingCount: 531, pendingBytes: 116877281 },
     { available: 900000000 },
   );
+  assert.equal(described.headline, "ゲームデータをダウンロードします");
+  assert.equal(described.actionLabel, "ダウンロードを開始");
+  assert.equal(described.capacityPrefix, "");
   assert.deepEqual(described.lines, ["531件・111MBをこの端末へ保存します"]);
   assert.equal(described.shortOnSpace, false);
   assert.equal(described.warning, null);
   assert.match(described.wifiHint, /Wi-Fi/);
+});
+
+test("a partial first install offers to resume and shows only the unsaved data", () => {
+  const retained = asset("/art/retained.webp", 1, { bytes: 10 * 1048576 });
+  const missing = asset("/art/missing.webp", 2);
+  const pack = manifest([retained, missing]);
+  const partial = planInstall(pack, { storedHashesByPath: new Map([[retained.path, retained.hash]]) });
+  const described = describeInstall(partial, { available: 2 * 1048576 });
+  assert.equal(described.headline, "ダウンロードの続き");
+  assert.equal(described.actionLabel, "ダウンロードを再開");
+  assert.equal(described.capacityPrefix, "残り");
+  assert.deepEqual(described.lines, ["残り1件・1.0MBをこの端末へ保存します"]);
+  assert.equal(described.warning, null);
+
+  const outdated = planInstall(pack, { storedHashesByPath: new Map([[retained.path, hashOf(3)]]) });
+  assert.equal(describeInstall(outdated, null).actionLabel, "ダウンロードを開始");
 });
 
 test("a low storage estimate adds an advisory warning without showing the quota", () => {
