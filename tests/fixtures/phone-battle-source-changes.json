@@ -977,6 +977,22 @@
     [
       "    artworks: PWA_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,",
       "    artworks: { ...PWA_MANUAL_FOLEY_FILES, [PWA_PAN_GUARD_FILE.id]: PWA_PAN_GUARD_FILE }, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,"
+    ],
+    [
+      "import { createAssetStore } from \"./pwaAssetStore.js\";",
+      "import { createAssetStore, persistStorage } from \"./pwaAssetStore.js\";"
+    ],
+    [
+      "    const store = storeRef.current;\n    if (!store) return;\n    setError(null);\n    setDiagnostics(null);\n    // Hold the safe screen",
+      "    const store = storeRef.current;\n    if (!store) return;\n    // Request protection on the player’s tap, before any asset writes.\n    void persistStorage(window.navigator);\n    setError(null);\n    setDiagnostics(null);\n    // Hold the safe screen"
+    ],
+    [
+      "        persistStorage: async () => import(\"./pwaAssetStore.js\").then((m) => m.persistStorage(window.navigator)),\n        onIncomplete: async (incomplete) => {",
+      "        onIncomplete: async (incomplete) => {"
+    ],
+    [
+      "        persistStorage: async () => import(\"./pwaAssetStore.js\").then((m) => m.persistStorage(window.navigator)),\n        onIncomplete: async () => {",
+      "        persistStorage: () => persistStorage(window.navigator),\n        onIncomplete: async () => {"
     ]
   ],
   "app/globals.css": [
