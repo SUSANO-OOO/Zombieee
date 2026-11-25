@@ -1117,14 +1117,20 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {!bootFailure && phase === "install-required" && installCopy && (
+            {!bootFailure && phase === "install-required" && installPlan && installCopy && (
               <>
                 <h2>{installCopy.headline}</h2>
-                <ul>{installCopy.lines.map((line, index) => <li key={line} className={index === 0 ? "pwa-plan-capacity" : undefined}>{index === 0 && installPlan ? <><small>{installPlan.pendingCount}件・</small><strong>{formatBytes(installPlan.pendingBytes)}</strong><span>をこの端末へ保存します</span></> : line}</li>)}</ul>
+                <ul>
+                  <li className="pwa-plan-capacity">
+                    <small>{installCopy.capacityPrefix}{installPlan.pendingCount}件・</small>
+                    <strong>{formatBytes(installPlan.pendingBytes)}</strong>
+                    <span>をこの端末へ保存します</span>
+                  </li>
+                </ul>
                 {installCopy.warning && <p className="pwa-warning" role="alert">{installCopy.warning}</p>}
                 <p className="pwa-hint">{installCopy.wifiHint}</p>
                 <button type="button" className="pwa-primary" onClick={startInstall}>
-                  ダウンロードを開始
+                  {installCopy.actionLabel}
                 </button>
               </>
             )}

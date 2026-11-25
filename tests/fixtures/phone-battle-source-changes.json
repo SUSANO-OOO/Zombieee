@@ -1001,6 +1001,10 @@
     [
       "        persistStorage: async () => import(\"./pwaAssetStore.js\").then((m) => m.persistStorage(window.navigator)),\n        onIncomplete: async () => {",
       "        persistStorage: () => persistStorage(window.navigator),\n        onIncomplete: async () => {"
+    ],
+    [
+      "            {!bootFailure && phase === \"install-required\" && installCopy && (\n              <>\n                <h2>{installCopy.headline}</h2>\n                <ul>{installCopy.lines.map((line, index) => <li key={line} className={index === 0 ? \"pwa-plan-capacity\" : undefined}>{index === 0 && installPlan ? <><small>{installPlan.pendingCount}件・</small><strong>{formatBytes(installPlan.pendingBytes)}</strong><span>をこの端末へ保存します</span></> : line}</li>)}</ul>\n                {installCopy.warning && <p className=\"pwa-warning\" role=\"alert\">{installCopy.warning}</p>}\n                <p className=\"pwa-hint\">{installCopy.wifiHint}</p>\n                <button type=\"button\" className=\"pwa-primary\" onClick={startInstall}>\n                  ダウンロードを開始\n                </button>\n              </>\n            )}",
+      "            {!bootFailure && phase === \"install-required\" && installPlan && installCopy && (\n              <>\n                <h2>{installCopy.headline}</h2>\n                <ul>\n                  <li className=\"pwa-plan-capacity\">\n                    <small>{installCopy.capacityPrefix}{installPlan.pendingCount}件・</small>\n                    <strong>{formatBytes(installPlan.pendingBytes)}</strong>\n                    <span>をこの端末へ保存します</span>\n                  </li>\n                </ul>\n                {installCopy.warning && <p className=\"pwa-warning\" role=\"alert\">{installCopy.warning}</p>}\n                <p className=\"pwa-hint\">{installCopy.wifiHint}</p>\n                <button type=\"button\" className=\"pwa-primary\" onClick={startInstall}>\n                  {installCopy.actionLabel}\n                </button>\n              </>\n            )}"
     ]
   ],
   "app/globals.css": [
