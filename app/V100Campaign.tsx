@@ -1708,7 +1708,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const bossHpPercentText = bossHpPercent > 0 && bossHpPercent < 1 ? "1%未満" : `${Math.round(bossHpPercent)}%`;
   const bossRemainingHpText = boss ? `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${bossHpPercentText}）` : "";
   const lastVehicleHit = v100LastVehicleHitText(result);
-  const hasDefeatIntegrity = Number.isFinite(maxHp) && maxHp > 0 && typeof result?.vehicleHp === "number" && Number.isFinite(result.vehicleHp);
+  const hasVehicleIntegrity = Number.isFinite(maxHp) && maxHp > 0 && typeof result?.vehicleHp === "number" && Number.isFinite(result.vehicleHp);
   const escortResult = v100EscortResultText(result);
   const defenseResult = v100DefenseResultText(result);
   const deviceResult = v100DeviceResultText(result);
@@ -1724,21 +1724,23 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
         <div><span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2></div>
         {hasMoreDetails && <button className="v100-result-detail-jump" type="button" aria-controls={resultDetailsId} data-ui-sound="advance" onClick={showResultDetails}>詳しい結果 <span aria-hidden="true">↓</span></button>}
       </header>
-      {won ? <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span><b>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</b><small className="v100-result-pending-reward">受取予定 +{rewardCaps + bonusStar2 + bonusStar3} CAPS</small></span></div>
-        : <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
+      {won && <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span><b>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</b><small className="v100-result-pending-reward">受取予定 +{rewardCaps + bonusStar2 + bonusStar3} CAPS</small></span></div>}
+      <dl className="v100-result-records" id={resultDetailsId} ref={resultDetailsRef} tabIndex={-1}>
+        <div><dt>{basePresentation.healthLabel}</dt><dd>{hasVehicleIntegrity ? `${vehicleHp} / ${maxHp}（${Math.floor(hpPercent)}%）` : "記録なし"}</dd></div>
+        <div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : report?.bayEvacuation?.evacuatedCount === 12 ? "十二人全員が避難" : "達成" : "未達"}</dd></div>
+      </dl>
+      {!won && <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
           <strong>{escortResult?.progress ?? defenseResult?.progress ?? deviceResult?.progress ?? (boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし")}</strong>
           {defenseResult && <span>{defenseResult.detail}</span>}
           {deviceResult && <span>{deviceResult.detail}</span>}
           {boss?.state === "active" && <span>{bossRemainingHpText}</span>}
           <small className="v100-defeat-facts">
-            {hasDefeatIntegrity && <span>{basePresentation.healthLabel} <b>{Math.ceil(vehicleHp)} / {Math.ceil(maxHp)}</b></span>}
             <span>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</span>
           </small>
           {lastVehicleHit && <small className="v100-result-last-hit"><b>直前の被害</b> {lastVehicleHit}</small>}
           {escortResult?.advice && <small>{escortResult.advice}</small>}
         </div>}
       <p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}</small></span> : outcome}</p>
-      <dl className="v100-result-records" id={resultDetailsId} ref={resultDetailsRef} tabIndex={-1}><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : report?.bayEvacuation?.evacuatedCount === 12 ? "十二人全員が避難" : "達成" : "未達"}</dd></div></dl>
       {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}
       <div className="v100-result-feedback">
         <dl className="v100-result-extra-records"><div><dt>経過時間</dt><dd>{recordedSeconds === null ? "記録なし" : `${recordedSeconds}秒`}</dd></div><div><dt>戦闘不能</dt><dd>{recordedDeaths === null ? "記録なし" : `${recordedDeaths}回`}</dd></div></dl>

@@ -530,8 +530,21 @@ for (const engine of engines) {
         const fixture = normalizeV100Save({ ...(won ? pending.save : { ...early, lastResult: value }), flowState: { phase: 'result', eventId: null, stageId, stageNumber: 3, destination: 'result', nodeIndex: 0, firstClear: won, finalized: false } });
         await runCase(browser, engine, viewport, 'result-' + (won ? 'win' : 'lose'), fixture, async (page, row, reload) => {
           await page.locator('.v100-result-panel').waitFor();
-          row.initialResultReadout=await page.locator('.v100-result-scroll').evaluate((scroll,won)=>{const r=scroll.getBoundingClientRect();const nodes=[scroll.querySelector(won?'.v100-result-highlight':'.v100-defeat-progress strong'),...(won?[scroll.querySelector('.v100-result-pending-reward')]:[])];return nodes.map(node=>{if(!node)return {present:false};const b=node.getBoundingClientRect();return {present:true,text:node.textContent,visible:b.top>=r.top-.5&&b.bottom<=r.bottom+.5&&b.left>=r.left-.5&&b.right<=r.right+.5};});},won);
-          assert.ok(row.initialResultReadout.length>0&&row.initialResultReadout.every(item=>item.present&&item.visible),'Stars/planned payout or defeat progress must be visible without scrolling');
+          row.initialResultReadout = await page.locator('.v100-result-scroll').evaluate((scroll, won) => {
+            const paper = scroll.getBoundingClientRect();
+            const headline = won
+              ? ['.v100-result-highlight', '.v100-result-pending-reward']
+              : ['.v100-defeat-progress strong'];
+            const nodes = [...headline.map(selector => scroll.querySelector(selector)), ...scroll.querySelectorAll('.v100-result-records > div')];
+            return nodes.map(node => {
+              if (!node) return { present: false };
+              const box = node.getBoundingClientRect();
+              return { present: true, text: node.textContent, visible: box.top >= paper.top - .5 && box.bottom <= paper.bottom + .5
+                && box.left >= paper.left - .5 && box.right <= paper.right + .5 };
+            });
+          }, won);
+          assert.equal(row.initialResultReadout.length, won ? 4 : 3);
+          assert.ok(row.initialResultReadout.every(item => item.present && item.visible), 'The result summary and vehicle/objective records must fit without scrolling');
           await capture(page, row, 'result');
           row.paperInk=await page.locator('.v100-result-scroll').evaluate(scroll=>{const linear=c=>{const s=c/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4;};const lum=rgb=>rgb.reduce((s,c,i)=>s+linear(c)*[.2126,.7152,.0722][i],0);const paper=lum([216,203,167]);return [...scroll.querySelectorAll('.v100-result-records dt,.v100-result-records dd,.v100-result-pending-reward')].map(node=>{const ink=getComputedStyle(node).color.match(/[\d.]+/g).slice(0,3).map(Number);const l=lum(ink);return {text:node.textContent,color:ink,contrast:(Math.max(l,paper)+.05)/(Math.min(l,paper)+.05)};});});
           assert.ok(row.paperInk.length>0&&row.paperInk.every(item=>item.contrast>=4.5),'Result paper labels/numbers meet4.5:1 against the darkest paper color');
