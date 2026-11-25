@@ -361,31 +361,33 @@ test("play is allowed offline whenever only optional assets are missing", () => 
   );
 });
 
-test("the install prompt states count, size, and free space", () => {
+test("the install prompt shows the download size without the browser quota", () => {
   const described = describeInstall(
     { pendingCount: 531, pendingBytes: 116877281 },
     { available: 900000000 },
   );
-  assert.match(described.lines[0], /531件・111MBをこの端末へ保存します/);
-  assert.match(described.lines[1], /空き容量の目安/);
+  assert.deepEqual(described.lines, ["531件・111MBをこの端末へ保存します"]);
   assert.equal(described.shortOnSpace, false);
   assert.equal(described.warning, null);
   assert.match(described.wifiHint, /Wi-Fi/);
 });
 
-test("a tight free-space estimate produces an explicit warning", () => {
+test("a low storage estimate adds an advisory warning without showing the quota", () => {
   const described = describeInstall(
     { pendingCount: 531, pendingBytes: 116877281 },
     { available: 100000000 },
   );
+  assert.deepEqual(described.lines, ["531件・111MBをこの端末へ保存します"]);
   assert.equal(described.shortOnSpace, true);
-  assert.match(described.warning, /空き容量が不足/);
+  assert.match(described.warning, /保存に使える容量が足りない可能性/);
+  assert.match(described.warning, /端末の空き容量を確認/);
 });
 
-test("an unavailable storage estimate omits the free-space line rather than guessing", () => {
+test("the download size remains visible when the storage estimate is unavailable", () => {
   const described = describeInstall({ pendingCount: 10, pendingBytes: 1048576 }, null);
-  assert.equal(described.lines.length, 1);
+  assert.deepEqual(described.lines, ["10件・1.0MBをこの端末へ保存します"]);
   assert.equal(described.shortOnSpace, false);
+  assert.equal(described.warning, null);
 });
 
 test("progress copy reports counts, bytes, category, and failures", () => {
