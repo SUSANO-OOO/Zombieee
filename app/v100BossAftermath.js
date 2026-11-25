@@ -60,18 +60,23 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
   const budget=viewportWidth*viewportHeight*.18/(worldScale*worldScale);
   size=Math.min(size,(Math.sqrt(spread*spread+4*budget)-spread)/2);
  }
+ // The painted debris travels right from its impact point. Place that point
+ // beneath the blade's reach and mirror the burst for a leftward strike.
+ const bladeSweep = kind === 'takuya-omega' && Boolean(art);
+ const strikeX = bladeSweep ? x + direction * size * .58 : x;
  for(const [delay,offset] of p.beats){
   const age=elapsed-delay;if(age<0||age>=.54)continue;
   const progress=age/.54,frame=Math.min(5,Math.floor(progress*6));
   ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=progress>.8?(1-progress)/.2:1;ctx.shadowBlur=0;
-  ctx.translate(x+(kind==='ooguchi'?-direction:1)*offset,y+4);
-  if(kind==='futago'&&offset<0)ctx.scale(-1,1);
+  ctx.translate(strikeX+(kind==='ooguchi'?-direction:1)*offset,y+4);
+  if ((bladeSweep && direction < 0) || (kind === 'futago' && offset < 0)) ctx.scale(-1, 1);
   if(art){
+   const anchorX = bladeSweep ? .35 : art.anchorX;
    const position=progress*5,first=Math.floor(position),next=Math.min(5,first+1),blend=position-first;
    const fade=ctx.globalAlpha;
    for(const [cell,weight]of [[first,1-blend],[next,blend]]){
     if(weight<=0)continue;ctx.globalAlpha=fade*weight;
-    ctx.drawImage(source,cell%3*cw,Math.floor(cell/3)*ch,cw,ch,-size*art.anchorX,-size*art.anchorY,size,size);
+    ctx.drawImage(source,cell%3*cw,Math.floor(cell/3)*ch,cw,ch,-size*anchorX,-size*art.anchorY,size,size);
    }
   }else ctx.drawImage(source,frame%3*cw,Math.floor(frame/3)*ch,cw,ch,-size/2,-size*360/512,size,size);
   ctx.restore();

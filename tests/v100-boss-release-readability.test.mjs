@@ -36,6 +36,36 @@ test('six boss ground releases retain the square camera and bound their whole sp
  }
 });
 
+test('Omega lands the painted blade impact ahead in the locked attack direction',()=>{
+ for(const direction of [-1,1]){
+  const f=fixture('takuya-omega');
+  f.owner.stationAbility.targetX=f.owner.x+direction*90;
+  assert.equal(drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport),1);
+  assert.ok(f.calls.length>0);
+  for(const call of f.calls){
+   const lead=(call.tx-f.owner.x)*direction;
+   assert.equal(call.args[0],f.objects[ART['takuya-omega'].id]);
+   assert.equal(call.sx,direction);
+   assert.ok(lead>call.args[7]/2&&lead<BOSS_ANOMALY_TUNING['takuya-omega'].controlRadius);
+   assert.equal(call.ty,f.owner.y+4);
+  }
+  assertState(f);
+ }
+});
+
+test('Omega keeps the generic ground burst centered when its directional sheet is missing',()=>{
+ const f=fixture('takuya-omega');
+ delete f.objects[ART['takuya-omega'].id];
+ assert.equal(drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport),1);
+ assert.ok(f.calls.length>0);
+ for(const call of f.calls){
+  assert.equal(call.args[0],f.objects['v100-ground-impact']);
+  assert.equal(call.tx,f.owner.x);
+  assert.equal(call.sx,1);
+ }
+ assertState(f);
+});
+
 test('existing active clocks own one burst and neither windup nor recovery replays it',()=>{
  for(const kind of kinds){
   for(const patch of [{hp:0},{combatReady:false},{stationAbility:{phase:'windup',remainingSeconds:.2}},{stationAbility:{phase:'recovery',remainingSeconds:.2}}]){
