@@ -1,7 +1,7 @@
 import {combatVariation,drawRasterPlume} from "./v100RasterAtmosphere.js";
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
 import {queueV104GuardImpact} from './v104CombatAudio.js';
-import {drawV100ScoutInterceptDust,drawV100TataraImpact} from './v100ManualImpactVfx.js';
+import {drawV100ScoutInterceptDust,drawV100ScoutInterceptImpact,drawV100TataraImpact} from './v100ManualImpactVfx.js';
 import {drawV100TakuyaGroundRelease} from './v100BossAttackVfx.js';
 import {drawV100GuardImpact} from './v100GuardImpactVfx.js';
 import {V100_GROUND_FIRE_BED_ART} from './v100GroundFireArt.js';
@@ -236,7 +236,7 @@ export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,taku
   const elapsed=world.time-e.startedAt;
   if(e.scoutIntercept){
    drawV100ScoutInterceptDust(ctx,objects,e,elapsed);
-   drawV100Contact(ctx,objects,{...e,elapsed,duration:.2});
+   if(!drawV100ScoutInterceptImpact(ctx,objects,e,elapsed))drawV100Contact(ctx,objects,{...e,elapsed,duration:.2});
   }else drawV100Contact(ctx,objects,{...e,elapsed});
  }
 }

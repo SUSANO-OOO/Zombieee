@@ -3,7 +3,7 @@ import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {V100_MANUAL_IMPACT_ART as ART} from '../app/v100ManualImpactArt.js';
 import {drawV100TataraImpact} from '../app/v100ManualImpactVfx.js';
-import {drawV100ContactQueue,getV100SkillContactSnapshot,queueV100TataraGroundContact,queueV100TakuyaGroundContact} from '../app/v100CombatVfx.js';
+import {drawV100ContactQueue,getV100SkillContactSnapshot,queueV100Contact,queueV100ScoutIntercept,queueV100TataraGroundContact,queueV100TakuyaGroundContact} from '../app/v100CombatVfx.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {canUseVerifiedPwaArtwork} from '../app/pwaArtworkAvailability.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
@@ -14,7 +14,7 @@ function canvas(){
  const calls=[],stack=[],ctx={globalAlpha:1,globalCompositeOperation:'screen',shadowBlur:3,
   save(){stack.push([this.globalAlpha,this.globalCompositeOperation,this.shadowBlur]);},
   restore(){[this.globalAlpha,this.globalCompositeOperation,this.shadowBlur]=stack.pop();},
-  translate(){},scale(){},drawImage(...args){calls.push({args,alpha:this.globalAlpha});}};
+  translate(){},scale(){},rotate(){},drawImage(...args){calls.push({args,alpha:this.globalAlpha});}};
  return {ctx,calls,stack};
 }
 function fixture(){
@@ -85,6 +85,40 @@ test('the actual formation and committed path are both required, and the new ima
  assert.equal(canUseVerifiedPwaArtwork({...facts,installedManifest:{assets:[{path:ART.brute.path,hash:'old'}]}}),false);
  assert.equal(canUseVerifiedPwaArtwork({...facts,installedManifest:{assets:[{path:ART.brute.path,hash:ART.brute.hash}]},storedHashes:new Set()}),false);
  assert.equal(canUseVerifiedPwaArtwork({...facts,installedManifest:{assets:[{path:ART.brute.path,hash:ART.brute.hash}]}}),true);
+});
+
+test('only Hachi’s manual intercept uses the sparks and the installed fallback stays fixed for the strike',()=>{
+ const {world,owner}=fixture(),{ctx,calls}=canvas(),art=ART.scout;
+ owner.kind='scout';
+ const target={side:'zombie',x:335,y:250};
+ const fallback=image('old'),preferred=image('new',art.width,art.height);
+ const objects={'v100-dust':image('dust'),'v100-contact':fallback};
+ const intercept={owner,target,from:{x:244,y:250},direction:1};
+ assert.equal(queueV100ScoutIntercept(world,intercept),true);
+ drawV100ContactQueue(ctx,objects,world);
+ assert.ok(calls.some(call=>call.args[0]===fallback));
+ objects[art.id]=preferred;
+ calls.length=0;
+ world.time+=.08;
+ drawV100ContactQueue(ctx,objects,world);
+ assert.ok(calls.some(call=>call.args[0]===fallback));
+ assert.ok(!calls.some(call=>call.args[0]===preferred));
+ world.time+=.46;
+ assert.equal(queueV100ScoutIntercept(world,intercept),true);
+ calls.length=0;
+ drawV100ContactQueue(ctx,objects,world);
+ assert.ok(calls.some(call=>call.args[0]===preferred&&call.args[7]===174));
+ assert.ok(!calls.some(call=>call.args[0]===fallback));
+ world.time+=.46;
+ queueV100Contact(world,{x:target.x,y:target.y-30});
+ calls.length=0;
+ drawV100ContactQueue(ctx,objects,world);
+ assert.ok(calls.some(call=>call.args[0]===fallback));
+ assert.ok(!calls.some(call=>call.args[0]===preferred));
+ const plan={stageId:V100_STAGE_IDS[3],verifiedManualImpactPaths:[art.path]};
+ assert.ok(requiredBattleAssetPlan({...plan,formationKinds:['scout']}).optionalPaths.includes(art.path));
+ assert.ok(!requiredBattleAssetPlan({...plan,formationKinds:['brute']}).optionalPaths.includes(art.path));
+ assert.ok(!requiredBattleAssetPlan({...plan,verifiedManualImpactPaths:[],formationKinds:['scout']}).optionalPaths.includes(art.path));
 });
 
 test('TAKUYA keeps its own existing ground material and pending-contact cancellation still applies',()=>{

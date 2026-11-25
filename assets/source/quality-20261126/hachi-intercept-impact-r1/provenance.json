@@ -1,0 +1,70 @@
+{
+  "creator": "OpenAI built-in image_gen under project direction. Atlas preparation by Codex.",
+  "license": "Project-original generated material art under the game asset policy",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Project-original output without external reference artwork"
+  },
+  "producerApproval": "The active mobile game goal requests dedicated material animation for manual abilities.",
+  "generation": {
+    "mode": "built-in image_gen",
+    "characterReferences": [],
+    "promptPath": "assets/source/quality-20261126/hachi-intercept-impact-r1/prompt.txt",
+    "promptSha256": "221e45c96da826dc8c16594a2ea05e974569b910a6ac61516631312ce6a1d182"
+  },
+  "source": {
+    "path": "assets/source/quality-20261126/hachi-intercept-impact-r1/master.png",
+    "bytes": 2041548,
+    "sha256": "29c924ecccec9ffafeeed1133bb97fcd4ee054129517a398c558a05465e3ff3a",
+    "width": 1536,
+    "height": 1024,
+    "hasAlpha": true
+  },
+  "processing": {
+    "script": "scripts/build-hachi-intercept-impact.mjs",
+    "sourceCellSize": 512,
+    "transparentGutter": 12
+  },
+  "output": {
+    "id": "v100-hachi-intercept-impact",
+    "path": "/art/quality-20261126/vfx/hachi-intercept-six-r1.webp",
+    "hash": "sha256-e3579346951cd87904a9e6686e2211126a94d8a625288300cdb877a58ef7a273",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "worldSize": 174,
+    "anchors": [
+      [
+        0.30912989,
+        0.68444647
+      ],
+      [
+        0.3350626,
+        0.66353837
+      ],
+      [
+        0.2842911,
+        0.68263953
+      ],
+      [
+        0.2842911,
+        0.68263953
+      ],
+      [
+        0.2842911,
+        0.68263953
+      ],
+      [
+        0.2842911,
+        0.68263953
+      ]
+    ],
+    "bytes": 103984
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 103984,
+  "distinctBytes": 103984
+}

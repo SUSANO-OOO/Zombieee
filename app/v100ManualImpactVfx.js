@@ -44,6 +44,36 @@ export function drawV100ScoutInterceptDust(ctx,objects,entry,elapsed){
  }
 }
 
+function drawAnchoredImpact(ctx,entry,{image,cellSize,size,anchors},position,fade){
+ const first=Math.floor(position),next=Math.min(5,first+1),blend=position-first;
+ const alpha=ctx.globalAlpha;
+ ctx.save();ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.translate(entry.x,entry.y);
+ if(entry.direction<0)ctx.scale(-1,1);
+ for(const [cell,weight]of [[first,1-blend],[next,blend]]){
+  if(weight<=0)continue;ctx.globalAlpha=alpha*fade*weight;
+  ctx.drawImage(image,cell%3*cellSize,Math.floor(cell/3)*cellSize,cellSize,cellSize,
+   -anchors[cell][0]*size,-anchors[cell][1]*size,size,size);
+ }
+ ctx.restore();
+}
+
+export function drawV100ScoutInterceptImpact(ctx,objects,entry,elapsed){
+ const duration=.35,burstPeak=.05;
+ if(!entry?.scoutIntercept||![entry.x,entry.y,elapsed].every(Number.isFinite)||elapsed<0||elapsed>=duration)return false;
+ if(!choices.has(entry)){
+  const art=V100_MANUAL_IMPACT_ART.scout,image=objects?.[art.id];
+  const valid=image?.complete&&image.naturalWidth===art.width&&image.naturalHeight===art.height;
+  choices.set(entry,valid?{image,cellSize:art.width/art.columns,size:art.worldSize,anchors:art.anchors}:null);
+ }
+ const selected=choices.get(entry);if(!selected)return false;
+ // The first two cells follow the quick strike. The remaining cells let the
+ // grains fall out of the way while the existing skid settles below.
+ const position=elapsed<burstPeak?elapsed/burstPeak:1+4*(elapsed-burstPeak)/(duration-burstPeak);
+ const fade=Math.min(1,(duration-elapsed)/.1);
+ drawAnchoredImpact(ctx,entry,selected,position,fade);
+ return true;
+}
+
 const musashiChoices=new WeakMap();
 export function drawV100MusashiImpact(ctx,objects,entry,elapsed){
  if(entry?.type!=='musashi-crosscut'||![entry.x,entry.y,entry.duration,elapsed].every(Number.isFinite)
@@ -58,14 +88,7 @@ export function drawV100MusashiImpact(ctx,objects,entry,elapsed){
   musashiChoices.set(entry,selected);
  }
  const selected=musashiChoices.get(entry);if(!selected)return false;
- const progress=elapsed/entry.duration,position=progress*5,first=Math.floor(position),next=Math.min(5,first+1),blend=position-first;
- const {image,cellSize,size,anchors}=selected,alpha=ctx.globalAlpha,fade=progress>.72?(1-progress)/.28:1;
- ctx.save();ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.translate(entry.x,entry.y);
- if(entry.direction<0)ctx.scale(-1,1);
- for(const [cell,weight]of [[first,1-blend],[next,blend]]){
-  if(weight<=0)continue;ctx.globalAlpha=alpha*fade*weight;
-  ctx.drawImage(image,cell%3*cellSize,Math.floor(cell/3)*cellSize,cellSize,cellSize,
-   -anchors[cell][0]*size,-anchors[cell][1]*size,size,size);
- }
- ctx.restore();return true;
+ const progress=elapsed/entry.duration,fade=progress>.72?(1-progress)/.28:1;
+ drawAnchoredImpact(ctx,entry,selected,progress*5,fade);
+ return true;
 }

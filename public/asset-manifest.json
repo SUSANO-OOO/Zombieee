@@ -332,6 +332,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261126/vfx/hachi-intercept-six-r1.webp",
+      "bytes": 103984,
+      "hash": "sha256-e3579346951cd87904a9e6686e2211126a94d8a625288300cdb877a58ef7a273",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v060/battle-nishijin-defense-line-v1.webp",
       "bytes": 172174,
       "hash": "sha256-4bd351304b064f86a3b8c651433e3aba6560564df315beeea9c8678967948a89",
