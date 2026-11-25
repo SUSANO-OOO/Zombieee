@@ -60,6 +60,13 @@ export default defineConfig(async () => {
             maxSize: 450_000,
             groups: [
               {
+                // Lazy client entries use the preload helper without importing
+                // the browser entry point that mounts them.
+                name: "client-preload",
+                test: /vite\/preload-helper\.js$/u,
+                minSize: 0,
+              },
+              {
                 name: "campaign-runtime",
                 test: /app[\\/](?:campaign(?:Storage)?|eventFoundation|storyEvents|storyFlow|storyBattleBarks|content[\\/])/,
               },
