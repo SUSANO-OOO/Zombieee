@@ -5,7 +5,7 @@ import {execFileSync} from 'node:child_process';
 import {restorePreMusashiManualSource} from './helpers/guard-spectacle-source.mjs';
 import {drawV100BossAftermath,drawV100BossReleaseFields} from '../app/v100BossAftermath.js';
 import {V100_BOSS_ATTACK_ART as ART} from '../app/v100BossAttackArt.js';
-import {BOSS_ANOMALY_TUNING} from '../app/bossAnomalies.js';
+import {advanceBossAnomalyAbility,beginBossAnomalyAbility,BOSS_ANOMALY_TUNING} from '../app/bossAnomalies.js';
 const kinds=['mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega'];
 function fixture(kind,elapsed=.22){
  const calls=[],stack=[],ctx={globalAlpha:.7,globalCompositeOperation:'screen',shadowBlur:3,tx:0,ty:0,sx:1,
@@ -49,6 +49,29 @@ test('Omega lands the painted blade impact ahead in the locked attack direction'
    assert.ok(lead>call.args[7]/2&&lead<BOSS_ANOMALY_TUNING['takuya-omega'].controlRadius);
    assert.equal(call.ty,f.owner.y+4);
   }
+  assertState(f);
+ }
+});
+
+test('Futago throws two outward bursts around the actual locked crossing, including after the boss moves',()=>{
+ for(const useAuthoredArt of [true,false]){
+  const f=fixture('futago');
+  const target={id:24,side:'human',hp:100,x:388,y:221};
+  f.owner.side='zombie';
+  const warning=beginBossAnomalyAbility({boss:f.owner,candidates:[target]});
+  assert.ok(warning.ok);
+  const {runtime}=advanceBossAnomalyAbility(warning.runtime,warning.runtime.remainingSeconds);
+  f.owner.stationAbility=advanceBossAnomalyAbility(runtime,.18).runtime;
+  f.owner.x+=20;
+  f.owner.y+=18;
+  const sourceId=ART.futago.id;
+  if(!useAuthoredArt)delete f.objects[sourceId];
+  assert.equal(drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport),1);
+  assert.deepEqual([...new Set(f.calls.map(({tx,ty,sx})=>[tx,ty,sx].join(',')))],[
+   [target.x-8,target.y+4,-1].join(','),
+   [target.x+8,target.y+4,1].join(','),
+  ]);
+  assert.ok(f.calls.every(c=>c.args[0]===f.objects[useAuthoredArt?sourceId:'v100-ground-impact']));
   assertState(f);
  }
 });
