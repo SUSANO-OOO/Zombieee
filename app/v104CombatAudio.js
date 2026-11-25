@@ -6,6 +6,17 @@ const recordedMayoVoices=Object.freeze({
  'voice-mayo-hurt':'recorded-whine',
  'voice-mayo-retreat':'recorded-whine',
 });
+const shortHeavyDeathFileByTake = Object.freeze({
+  '01': '/audio/quality-20261125/voices/human-male-heavy-death-01.wav',
+  '02': '/audio/quality-20261125/voices/human-male-heavy-death-02.wav',
+});
+export const V104_SHORT_HEAVY_DEATH_PATHS = Object.freeze(Object.values(shortHeavyDeathFileByTake));
+
+function shortHeavyDeathSources(sources) {
+  const take = /^\/audio\/v060\/sfx\/human-male-heavy-death-(0[12])\.(?:mp3|ogg)$/.exec(sources[0]?.src ?? '')?.[1];
+  return take ? [{ src: shortHeavyDeathFileByTake[take], type: 'audio/wav' }] : sources;
+}
+
 // Original CC0 human performances already shipped with the game. Keep each
 // character's reaction family consistent; no speech synthesis or pitch shift.
 const recordedHumanVoices=Object.freeze({
@@ -23,7 +34,7 @@ const recordedSources=name=>{
  const match=/^voice-(.+)-(attack|hurt|death)$/.exec(name);
  const actor=match&&recordedHumanVoices[match[1]];
  const root=actor?`/audio/v060/sfx/human-${actor.profile}-${match[2]}-${actor.take}`:`/audio/v104/combat/${name}`;
- return ['mp3','ogg'].map(ext=>({src:`${root}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
+ return shortHeavyDeathSources(['mp3','ogg'].map(ext=>({src:`${root}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'})));
 };
 const replacements={
  ...Object.fromEntries(Object.keys(recordedMayoVoices).map(id=>[id,id])),
@@ -36,8 +47,13 @@ const replacements={
   const id=`voice-${kind}-${event}`;return[id,id];
  }))),
 };
-export function withV104CombatAudio(base){
- return{...base,assets:base.assets.map(asset=>replacements[asset.id]?{...asset,sources:recordedSources(replacements[asset.id])}:asset)};
+export function withV104CombatAudio(base) {
+  const assets = base.assets.map(asset => {
+    const replacement = replacements[asset.id];
+    const updatedSources = replacement ? recordedSources(replacement) : shortHeavyDeathSources(asset.sources);
+    return updatedSources === asset.sources ? asset : { ...asset, sources: updatedSources };
+  });
+  return { ...base, assets };
 }
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};

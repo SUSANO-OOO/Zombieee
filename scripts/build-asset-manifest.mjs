@@ -48,6 +48,7 @@ import {
 import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
+import { V104_SHORT_HEAVY_DEATH_PATHS } from "../app/v104CombatAudio.js";
 import { V100_CREDITS_SONG } from "../app/v100StaffRoll.js";
 import { V100_TITLE_VOICE } from "../app/v100TitleIntro.js";
 import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
@@ -345,9 +346,9 @@ for (const [src, audioId, audioChannel = "se"] of DIRECT_AUDIO_FALLBACKS) {
     audioChannel, audioId, audioType: "audio/ogg" });
 }
 
-function recordBundledAudio(source, audioId, audioChannel, index) {
-  const bundleEntry = index.assets?.[source.src];
-  if (!bundleEntry) throw new Error(`Missing audio bundle entry for ${source.src}`);
+function recordAudio(source, audioId, audioChannel, bundleIndex) {
+  const bundleEntry = bundleIndex?.assets?.[source.src];
+  if (bundleIndex && !bundleEntry) throw new Error(`Missing audio bundle entry for ${source.src}`);
   record(source.src, {
     pack: "audio",
     category: "audio",
@@ -356,21 +357,27 @@ function recordBundledAudio(source, audioId, audioChannel, index) {
     audioChannel,
     audioId,
     audioType: source.type,
-    bundlePath: index.bundlePath,
-    bundleOffset: bundleEntry.offset,
-    bundleBytes: bundleEntry.bytes,
-    bundleLength: index.bytes,
+    ...(bundleEntry ? {
+      bundlePath: bundleIndex.bundlePath,
+      bundleOffset: bundleEntry.offset,
+      bundleBytes: bundleEntry.bytes,
+      bundleLength: bundleIndex.bytes,
+    } : {}),
   });
 }
+const directVoicePaths = new Set(V104_SHORT_HEAVY_DEATH_PATHS);
 for (const asset of INSTALL_AUDIO_ASSETS) {
   const source = selectPreferredAudioSource(asset.sources);
-  if (source) recordBundledAudio(source, asset.id, audioChannelFor(asset.category), audioBundleIndex);
+  if (source) {
+    const bundle = directVoicePaths.has(source.src) ? null : audioBundleIndex;
+    recordAudio(source, asset.id, audioChannelFor(asset.category), bundle);
+  }
 }
 const fallbackBundle = JSON.parse(await readFile(
   path.join(publicDir, "pwa-bundles", FALLBACK_AUDIO_BUNDLE_NAME + ".json"), "utf8",
 ));
 for (const { id, channel, source } of v100OfflineAudioFallbacks()) {
-  recordBundledAudio(source, id, channel, fallbackBundle);
+  recordAudio(source, id, channel, fallbackBundle);
 }
 
 /**

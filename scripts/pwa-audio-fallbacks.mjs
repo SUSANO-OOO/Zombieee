@@ -1,4 +1,5 @@
 import { INSTALL_AUDIO_ASSETS, V100_AUDIO_MANIFEST } from "../app/productionAudio.js";
+import { V104_SHORT_HEAVY_DEATH_PATHS } from "../app/v104CombatAudio.js";
 import { audioChannelFor, selectPreferredAudioSource } from "../app/pwaAssetManifest.js";
 
 export const FALLBACK_AUDIO_BUNDLE_NAME = "audio-fallback-v1";
@@ -19,11 +20,16 @@ export function v100OfflineAudioFallbacks() {
     if (primary) paths.add(primary.src);
   }
 
+  // The previous Ogg versions retain their original place in the fallback transport.
+  const oldVoiceByShortPath = new Map(V104_SHORT_HEAVY_DEATH_PATHS.map(file => [
+    file, { src: "/audio/v060/sfx/" + file.split("/").at(-1).replace(/\.wav$/, ".ogg"), type: "audio/ogg" },
+  ]));
   const alternates = [];
   for (const cue of V100_AUDIO_MANIFEST.assets) {
     const channel = audioChannelFor(cue.category);
     if (channel === "bgm") continue; // The music tracks already ship in their preferred encoding.
-    for (const source of cue.sources) {
+    const oldVoice = oldVoiceByShortPath.get(cue.sources[0]?.src);
+    for (const source of oldVoice ? [oldVoice] : cue.sources) {
       if (paths.has(source.src)) continue;
       paths.add(source.src);
       const pathId = source.src.replace(/^\/audio\//, "").replace(/[/.]/g, "-");

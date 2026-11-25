@@ -7,6 +7,7 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
+import { V104_SHORT_HEAVY_DEATH_PATHS } from "../app/v104CombatAudio.js";
 import { selectPreferredAudioSource } from "../app/pwaAssetManifest.js";
 import { FALLBACK_AUDIO_BUNDLE_NAME, v100OfflineAudioFallbacks } from "./pwa-audio-fallbacks.mjs";
 
@@ -66,8 +67,11 @@ async function buildAudioBundle(name, entries) {
   }, null, 2));
 }
 
-await buildAudioBundle("audio-v1", INSTALL_AUDIO_ASSETS.map(({ id, sources }) => ({
+// Fetch the new takes individually when updating an existing installation.
+const directVoicePaths = new Set(V104_SHORT_HEAVY_DEATH_PATHS);
+const bundledAudio = INSTALL_AUDIO_ASSETS.map(({ id, sources }) => ({
   id,
   source: selectPreferredAudioSource(sources),
-})));
+})).filter(({ source }) => !directVoicePaths.has(source?.src));
+await buildAudioBundle("audio-v1", bundledAudio);
 await buildAudioBundle(FALLBACK_AUDIO_BUNDLE_NAME, v100OfflineAudioFallbacks());

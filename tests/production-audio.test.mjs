@@ -216,14 +216,20 @@ test("every referenced source is repository-local, nonempty, and has a complete 
   const approvedStationSources = new Set(["warning", "impact"].flatMap(phase =>
     ["mp3", "ogg"].map(ext => `/audio/quality-20261121/station-mud/floor-mud-${phase}-r1.${ext}`),
   ));
+  const approvedShortDeathSources = new Set([
+    "/audio/quality-20261125/voices/human-male-heavy-death-01.wav",
+    "/audio/quality-20261125/voices/human-male-heavy-death-02.wav",
+  ]);
   const approvedPanGuardSource = "/audio/quality-20261124/manual/pan-guard-contact.mp3";
-  const approvedSource = source => source === approvedPanGuardSource || approvedStationSources.has(source) || approvedMayoSources.has(source) || approvedBossSkillSources.has(source) || /^\/audio\/quality-20261116\/boss-finales\/(?:gate-eater|mother|kurome|ooguchi|gairen|takuya|mugarian-president-mutated|futago|takuya-omega)-collapse-r1\.(mp3|ogg)$/.test(source) || /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105|weapons\/(?:recorded|chainsaw|melee)|quality-20261028)\/[a-z0-9-]+\.(mp3|ogg|wav)$/.test(source)
+  const approvedSource = source => approvedShortDeathSources.has(source) || source === approvedPanGuardSource || approvedStationSources.has(source) || approvedMayoSources.has(source) || approvedBossSkillSources.has(source) || /^\/audio\/quality-20261116\/boss-finales\/(?:gate-eater|mother|kurome|ooguchi|gairen|takuya|mugarian-president-mutated|futago|takuya-omega)-collapse-r1\.(mp3|ogg)$/.test(source) || /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105|weapons\/(?:recorded|chainsaw|melee)|quality-20261028)\/[a-z0-9-]+\.(mp3|ogg|wav)$/.test(source)
     || /^\/audio\/quality-20261114\/manual\/(?:medic|guardian|scout|ranger|brute|kumaverson|babayaga|gunner|engineer|zakimiya|mrs-chiha|miyamoto-musashi|brawler-pressure|tky-energy)-preparation-r1\.(mp3|ogg)$/.test(source);
   for (const kind of ["medic","guardian","scout","ranger","brute","kumaverson","babayaga","gunner","engineer","zakimiya","mrs-chiha","miyamoto-musashi","brawler-pressure","tky-energy"]) for (const ext of ["mp3", "ogg"])
     assert.equal(approvedSource(`/audio/quality-20261114/manual/${kind}-preparation-r1.${ext}`), true);
   for (const source of approvedBossSkillSources) assert.equal(approvedSource(source), true);
   for (const source of approvedMayoSources) assert.equal(approvedSource(source), true);
   for (const source of approvedStationSources) assert.equal(approvedSource(source), true);
+  for (const source of approvedShortDeathSources) assert.equal(approvedSource(source), true);
+  assert.equal(approvedSource("/audio/quality-20261125/voices/human-male-heavy-death-03.wav"), false);
   assert.equal(approvedSource(approvedPanGuardSource), true);
   assert.equal(approvedSource("/audio/quality-20261124/manual/pan-guard-contact.ogg"), false);
   assert.equal(approvedSource("/audio/quality-20261121/station-mud/floor-mud-unreviewed-r1.ogg"), false);

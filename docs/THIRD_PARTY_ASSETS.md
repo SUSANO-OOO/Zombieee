@@ -524,3 +524,13 @@ The V1 preparations for Nao, Gantetsu, Hachi, Mizuchi, Tatara, Kumaverson, Babay
 # マヨちゃんの実録反応音（2026-11-16）
 
 AustinXYZのRobinコレクションにある [Chihuahua Puppy Bark](https://freesound.org/people/AustinXYZ/sounds/350591/) と [Chihuahua Puppy Whine](https://freesound.org/people/AustinXYZ/sounds/350593/) をCC0 1.0で使用。取得元は作者ページに公開されているHQ MP3版で、元の24bit WAVは未取得です。原素材を保持し、44.1kHz・モノラルへ復号後、ピーク0.707まで線形に下げてPCM16 WAVへ保存しました。全尺を維持し、音程・速度を変えていません。2配布ファイル150,712bytesを出撃・攻撃・被弾・退場の4cueへ接続し、旧合成WAVも復旧用に保持します。出典・原素材と出力のSHA・製法は `assets/source/quality-20261116/mayo-recordings/` に記録しています。実聴・実機の受入は未確認です。
+
+
+### 人間の重い退場反応（2026-11-25）
+
+HaelDBの「Male Grunt/Yelling sounds」のうち、既存の重い退場声と同じ演者の `3yell10.wav` と `3yell11.wav` を使用する。配布元とCC0 1.0の選択は `male_yelling` の行を参照。冒頭の無音を切り、44.1 kHzのモノラルに変換、両端に18 msの短いフェードを入れ、従来の二つの声とそれぞれピークを揃えた。
+
+| 配布用ファイル | 原音 SHA-256 | 配布 SHA-256 | 長さ |
+|---|---|---|---|
+| `public/audio/quality-20261125/voices/human-male-heavy-death-01.wav` | `cc8769e8f2ceac666394ac0b1f519792f6feeef46d09e241b6860951dee11ae3` | `cf9e4be9a41d74971e1292774b37bddf14143fb57e341e024df7270c5be97331` | 1.32秒 |
+| `public/audio/quality-20261125/voices/human-male-heavy-death-02.wav` | `f8ccec37601dc31bcf4fb326bef158ce713548d6a30df940edbdf37c27450df7` | `2bdd776104acae0e6c22419602f106f5e6e22d8d7972a46b312c33efdffeb4b1` | 1.07秒 |
