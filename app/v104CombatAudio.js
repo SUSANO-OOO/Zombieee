@@ -29,11 +29,11 @@ const recordedHumanVoices=Object.freeze({
  'red-panther-commander':{profile:'male-heavy',take:'01'},
 });
 const sources=name=>['mp3','ogg'].map(ext=>({src:`/audio/v104/combat/${name}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
-const recordedSources=name=>{
+const recordedSources=(name,take)=>{
  if(recordedMayoVoices[name])return[{src:`/audio/quality-20261116/mayo/${recordedMayoVoices[name]}.wav`,type:'audio/wav'}];
  const match=/^voice-(.+)-(attack|hurt|death)$/.exec(name);
  const actor=match&&recordedHumanVoices[match[1]];
- const root=actor?`/audio/v060/sfx/human-${actor.profile}-${match[2]}-${actor.take}`:`/audio/v104/combat/${name}`;
+ const root=actor?`/audio/v060/sfx/human-${actor.profile}-${match[2]}-${take ?? actor.take}`:`/audio/v104/combat/${name}`;
  return shortHeavyDeathSources(['mp3','ogg'].map(ext=>({src:`${root}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'})));
 };
 const replacements={
@@ -47,13 +47,38 @@ const replacements={
   const id=`voice-${kind}-${event}`;return[id,id];
  }))),
 };
+const redPantherHurtPoolId = (assetId) => `${assetId}-takes`;
+
 export function withV104CombatAudio(base) {
   const assets = base.assets.map(asset => {
     const replacement = replacements[asset.id];
     const updatedSources = replacement ? recordedSources(replacement) : shortHeavyDeathSources(asset.sources);
     return updatedSources === asset.sources ? asset : { ...asset, sources: updatedSources };
   });
-  return { ...base, assets };
+  const hurtTakes = assets.flatMap(asset => {
+    const role = /^voice-(red-panther-.+)-hurt$/.exec(asset.id)?.[1];
+    const voice = recordedHumanVoices[role];
+    if (!voice) return [];
+    const alternateTake = voice.take === '01' ? '02' : '01';
+    const alternate = { ...asset, id: `${asset.id}-alternate`, sources: recordedSources(asset.id, alternateTake) };
+    return [{
+      alternate,
+      pool: {
+        id: redPantherHurtPoolId(asset.id),
+        category: asset.category,
+        assetIds: [asset.id, alternate.id],
+        strategy: 'round-robin',
+        cooldownMs: asset.cooldownMs,
+        maxInstances: asset.maxInstances,
+        priority: asset.priority,
+      },
+    }];
+  });
+  return {
+    ...base,
+    assets: [...assets, ...hurtTakes.map(({ alternate }) => alternate)],
+    pools: [...(base.pools ?? []), ...hurtTakes.map(({ pool }) => pool)],
+  };
 }
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
@@ -74,6 +99,7 @@ const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-
    preload:'lazy',loop:false,maxInstances:1,...settings})})));
 export const V104_RED_PANTHER_VOICES=Object.freeze(rpVoices.map(row=>row.asset));
 const rpMaterialVoices=new Map(rpVoices.map(row=>[`enemy-${row.kind}-${row.event}`,Object.freeze({...row,
+ cueId: row.event === 'hurt' ? redPantherHurtPoolId(row.asset.id) : row.asset.id,
  asset:Object.freeze({...row.asset,sources:recordedSources(row.asset.id)})})]));
 // Keep the original weapon/material cue; the dedicated human bark accompanies it.
 export function v104SupplementalEnemyVoice(cueId){return rpMaterialVoices.get(cueId)??null;}

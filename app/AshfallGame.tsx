@@ -16384,7 +16384,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             isMuted: () => sfxMutedRef.current,
             play: () => {
               if (voice.event !== "attack") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });
-              return productionMixer.play(voice.asset.id, {
+              return productionMixer.play(voice.cueId, {
                 pan,
                 instanceKey,
                 maxInstances: 1,

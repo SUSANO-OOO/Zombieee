@@ -94,13 +94,36 @@ test('generic heavy voice reactions use the matching short recorded performance'
     }
   }
 });
+test('Red Panther hurt cues alternate recordings from the same voice family at the original intensity', () => {
+  const installed = new Set(INSTALL_AUDIO_ASSETS.flatMap(asset => asset.sources.map(source => source.src)));
+  for (const kind of kinds) {
+    const voice = v104SupplementalEnemyVoice(enemyVoiceCue(kind, 'hurt'));
+    for (const manifest of [GAMEPLAY_PRODUCTION_AUDIO_MANIFEST, V100_AUDIO_MANIFEST]) {
+      const pool = manifest.poolById[voice.cueId];
+      const [first, second] = pool.assetIds.map(id => manifest.assetById[id]);
+      assert.equal(pool.strategy, 'round-robin');
+      assert.equal(first.id, voice.asset.id);
+      assert.equal(pool.cooldownMs, voice.asset.cooldownMs);
+      assert.equal(pool.priority, voice.asset.priority);
+      assert.equal(pool.maxInstances, voice.asset.maxInstances);
+      assert.equal(second.gain, first.gain);
+      for (const codec of ['mp3', 'ogg']) {
+        const takes = [first, second].map(asset => asset.sources.find(source => source.src.endsWith('.' + codec)).src);
+        assert.ok(takes.every(src => installed.has(src)));
+        assert.equal(takes[0].replace(/0[12]\.\w+$/, ''), takes[1].replace(/0[12]\.\w+$/, ''));
+        assert.notEqual(takes[0], takes[1]);
+      }
+    }
+  }
+});
 test('the actual game keeps the weapon request unchanged and adds one independently controlled actor voice',async()=>{
  for(const kind of kinds)for(const event of events){
   const player=actualPlayer(),cueId=enemyVoiceCue(kind,event);
   player.play(cueId,640,{ownerId:91,priority:17,volume:.3,playbackRate:.66,durationSeconds:.05,maxInstances:3,dedupeKey:'contact:91'});
   await flush();assert.equal(player.requests.length,2);assert.equal(player.requests[0].cueId,cueId);
   assert.deepEqual(plain(player.requests[0].options),{pan:0,priority:17,volume:.3,playbackRate:.66,maxInstances:3,durationSeconds:.05,dedupeKey:'contact:91'});
-  assert.equal(player.requests[1].cueId,`voice-${kind}-${event}`);
+  const expected = `voice-${kind}-${event}${event==='hurt'?'-takes':''}`;
+  assert.equal(player.requests[1].cueId,expected);
   assert.deepEqual(plain(player.requests[1].options),{pan:0,instanceKey:'rp-voice:91',maxInstances:1,dedupeKey:'contact:91:voice'});
   assert.deepEqual(plain(player.stops),event==='attack'?[]:[{key:'rp-voice:91',options:{fadeMs:20}}]);
  }
