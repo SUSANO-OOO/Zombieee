@@ -537,7 +537,7 @@ test("a published manifest is validated before it is trusted", async () => {
   );
 });
 
-test("a successful HTML authentication response is not accepted as release metadata", async () => {
+test("an HTML response is rejected before parsing release metadata", async () => {
   let parsed = false;
   await assert.rejects(fetchPublishedManifest({
     baseUrl: "https://example.test/Zombieee/",
@@ -546,7 +546,7 @@ test("a successful HTML authentication response is not accepted as release metad
       headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
       json: async () => { parsed = true; throw new SyntaxError("unexpected HTML"); },
     }),
-  }), /ゲームデータの一覧ではなくWebページ/);
+  }), { message: "配信データの代わりにWebページが返されました。" });
   assert.equal(parsed, false);
 });
 

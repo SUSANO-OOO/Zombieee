@@ -1032,7 +1032,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 <h2>ゲームデータを準備できません</h2>
                 <p className="pwa-warning" role="alert">
                   {manifestUnreachable
-                    ? "配信データに接続できませんでした。通信環境を確認してください。"
+                    ? "通信を確認して「再試行」を押してください。"
                     : "配信データを確認しています。"}
                 </p>
                 {manifestUnreachable && manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}

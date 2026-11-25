@@ -395,7 +395,7 @@ export async function fetchPublishedManifest({ baseUrl, fetchImpl = fetch, signa
   const response = await fetchImpl(url, { cache: "no-store", signal });
   if (!response.ok) throw new Error(`asset-manifest.json responded ${response.status}`);
   if (/text\/html/i.test(response.headers?.get?.("content-type") ?? "")) {
-    throw new Error("ゲームデータの一覧ではなくWebページが返されました。共有リンクの認証が切れている場合は、URLを開き直して再度認証してください。");
+    throw new Error("配信データの代わりにWebページが返されました。");
   }
   const manifest = await response.json();
   const { valid, errors } = validateAssetManifest(manifest);
