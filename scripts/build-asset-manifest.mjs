@@ -13,6 +13,7 @@ import { assertV100ArtAllowed } from './rejected-v100-art.mjs';
 import { DIRECT_AUDIO_FALLBACKS, FALLBACK_AUDIO_BUNDLE_NAME, v100OfflineAudioFallbacks } from "./pwa-audio-fallbacks.mjs";
 
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
+import { PWA_HACHI_CROWBAR_FILES } from "../app/pwaHachiCrowbarFiles.js";
 import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_SCENE_PORTRAITS, V100_R5_STORY_CUTS, V100_R9_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
 import { V100_RETREAT_DOOR_ART } from "../app/v100BasePresentation.js";
 import { V100_STORY_LOCATION_BACKDROPS } from "../app/v100StoryLocations.js";
@@ -339,6 +340,9 @@ record(V100_TITLE_VOICE.src, { pack: "audio", category: "audio", criticality: "o
 record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", criticality: "optional", audioChannel: "se", audioId: "sfx-v100-king-laugh", audioType: "audio/mpeg" });
 record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });
+for (const [audioId, { path }] of Object.entries(PWA_HACHI_CROWBAR_FILES)) {
+  record(path, { pack: "audio", category: "audio", criticality: "optional", audioChannel: "se", audioId, audioType: "audio/mpeg" });
+}
 
 // Preserve the direct alternatives already present in installed packs.
 for (const [src, audioId, audioChannel = "se"] of DIRECT_AUDIO_FALLBACKS) {

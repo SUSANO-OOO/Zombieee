@@ -5560,6 +5560,28 @@
       "audioType": "audio/wav"
     },
     {
+      "path": "/audio/quality-20261126/foley/hachi-crowbar-01.mp3",
+      "bytes": 3721,
+      "hash": "sha256-06716f43cc277c0d75faa866a8c03bd8f6a5171a438289787b96e591f185756c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "hachi-crowbar-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261126/foley/hachi-crowbar-02.mp3",
+      "bytes": 4348,
+      "hash": "sha256-3c819ba8f4c345e30c4658f02fc4dadbc4c9c725d5ca2abdd915fee72683b417",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "hachi-crowbar-02",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/v060/music/battle-stage1.mp3",
       "bytes": 925037,
       "hash": "sha256-71613b42c69632a6b6bb8db7a1bd8d92144eb217b147ebc0699e10f11f3514c9",

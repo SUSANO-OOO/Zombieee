@@ -1,0 +1,96 @@
+{
+  "creator": "Kenney",
+  "license": "CC0-1.0",
+  "notices": [
+    {
+      "file": "assets/source/v100/audio/kenney-rpg/License.txt",
+      "sha256": "7921b864e3bdaf005f8c7ee2e5dc4c0a18a1db38943ccf45962681e2e66f73d0"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-impact/License.txt",
+      "sha256": "043d5a52d1dc1dfd67437b55b714b7fd629031153ac579b9fdedc5396c037f99"
+    }
+  ],
+  "adaptation": "Fabric motion, weighted body impact and metal contact from the source material recordings. Layers trimmed and mixed at original pitch and speed.",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "recordings": [
+    {
+      "id": "hachi-crowbar-01",
+      "duration": 0.32,
+      "layers": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "delay": 0,
+          "gain": 0.023,
+          "filter": "highpass=f=85,lowpass=f=4700"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "delay": 0.013,
+          "gain": 0.067,
+          "filter": "highpass=f=85,lowpass=f=1300"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "delay": 0.018,
+          "gain": 0.059,
+          "filter": "highpass=f=85,lowpass=f=5000"
+        }
+      ],
+      "scale": 0.9404319017087422,
+      "master": {
+        "path": "assets/source/quality-20261126/audio/hachi-crowbar/hachi-crowbar-01.wav",
+        "sha256": "2bf2bc59cb87e89d7ccdffa46d7eff1aa09cd01e33607632db61f001406761fe"
+      },
+      "delivery": {
+        "path": "/audio/quality-20261126/foley/hachi-crowbar-01.mp3",
+        "hash": "sha256-06716f43cc277c0d75faa866a8c03bd8f6a5171a438289787b96e591f185756c",
+        "bytes": 3721
+      },
+      "peak": 0.435762494802475
+    },
+    {
+      "id": "hachi-crowbar-02",
+      "duration": 0.36,
+      "layers": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "delay": 0,
+          "gain": 0.018,
+          "filter": "highpass=f=85,lowpass=f=4200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "delay": 0.015,
+          "gain": 0.073,
+          "filter": "highpass=f=85,lowpass=f=1200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "delay": 0.02,
+          "gain": 0.056,
+          "filter": "highpass=f=85,lowpass=f=4600"
+        }
+      ],
+      "scale": 0.9139173256247184,
+      "master": {
+        "path": "assets/source/quality-20261126/audio/hachi-crowbar/hachi-crowbar-02.wav",
+        "sha256": "d0231f1d32fe8a89e14f83861452a3e6189ed6987e62e6de34c354c0c9f060af"
+      },
+      "delivery": {
+        "path": "/audio/quality-20261126/foley/hachi-crowbar-02.mp3",
+        "hash": "sha256-3c819ba8f4c345e30c4658f02fc4dadbc4c9c725d5ca2abdd915fee72683b417",
+        "bytes": 4348
+      },
+      "peak": 0.5864139199256897
+    }
+  ]
+}

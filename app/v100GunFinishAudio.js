@@ -1,4 +1,5 @@
 import {createAudioManifest} from './audioManifest.js';
+import {withV100HachiCrowbar} from './v100HachiCrowbarAudio.js';
 const gunIds=Object.freeze(['v104-handgun','weapon-rifle-01','weapon-rifle-02','weapon-gunner-01','weapon-gunner-02','weapon-smg-01','weapon-smg-02','weapon-suppressed-pistol']);
 // Keep install hashes in the install-only leaf, as with manual/boss audio.
 // Sharing that leaf with productionAudio pulls the entire mixer into PwaGate
@@ -32,5 +33,6 @@ export function v100GunFinishInstallAssets(manifest){
 // A battle/conversation snapshots this whitelist at entry. Old committed packs,
 // uncommitted bytes and unwrapped callers retain the original recorded cues.
 export function selectV100GunFinishPlayback(manifest,verifiedPaths=''){
-  return createAudioManifest(rewrite(manifest,new Set(verifiedPaths.split('\n').filter(Boolean))));
+  const allowed = new Set(verifiedPaths.split('\n').filter(Boolean));
+  return createAudioManifest(withV100HachiCrowbar(rewrite(manifest, allowed), allowed));
 }
