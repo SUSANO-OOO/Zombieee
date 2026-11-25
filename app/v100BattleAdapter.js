@@ -83,6 +83,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (!stage) return "ステージの目標を達成";
   if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
   if (stage.number === 5) return "改札喰いを倒し、感染核を破壊";
+  if (stage.number === 9) return "電源盤の周りを味方で守り、3基を順に起動";
   if (stageId === V100_SUPPLY_VALVE_STAGE) return "供給管を復旧し、MOTHERを倒す";
   if (stageId === V100_RAIL_EVACUATION_STAGE) return "レバーを3つ引いて民間車両を逃がし、オオグチを倒す";
   if (stageId === V100_RESCUE_CONTROL_STAGE) return "救難回線を3か所復旧し、制御区を守る";

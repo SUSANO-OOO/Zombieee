@@ -79,18 +79,27 @@ export function drawV100MissionNode(context, game, stageObjects, index, x, y) {
     x + (frame.x - frame.anchorX) * frame.scale,
     y + (frame.y - frame.anchorY) * frame.scale,
     frame.w * frame.scale, frame.h * frame.scale);
-  const complete = index < (game.stageMission.powerActivated ?? 0);
-  context.font = rescueControl || centralSeal ? "bold 14px sans-serif" : "bold 10px sans-serif";
+  const powerActivated = game.stageMission.powerActivated ?? 0;
+  const complete = index < powerActivated;
+  const hospitalPower = game.definition.stageId === "stage-hospital-evacuation-route";
+  const nextHospitalPower = hospitalPower && index === powerActivated;
+  context.font = rescueControl || centralSeal || hospitalPower ? "bold 14px sans-serif" : "bold 10px sans-serif";
   context.textAlign = "center";
   context.lineWidth = 3;
   context.strokeStyle = "rgba(0,0,0,.9)";
-  context.fillStyle = security ? "#f1a585" : complete ? "#b8df83" : "#f2dbae";
-  const label = security ? "警備用・操作不可"
+  context.fillStyle = security ? "#f1a585" : complete ? "#b8df83" : nextHospitalPower ? "#ffe19a" : "#f2dbae";
+  let label = security ? "警備用・操作不可"
     : rescueControl ? complete ? `制御盤${index + 1} 復旧済` : `制御盤${index + 1}`
     : centralSeal ? complete ? `ゲート${index + 1} 閉鎖` : `閉鎖盤${index + 1}`
     : game.definition.missionConfig.supplyValve === true
       ? complete ? "供給弁 復旧済み" : "供給弁"
       : `${index + 1}${complete ? ` ${profile.verb}済` : ""}`;
+  if (hospitalPower) {
+    const name = `電源${index + 1}`;
+    if (complete) label = `${name} 起動済`;
+    else if (nextHospitalPower) label = game.stageMission.powerOperating ? `${name} 起動中` : `次の${name}`;
+    else label = name;
+  }
   context.strokeText(label, x, y + 15);
   context.fillText(label, x, y + 15);
   context.restore();
