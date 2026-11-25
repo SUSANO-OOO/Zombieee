@@ -122,10 +122,16 @@ try {
       await first.evaluate(() => { window.__pwaInterruptFirstDownload = true; });
       await first.getByRole("button", { name: "ダウンロードを開始", exact: true }).tap({ timeout: 30000 });
       const cacheKey = assetCacheKey(retained.hash, base);
-      await first.waitForFunction(async ({ name, key }) => {
-        const cache = await caches.open(name);
-        return Boolean(await cache.match(key));
-      }, { name: ASSET_CACHE_NAME, key: cacheKey }, { timeout: 30000 });
+      const saveDeadline = Date.now() + 30_000;
+      let storedHash = null;
+      while (!storedHash && Date.now() < saveDeadline) {
+        storedHash = await first.evaluate(async ({ name, key }) => {
+          const cache = await caches.open(name);
+          return (await cache.match(key))?.headers.get("x-pwa-asset-hash") ?? null;
+        }, { name: ASSET_CACHE_NAME, key: cacheKey });
+        if (!storedHash) await first.waitForTimeout(100);
+      }
+      assert.equal(storedHash, retained.hash, "close only after a verified file has been saved");
       await first.close();
 
       const reopened = await context.newPage();
