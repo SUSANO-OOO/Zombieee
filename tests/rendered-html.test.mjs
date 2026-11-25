@@ -1818,6 +1818,10 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /if \(!resultPresentationPending\) \{[\s\S]*stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
   assert.match(game, /if \(!battleResultPresentationPending\(g\.battlePresentation, \{ enemyBaseCollapsePending \}\)\) \{[\s\S]*stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
   assert.match(game, /const disposeBattleRuntime = useCallback\(\(\) => \{[\s\S]*stopMusic\(\);[\s\S]*stopJingle\(\);[\s\S]*stopSfx\(\)/);
+  const pauseBlock = game.slice(game.indexOf("const togglePause ="), game.indexOf("const changeSurvivalSpeed ="));
+  const pauseCleanup = pauseBlock.indexOf("stopSfx();");
+  const pauseConfirmation = pauseBlock.indexOf('playUiOperationCue("confirm"');
+  assert.ok(pauseCleanup >= 0 && pauseConfirmation > pauseCleanup, "play pause feedback after stopping the battle audio");
   const returnToMapBlock = game.slice(game.indexOf("const returnToMap"), game.indexOf("const handleEventComplete"));
   assert.notEqual(returnToMapBlock, "");
   assert.match(returnToMapBlock, /disposeBattleRuntime\(\);[\s\S]*setScreen\("map"\)/);
