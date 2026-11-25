@@ -491,7 +491,6 @@
 #v100-campaign[data-v100-phase="result"] .v100-result-other-merits { grid-column:1/-1; grid-row:4; display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:5px; margin:3px 0; text-align:left; }
 #v100-campaign .v100-result-other-merits > span { min-width:0; padding:5px 8px; border:1px solid #778761; background:#14241d; }
 #v100-campaign[data-v100-phase="result"] .v100-result-scroll:has(> .v100-result-other-merits) > .v100-result-feedback { grid-row:5; }
-#v100-campaign .v100-merit-scroll-hint { display:none; }
 #v100-campaign .v100-result-extra-records { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:6px 0; }
 #v100-campaign .v100-result-extra-records > div { display:flex; justify-content:space-between; gap:8px; padding:4px 8px; background:#07131075; }
 #v100-campaign .v100-result-extra-records dt { color:#b4c4b8; font-size:12px; }
@@ -508,8 +507,6 @@
 @media (max-width:639px) { #v100-campaign .v100-defeat-progress > span { grid-column:1/-1; } }
 @media (max-height:520px) and (min-width:640px) and (orientation:landscape) {
   #v100-campaign .v100-result-lead-merit { margin:0; }
-  #v100-campaign .v100-result-lead-merit .v100-merit-scroll-hint { display:inline; color:#e2b666; }
-  #v100-campaign .v100-result-scroll > p:has(.v100-result-lead-merit) > .v100-result-scroll-guide { display:none; }
 }
 @media (max-height:420px) and (min-width:640px) and (orientation:landscape) {
   #v100-campaign[data-v100-phase="result"] section.v100-result-panel { padding:8px 12px; gap:6px; }
