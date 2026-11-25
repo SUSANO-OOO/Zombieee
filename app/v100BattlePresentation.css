@@ -1,5 +1,5 @@
 .v100-shell .battlefield,
-.v100-shell .unit-card .portrait > img {
+.v100-shell .unit-card .portrait img {
  /* WebKit can temporarily reduce bitmap interpolation during live resizing.
     Keep its normal interpolation rather than entering that resize heuristic. */
  image-rendering: auto;
