@@ -13,7 +13,7 @@ import {queueV100GuardActivation} from './v100GuardActivationVfx.js';
 import {drawV100KingExhaust} from './v100KingExhaustVfx.js';
 import {V100_KING_EXHAUST_SOCKET} from './v100KingExhaustArt.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
-import { V100BattleDeparture } from "./V100BattleDeparture";
+import { V100BattleDeparture, v100DepartureCrewKind } from "./V100BattleDeparture";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
 import {v100SurvivalUpgradeArtworkStyle} from "./v100SurvivalUpgradeArt.js";
@@ -15500,6 +15500,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     };
   }, [cleanupAllBattlefieldPointerGestures]);
 
+  const departureCrewKind = externalSession ? v100DepartureCrewKind(externalSession) : undefined;
   const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === "survival" || (screen === "battle" && survivalHud !== null);
   const survivalAssetBossKindKey = (
     externalSession?.survivalRun?.bossPool
@@ -15741,11 +15742,20 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         }, signal, decodeRetry,
       ),
     });
+    const cardJobs = requiredPlan.cards.map(({ kind, path, category }) => ({
+      kind,
+      ...imageJob(path, category, spriteRefs.current[`card-${kind}`],
+        (image) => { spriteRefs.current[`card-${kind}`] = image; }),
+    }));
+    const departureCardJob = cardJobs.find(({ kind }) => kind === departureCrewKind);
     const allCriticalJobs = [
       imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {
         backgroundCacheRef.current[assetOperationId] = image;
         backgroundRef.current = image;
       }),
+      // The two first decode slots can paint the departure briefing during the
+      // same session that prepares the heavy battle sheets.
+      ...(departureCardJob ? [departureCardJob] : []),
       imageJob(requiredPlan.enemyBase.path, requiredPlan.enemyBase.category, enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),
       ...requiredPlan.sprites.map(({ kind, path, category }) => imageJob(
         path,
@@ -15756,10 +15766,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           if (externalSessionActive && !V177_JOINT_ATLASES[kind]) v100HumanWalkRenderer.prepare(kind,image);
         },
       )),
-      ...requiredPlan.cards.map(({ kind, path, category }) => imageJob(
-        path, category, spriteRefs.current[`card-${kind}`],
-        (image) => { spriteRefs.current[`card-${kind}`] = image; },
-      )),
+      ...cardJobs.filter((job) => job !== departureCardJob),
       ...Object.entries(persistentPaths)
         .map(([key, src]) => imageJob(
           src,
@@ -15940,7 +15947,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       window.clearTimeout(slowTimer);
       controller.abort();
     };
-  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
+  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
 
   const retryAssets = useCallback(() => {
     const retryPaths = new Set([
@@ -16384,7 +16391,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             isMuted: () => sfxMutedRef.current,
             play: () => {
               if (voice.event !== "attack") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });
-              return productionMixer.play(voice.asset.id, {
+              return productionMixer.play(voice.cueId, {
                 pan,
                 instanceKey,
                 maxInstances: 1,

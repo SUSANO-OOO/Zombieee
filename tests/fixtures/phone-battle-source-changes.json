@@ -887,6 +887,34 @@
     [
       "      resumeBattleAudioLoops(g);\n    }\n  }, [bgmMuted, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);\n",
       "      resumeBattleAudioLoops(g);\n    }\n    playUiOperationCue(\"confirm\", `pause:${transition.paused ? \"pause\" : \"resume\"}`);\n  }, [bgmMuted, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);\n"
+    ],
+    [
+      "import {V100_KING_EXHAUST_SOCKET} from './v100KingExhaustArt.js';\nimport { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';\nimport { V100BattleDeparture } from \"./V100BattleDeparture\";\nimport { v100StoryPortraitPath } from \"./v100StoryPortraitPaths.js\";\nimport { v100PortraitFraming } from \"./v100PortraitFraming.js\";\n",
+      "import {V100_KING_EXHAUST_SOCKET} from './v100KingExhaustArt.js';\nimport { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';\nimport { V100BattleDeparture, v100DepartureCrewKind } from \"./V100BattleDeparture\";\nimport { v100StoryPortraitPath } from \"./v100StoryPortraitPaths.js\";\nimport { v100PortraitFraming } from \"./v100PortraitFraming.js\";\n"
+    ],
+    [
+      "  }, [cleanupAllBattlefieldPointerGestures]);\n\n  const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === \"survival\" || (screen === \"battle\" && survivalHud !== null);\n  const survivalAssetBossKindKey = (\n",
+      "  }, [cleanupAllBattlefieldPointerGestures]);\n\n  const departureCrewKind = externalSession ? v100DepartureCrewKind(externalSession) : undefined;\n  const survivalAssetMode = Boolean(externalSession?.survivalRun) || screen === \"survival\" || (screen === \"battle\" && survivalHud !== null);\n  const survivalAssetBossKindKey = (\n"
+    ],
+    [
+      "      ),\n    });\n    const allCriticalJobs = [\n      imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {\n",
+      "      ),\n    });\n    const cardJobs = requiredPlan.cards.map(({ kind, path, category }) => ({\n      kind,\n      ...imageJob(path, category, spriteRefs.current[`card-${kind}`],\n        (image) => { spriteRefs.current[`card-${kind}`] = image; }),\n    }));\n    const departureCardJob = cardJobs.find(({ kind }) => kind === departureCrewKind);\n    const allCriticalJobs = [\n      imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {\n"
+    ],
+    [
+      "        backgroundRef.current = image;\n      }),\n      imageJob(requiredPlan.enemyBase.path, requiredPlan.enemyBase.category, enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),\n      ...requiredPlan.sprites.map(({ kind, path, category }) => imageJob(\n",
+      "        backgroundRef.current = image;\n      }),\n      // The two first decode slots can paint the departure briefing during the\n      // same session that prepares the heavy battle sheets.\n      ...(departureCardJob ? [departureCardJob] : []),\n      imageJob(requiredPlan.enemyBase.path, requiredPlan.enemyBase.category, enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),\n      ...requiredPlan.sprites.map(({ kind, path, category }) => imageJob(\n"
+    ],
+    [
+      "        },\n      )),\n      ...requiredPlan.cards.map(({ kind, path, category }) => imageJob(\n        path, category, spriteRefs.current[`card-${kind}`],\n        (image) => { spriteRefs.current[`card-${kind}`] = image; },\n      )),\n      ...Object.entries(persistentPaths)\n        .map(([key, src]) => imageJob(\n",
+      "        },\n      )),\n      ...cardJobs.filter((job) => job !== departureCardJob),\n      ...Object.entries(persistentPaths)\n        .map(([key, src]) => imageJob(\n"
+    ],
+    [
+      "      controller.abort();\n    };\n  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);\n\n  const retryAssets = useCallback(() => {\n",
+      "      controller.abort();\n    };\n  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);\n\n  const retryAssets = useCallback(() => {\n"
+    ],
+    [
+      "            play: () => {\n              if (voice.event !== \"attack\") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });\n              return productionMixer.play(voice.asset.id, {\n                pan,\n                instanceKey,\n",
+      "            play: () => {\n              if (voice.event !== \"attack\") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });\n              return productionMixer.play(voice.cueId, {\n                pan,\n                instanceKey,\n"
     ]
   ],
   "app/manualAbilities.js": [
@@ -1023,6 +1051,10 @@
     [
       ".archive-objective[data-archive-phase=\"secured\"] { border-color:#a3b481; }",
       ".archive-objective[data-archive-phase=\"secured\"] { border-color:#a3b481; }\n.clinical-rescue-objective { border-color:#a4926c; }\n.clinical-rescue-objective i > em { background:linear-gradient(90deg,#718877,#cfdda7); }\n.clinical-rescue-objective[data-clinical-phase=\"ready\"] { border-color:#e6be74; }\n.clinical-rescue-objective[data-clinical-phase=\"rescued\"] { border-color:#adc18a; }\n.clinical-rescue-objective[data-clinical-phase=\"sheltering\"] small { color:#efc985; }"
+    ],
+    [
+      ".v100-departure-crew figcaption strong { font-size: clamp(17px, 2.8vw, 24px); overflow-wrap: anywhere; }\n.v100-departure-crew figcaption small { color: #dbd5c0; font-size: 13px; }\n.battlefield { position:absolute; inset:0; width:100%; height:100%; image-rendering:auto; touch-action:none; }\n.battlefield.inactive { pointer-events:none; }\n",
+      ".v100-departure-crew figcaption strong { font-size: clamp(17px, 2.8vw, 24px); overflow-wrap: anywhere; }\n.v100-departure-crew figcaption small { color: #dbd5c0; font-size: 13px; }\n.v100-departure-crew[data-portrait-ready=\"false\"] {\n  align-content: center;\n  background: linear-gradient(#18211fd9, #141b18e8), var(--departure-backdrop, none) center / cover no-repeat, #29312d;\n}\n.v100-departure-crew[data-portrait-ready=\"false\"] figcaption {\n  padding: 12px 14px;\n  border-block: 1px solid #81734b;\n  background: #111a1bcc;\n}\n.battlefield { position:absolute; inset:0; width:100%; height:100%; image-rendering:auto; touch-action:none; }\n.battlefield.inactive { pointer-events:none; }\n"
     ]
   ],
   "app/bossFoundation.js": [

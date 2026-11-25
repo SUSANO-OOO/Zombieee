@@ -37,12 +37,21 @@ function decodedSource(image?: HTMLImageElement | null) {
   return image?.complete && image.naturalWidth > 0 ? image.currentSrc || image.src : undefined;
 }
 
+function departureStageFor(session: DepartureSession) {
+  return session.survivalRun || session.battleMode === "outbreak" ? null : V100_STAGE_BY_ID[session.stageId];
+}
+
+export function v100DepartureCrewKind(session: DepartureSession) {
+  const stageNumber = departureStageFor(session)?.number ?? 1;
+  return session.formationKinds[(stageNumber - 1) % Math.max(1, session.formationKinds.length)];
+}
+
 export function V100BattleDeparture({ session, progress, assetError, background, images, onRetry }: BattleDepartureProps) {
-  const stage = session.survivalRun || session.battleMode === "outbreak" ? null : V100_STAGE_BY_ID[session.stageId];
+  const stage = departureStageFor(session);
   const threats = useMemo(() => stage ? v100MissionThreatsFor(stage.id) : [], [stage]);
   const threat = threats.find((candidate) => session.enemyKinds.includes(candidate.id));
   const stageNumber = stage?.number ?? 1;
-  const crewKind = session.formationKinds[(stageNumber - 1) % Math.max(1, session.formationKinds.length)];
+  const crewKind = v100DepartureCrewKind(session);
   const crewId = crewKind ? combatKindToCampaignUnitId(crewKind) : null;
   const crew = crewId ? V100_UNIT_BY_ID[crewId] : null;
   const ability = crewKind ? MANUAL_ABILITY_REGISTRY[crewKind] : null;
@@ -77,7 +86,7 @@ export function V100BattleDeparture({ session, progress, assetError, background,
             </button>}
         </div>
       </article>
-      {crew && crewId && <figure className="v100-departure-crew" style={v100PortraitFraming(crewId) as CSSProperties}>
+      {crew && crewId && <figure className="v100-departure-crew" data-portrait-ready={Boolean(portrait)} style={v100PortraitFraming(crewId) as CSSProperties}>
         <div className="v100-departure-portrait" aria-hidden="true">
           {portrait && <img src={portrait} alt="" draggable={false} />}
         </div>

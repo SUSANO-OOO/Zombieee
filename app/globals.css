@@ -126,6 +126,15 @@ button[aria-disabled="true"]:focus-visible {
 .v100-departure-crew figcaption span { color: #edcd92; font-size: 12px; }
 .v100-departure-crew figcaption strong { font-size: clamp(17px, 2.8vw, 24px); overflow-wrap: anywhere; }
 .v100-departure-crew figcaption small { color: #dbd5c0; font-size: 13px; }
+.v100-departure-crew[data-portrait-ready="false"] {
+  align-content: center;
+  background: linear-gradient(#18211fd9, #141b18e8), var(--departure-backdrop, none) center / cover no-repeat, #29312d;
+}
+.v100-departure-crew[data-portrait-ready="false"] figcaption {
+  padding: 12px 14px;
+  border-block: 1px solid #81734b;
+  background: #111a1bcc;
+}
 .battlefield { position:absolute; inset:0; width:100%; height:100%; image-rendering:auto; touch-action:none; }
 .battlefield.inactive { pointer-events:none; }
 .battlefield.targeting { cursor:crosshair; }
