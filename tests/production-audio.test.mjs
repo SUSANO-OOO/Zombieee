@@ -242,10 +242,18 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     const panGuardCue = asset.id === "ability-kumaverson-pan-guard-contact";
     const singleMpegCue = panGuardCue || asset.sources[0]?.src.startsWith("/audio/v099/");
     if (panGuardCue) assert.equal(asset.sources[0]?.src, approvedPanGuardSource);
-    assert.equal(asset.sources.length, wavCue || singleMpegCue ? 1 : 2, asset.id);
+    const shortDeathCue = approvedShortDeathSources.has(asset.sources[0]?.src);
+    if (shortDeathCue) {
+      const name = path.basename(asset.sources[0].src, ".wav");
+      assert.deepEqual(asset.sources.slice(1).map(source => source.src), [
+        `/audio/v060/sfx/${name}.mp3`,
+        `/audio/v060/sfx/${name}.ogg`,
+      ], asset.id);
+    }
     assert.deepEqual(
       asset.sources.map((source) => source.type),
-      wavCue ? ["audio/wav"] : singleMpegCue ? ["audio/mpeg"] : ["audio/mpeg", "audio/ogg"],
+      shortDeathCue ? ["audio/wav", "audio/mpeg", "audio/ogg"]
+        : wavCue ? ["audio/wav"] : singleMpegCue ? ["audio/mpeg"] : ["audio/mpeg", "audio/ogg"],
       asset.id,
     );
     for (const source of asset.sources) {

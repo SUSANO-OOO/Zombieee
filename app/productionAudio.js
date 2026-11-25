@@ -800,7 +800,9 @@ const precedingInstallAssets = [
   ...legacyVoiceInstallAssets, ...existingV100InstallAssets,
   ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,
 ].filter(asset => !isShortHeavyDeath(asset));
-const shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath);
+// The older formats are already inventoried under their original cue IDs.
+const shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)
+  .map(asset => ({ ...asset, sources: asset.sources.slice(0, 1) }));
 for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
