@@ -160,6 +160,28 @@ test("reload recovery commits a complete verified pack once without creating a d
   assert.deepEqual(state.save, saveBefore);
 });
 
+test("a verified download or recovery can finish while storage permission is pending", async () => {
+  const next = manifest("0.9.8.2", "candidate");
+  for (const finalize of [finalizePwaDownload, recoverVerifiedPwaManifest]) {
+    const { calls, state, options } = harness();
+    state.cacheHashes = new Set(next.assets.map(asset => asset.hash));
+    const pending = new Promise(() => {});
+    const outcome = await Promise.race([
+      finalize({
+        ...options,
+        final: { state: "complete" },
+        manifest: next,
+        persistStorage: () => { calls.persist += 1; return pending; },
+      }),
+      new Promise(resolve => setImmediate(() => resolve(null))),
+    ]);
+    assert.equal(outcome?.state, "complete");
+    assert.equal(state.installed, next);
+    assert.equal(calls.persist, 1);
+    assert.equal(calls.committed, 1);
+  }
+});
+
 test("reload recovery refuses a partial pack and does not send a manifest commit", async () => {
   const next = manifest("0.9.8.2", "new");
   const { calls, options } = harness();
