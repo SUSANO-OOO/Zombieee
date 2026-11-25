@@ -113,7 +113,23 @@ export function createV100ShotLayer({ createCanvas = () => document.createElemen
     try {
       drawing = true; ensureSurface(1, 1); context.save(); surfaceGuard = true;
       record = recorder(onFallback); callbackStarted = true; callbackCount += 1; drawShots(record.proxy); commandPeak = Math.max(commandPeak, record.commands.length);
-      if (record.mode === "fallback") { if (surfaceGuard) { context.restore(); surfaceGuard = false; } while (ownerDepth > 1) { main.restore(); ownerDepth -= 1; } if (ownerDepth) { main.restore(); ownerDepth = 0; } release(); return; }
+      if (record.mode === "fallback") {
+        if (surfaceGuard) {
+          context.restore();
+          surfaceGuard = false;
+        }
+        while (ownerDepth > 1) {
+          main.restore();
+          ownerDepth -= 1;
+        }
+        if (ownerDepth) {
+          main.restore();
+          ownerDepth = 0;
+        }
+        // The frame was painted on the main canvas. Keep the bounded scratch
+        // surface ready for the next shot instead of reallocating it each frame.
+        return;
+      }
       if (record.depth !== 0) throw new Error("unbalanced save/restore"); if (surfaceGuard) { context.restore(); surfaceGuard = false; } const initialState = { shadowBlur: Number(main.shadowBlur), lineWidth: Number(main.lineWidth), miterLimit: Number(main.miterLimit) }; const rawCrop = supportBounds(record.commands, transform, glowWidth, glowHeight, initialState); const roi = !rawCrop.full && typeof Path2D === "function" && surface?.getContext && typeof context.clip === "function"; const crop = roi ? rawCrop : { bounds: { x0: 0, y0: 0, x1: glowWidth, y1: glowHeight }, full: true, empty: false }; const x = roi && !crop.empty ? crop.bounds.x0 : 0, y = roi && !crop.empty ? crop.bounds.y0 : 0, w = roi ? Math.max(0, crop.bounds.x1 - crop.bounds.x0) : glowWidth, h = roi ? Math.max(0, crop.bounds.y1 - crop.bounds.y0) : glowHeight;
       activeX = x; activeY = y; activeWidth = w; activeHeight = h; ensureSurface(roi ? w : glowWidth, roi ? h : glowHeight); configureSurface(); if (roi) { context.save(); try { context.setTransform(1, 0, 0, 1, 0, 0); const path = new Path2D(); path.rect(0, 0, w, h); context.clip(path); replay(record.commands, context, "glow", SCALE, transform, x, y); replayClipPixels += w * h; replayClippedFrames += 1; } finally { context.restore(); } } else { replay(record.commands, context, "glow", SCALE, transform); replayFullPixels += glowWidth * glowHeight; } context.restore(); surfaceGuard = false;
       main.save(); try { main.setTransform(1, 0, 0, 1, 0, 0); main.globalAlpha = 1; main.shadowColor = CLEAR_COLOR; main.shadowBlur = 0; main.shadowOffsetX = 0; main.shadowOffsetY = 0; main.filter = "none"; main.globalCompositeOperation = "lighter"; fullBlitPixels += glowWidth * glowHeight; if (crop.full) { fullBoundsFallbacks += 1; main.drawImage(surface, 0, 0, w, h, 0, 0, w / SCALE, h / SCALE); actualBlitPixels += w * h; } else if (!crop.empty && w > 0 && h > 0) { boundedBlits += 1; main.drawImage(surface, 0, 0, w, h, x / SCALE, y / SCALE, w / SCALE, h / SCALE); actualBlitPixels += w * h; } } finally { main.restore(); }
