@@ -1382,7 +1382,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   const basePresentation = v100BasePresentationFor(stage?.number);
   const threats = v100MissionThreatsFor(stageId);
   const tacticalAdvice = briefingOpen && stage ? <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p> : null;
-  const showSupportAdviceFirst = stage?.number === 2;
+  const showAdviceBeforePlan = stage?.number === 2 || stage?.number === 3;
   const showChargeAdvice = stage?.number === 5;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
@@ -1429,7 +1429,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
               onClose={() => setBriefingOpen(false)}
             >
               <div className="v100-briefing-plan">
-                {showSupportAdviceFirst && tacticalAdvice}
+                {showAdviceBeforePlan && tacticalAdvice}
                 <section>
                   <h3>{stage ? stageDisplayNameFor(stage) : "次の迎撃に備える"}</h3>
                   <strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>
@@ -1449,7 +1449,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                   ) : <p>ステージを選ぶと、出現する敵を確認できます。</p>}
                   <p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p>
                 </section>
-                {!showSupportAdviceFirst && !showChargeAdvice && tacticalAdvice}
+                {!showAdviceBeforePlan && !showChargeAdvice && tacticalAdvice}
               </div>
             </V100BattleBriefing>
           )}
