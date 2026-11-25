@@ -535,7 +535,27 @@ for (const engine of engines) {
           await capture(page, row, 'result');
           row.paperInk=await page.locator('.v100-result-scroll').evaluate(scroll=>{const linear=c=>{const s=c/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4;};const lum=rgb=>rgb.reduce((s,c,i)=>s+linear(c)*[.2126,.7152,.0722][i],0);const paper=lum([216,203,167]);return [...scroll.querySelectorAll('.v100-result-records dt,.v100-result-records dd,.v100-result-pending-reward')].map(node=>{const ink=getComputedStyle(node).color.match(/[\d.]+/g).slice(0,3).map(Number);const l=lum(ink);return {text:node.textContent,color:ink,contrast:(Math.max(l,paper)+.05)/(Math.min(l,paper)+.05)};});});
           assert.ok(row.paperInk.length>0&&row.paperInk.every(item=>item.contrast>=4.5),'Result paper labels/numbers meet4.5:1 against the darkest paper color');
-          await page.locator('.v100-result-scroll').evaluate(scroll=>{scroll.scrollTop=scroll.scrollHeight;});await capture(page,row,'result-details');await page.locator('.v100-result-scroll').evaluate(scroll=>{scroll.scrollTop=0;});
+          const resultScroll = page.locator('.v100-result-scroll');
+          const detailJump = page.getByRole('button', { name: '詳しい結果', exact: true });
+          const hasOverflow = await resultScroll.evaluate(scroll => scroll.scrollHeight > scroll.clientHeight + 1);
+          if (hasOverflow) {
+            await detailJump.waitFor();
+            await within(detailJump, 44);
+            await detailJump.tap();
+            row.detailJump = await resultScroll.evaluate(scroll => {
+              const details = scroll.querySelector('.v100-result-records');
+              const visible = scroll.getBoundingClientRect();
+              const target = details.getBoundingClientRect();
+              return { moved: scroll.scrollTop > 0, focused: document.activeElement === details, detailsVisible: target.top >= visible.top - 1 && target.bottom <= visible.bottom + 1 };
+            });
+            assert.deepEqual(row.detailJump, { moved: true, focused: true, detailsVisible: true });
+            for (const button of await page.locator('.v100-result-actions button').all()) await within(button, 44);
+          } else {
+            assert.equal(await detailJump.count(), 0, 'No detail shortcut when the result already fits');
+          }
+          await resultScroll.evaluate(scroll => { scroll.scrollTop = scroll.scrollHeight; });
+          await capture(page, row, 'result-details');
+          await resultScroll.evaluate(scroll => { scroll.scrollTop = 0; });
           const summary = page.locator('.v100-battle-report summary');
           await within(summary, 44); await summary.tap();
           const body = page.locator('.v100-battle-report > div');
