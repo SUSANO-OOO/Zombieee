@@ -135,7 +135,6 @@ export function contentTypeFor(assetPath) {
  */
 export async function persistStorage(navigatorRef) {
   try {
-    if (await navigatorRef?.storage?.persisted?.()) return true;
     return Boolean(await navigatorRef?.storage?.persist?.());
   } catch {
     return false;

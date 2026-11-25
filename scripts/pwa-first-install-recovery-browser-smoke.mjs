@@ -92,6 +92,14 @@ try {
     const small = { ...shipped, assets: [...shipped.assets].sort((a, b) => a.bytes - b.bytes).slice(0, 3).map(asset => Object.fromEntries(Object.entries(asset).filter(([key]) => !key.startsWith("bundle")))) };
     await page.addInitScript(({ small }) => {
       Object.defineProperty(navigator, "standalone", { configurable: true, get: () => true });
+      window.__pwaStorageRequests = [];
+      Object.defineProperty(navigator.storage, "persist", {
+        configurable: true,
+        value: () => {
+          window.__pwaStorageRequests.push(navigator.userActivation.isActive);
+          return new Promise(() => {});
+        },
+      });
       const fetchOriginal = window.fetch.bind(window);
       window.fetch = (...args) => {
         const url = new URL(typeof args[0] === "string" ? args[0] : args[0].url, location.href);
@@ -110,8 +118,9 @@ try {
     await page.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
     const start = page.getByRole("button", { name: "ダウンロードを開始", exact: true });
     await start.waitFor({ timeout: 30000 });
+    assert.deepEqual(await page.evaluate(() => window.__pwaStorageRequests), []);
     await page.evaluate(() => { window.__pwaHoldFinalVerification = true; });
-    await start.click();
+    await start.tap();
     await page.waitForFunction(() => typeof window.__pwaReleaseFinalVerification === "function", null, { timeout: 30000 });
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     const beforeCommit = await page.locator(".pwa-gate").innerText();
@@ -121,6 +130,7 @@ try {
     }
     assert.doesNotMatch(beforeCommit, /ダウンロードが完了しました|ゲームを始める/);
     assert.match(beforeCommit, /保存済みデータを反映しています/);
+    assert.deepEqual(await page.evaluate(() => window.__pwaStorageRequests), [true]);
     await page.evaluate(() => { window.__pwaReleaseFinalVerification(); });
     await page.getByRole("heading", { name: "ダウンロードが完了しました", exact: true }).waitFor({ timeout: 60000 });
     const active = await page.evaluate(async base => {
@@ -133,7 +143,8 @@ try {
     }, base);
     assert.equal(active.source, small.releaseSha);
     assert.equal(active.assets, small.assets.length);
-    results.push({ mode: "download-commit-boundary", status: "passed", active, syntheticPack: true, physicalPhone: false });
+    assert.deepEqual(await page.evaluate(() => window.__pwaStorageRequests), [true]);
+    results.push({ mode: "download-commit-boundary", status: "passed", active, persistenceRequestedOnTap: true, syntheticPack: true, physicalPhone: false });
   } finally { await context.close(); }
 } catch (error) { failure = error; }
 finally {

@@ -42,10 +42,9 @@ async function commitVerifiedManifest({
     return { state: "commit-failed", committed: false, response: failed };
   }
 
-  // Persistence is best effort, but it still belongs to both normal and retry
-  // completion paths. A refused request must not turn a valid commit into a
-  // false download failure.
-  await persistStorage?.();
+  // Storage permission can be pending even after the worker has verified the
+  // active generation. Recovery must be playable independently of that reply.
+  if (persistStorage) void Promise.resolve().then(persistStorage).catch(() => {});
   await onCommitted?.(manifest, response, activeState);
   return { state: "complete", committed: true, response, activeState };
 }

@@ -29,7 +29,7 @@ import {
   formatBytes,
   planInstall,
 } from "./pwaAssetManifest.js";
-import { createAssetStore } from "./pwaAssetStore.js";
+import { createAssetStore, persistStorage } from "./pwaAssetStore.js";
 import { createAssetDownloadSession } from "./pwaDownloadSession.js";
 import { finalizePwaDownload, recoverVerifiedPwaManifest } from "./pwaInstallFinalize.js";
 import { assessCommitRecovery, manifestsEqual } from "./pwaManifestCommit.js";
@@ -519,6 +519,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     if (!evaluateActivationSafety(readSafetyFromDocument()).safe) return;
     const store = storeRef.current;
     if (!store) return;
+    // Request protection on the player’s tap, before any asset writes.
+    void persistStorage(window.navigator);
     setError(null);
     setDiagnostics(null);
     // Hold the safe screen before waiting for a worker activation; otherwise
@@ -601,7 +603,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           }
         },
         readActiveState: async (registration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
-        persistStorage: async () => import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator)),
         onIncomplete: async (incomplete) => {
           recordDiagnostics(session.getSnapshot().failures ?? []);
           setDownloadState(incomplete?.state ?? "failed");
@@ -741,7 +742,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           { timeoutMs: 60_000 },
         ),
         readActiveState: async (registration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
-        persistStorage: async () => import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator)),
+        persistStorage: () => persistStorage(window.navigator),
         onIncomplete: async () => {
           record("cache-incomplete");
           setDownloadState("failed");
