@@ -1,8 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
+import { v100BattleDefinitionFor, v100MissionObjectiveFor } from "../app/v100BattleAdapter.js";
 import { V100_NODE_PROFILES, v100NodeState, v100NodeFrame, drawV100MissionNode } from "../app/v100MissionNodes.js";
 import { advanceStationMissionRuntime, createStationMissionRuntime, stationMissionObjective, stationPowerNodes } from "../app/stationStageMechanics.js";
+
+test("the hospital briefing and labels identify the next cabinet during operation and handoff", () => {
+  const stageId = "stage-hospital-evacuation-route";
+  const definition = v100BattleDefinitionFor(stageId);
+  assert.equal(v100MissionObjectiveFor(stageId), "電源盤の周りを味方で守り、3基を順に起動");
+  let label;
+  const context = new Proxy({}, { get: (_target, key) => key === "fillText"
+    ? text => { label = text; } : () => {} });
+  const image = { complete: true, naturalWidth: 1983 };
+  const cases = [
+    [0, 0, false, "次の電源1"],
+    [1, 0, false, "電源2"],
+    [0, 0, true, "電源1 起動中"],
+    [0, 1, false, "電源1 起動済"],
+    [1, 1, false, "次の電源2"],
+    [2, 2, false, "次の電源3"],
+    [2, 3, false, "電源3 起動済"],
+  ];
+  for (const [index, powerActivated, powerOperating, expected] of cases) {
+    const stageMission = { powerActivated, powerOperating, powerOperationStartedAt: 1 };
+    drawV100MissionNode(context, { definition, stageMission, time: definition.prepSeconds + 2 },
+      { "v100-mission-node-states": image }, index, 400, 250);
+    assert.equal(label, expected);
+  }
+});
 
 for (const [stageId, profile] of Object.entries(V100_NODE_PROFILES)) {
   test(`${stageId}: every actual node connects, operates, interrupts and completes with the correct physical state`, () => {
