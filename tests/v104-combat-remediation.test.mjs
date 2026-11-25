@@ -101,7 +101,16 @@ test('first battle calls are audible candidates, cooldowns are per actor, and ar
  const guard=assets.find(a=>a.id==='ability-kumaverson-pan-guard-contact');
  assert.deepEqual(guard.sources,[{src:'/audio/quality-20261124/manual/pan-guard-contact.mp3',type:'audio/mpeg'}]);
  assert.equal(guard.gain,pan.gain,'the guard timbre is distinct at the existing playback gain');
- for(const kind of['crazy-king','kumaverson','babayaga'])for(const event of['deploy','attack','hurt','death'])assert.ok(assets.find(a=>a.id===`voice-${kind}-${event}`).sources.every(s=>s.src.includes(event==='deploy'?'/v104/':'/v060/sfx/human-')));
+ const shortDefeatTakes = { 'crazy-king': '02', kumaverson: '01' };
+ for (const kind of ['crazy-king','kumaverson','babayaga']) for (const event of ['deploy','attack','hurt','death']) {
+  const voice = assets.find(asset => asset.id === `voice-${kind}-${event}`);
+  const take = event === 'death' && shortDefeatTakes[kind];
+  if (take) {
+   assert.deepEqual(voice.sources,[{src:'/audio/quality-20261125/voices/human-male-heavy-death-'+take+'.wav',type:'audio/wav'}]);
+  } else {
+   assert.ok(voice.sources.every(source=>source.src.includes(event==='deploy'?'/v104/':'/v060/sfx/human-')));
+  }
+ }
 });
 
 test('monster reactions share the actor voice slot while material cues and special boss effects keep theirs', () => {

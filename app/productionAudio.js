@@ -1,6 +1,6 @@
 import {withV100BossCollapseAudio} from './v100BossCollapseAudio.js';
 import {withV100BossSkillAudio} from './v100BossSkillAudio.js';
-import {withV104CombatAudio} from './v104CombatAudio.js';
+import {withV104CombatAudio,V104_SHORT_HEAVY_DEATH_PATHS} from './v104CombatAudio.js';
 import { createAudioManifest } from "./audioManifest.js";
 import { withRecordedWeapons, recordedWeaponSources } from "./weaponRecordingRecipes.js";
 import {v100GunFinishInstallAssets} from "./v100GunFinishAudio.js";
@@ -794,7 +794,14 @@ const legacyVoiceInstallAssets = existingV100InstallAssets.map(asset =>
     : /^voice-mayo-(?:deploy|attack|hurt|retreat)$/.test(asset.id)
       ? {...asset,sources:[{src:`/audio/v090/sfx/${asset.id}.wav`,type:'audio/wav'}]}
       : asset);
-for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO]) {
+const shortHeavyDeathPaths = new Set(V104_SHORT_HEAVY_DEATH_PATHS);
+const isShortHeavyDeath = asset => shortHeavyDeathPaths.has(asset.sources[0].src);
+const precedingInstallAssets = [
+  ...legacyVoiceInstallAssets, ...existingV100InstallAssets,
+  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,
+].filter(asset => !isShortHeavyDeath(asset));
+const shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath);
+for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
     const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');

@@ -6263,6 +6263,28 @@
       "bundleOffset": 449648,
       "bundleBytes": 7146,
       "bundleLength": 3805569
+    },
+    {
+      "path": "/audio/quality-20261125/voices/human-male-heavy-death-01.wav",
+      "bytes": 116468,
+      "hash": "sha256-cf9e4be9a41d74971e1292774b37bddf14143fb57e341e024df7270c5be97331",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261125-voices-human-male-heavy-death-01",
+      "audioType": "audio/wav"
+    },
+    {
+      "path": "/audio/quality-20261125/voices/human-male-heavy-death-02.wav",
+      "bytes": 94418,
+      "hash": "sha256-2bdd776104acae0e6c22419602f106f5e6e22d8d7972a46b312c33efdffeb4b1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261125-voices-human-male-heavy-death-02",
+      "audioType": "audio/wav"
     }
   ],
   "retired": [

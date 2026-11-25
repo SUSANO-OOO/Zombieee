@@ -19315,7 +19315,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       playUiOperationCue("reject", "pause:invalid");
       return;
     }
-    playUiOperationCue("confirm", `pause:${transition.paused ? "pause" : "resume"}`);
     g.paused = transition.paused; setPaused(g.paused);
     setPauseConfirm(null);
     if (g.paused) {
@@ -19341,6 +19340,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       if (!bgmMuted) startMusic();
       resumeBattleAudioLoops(g);
     }
+    playUiOperationCue("confirm", `pause:${transition.paused ? "pause" : "resume"}`);
   }, [bgmMuted, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
 
   const changeSurvivalSpeed = useCallback((speed: 1 | 2) => {

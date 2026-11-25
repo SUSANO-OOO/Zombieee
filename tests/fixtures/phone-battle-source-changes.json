@@ -879,6 +879,14 @@
     [
       "      run: () => ensureImageLoaded(loadedImageByPath.get(path) ?? existing, path, (image) => {\n        loadedImageByPath.set(path, image);\n        onReady(image);\n      }),",
       "      run: (signal?: AbortSignal, decodeRetry = false) => ensureImageLoaded(\n        loadedImageByPath.get(path) ?? existing, path, (image) => {\n          loadedImageByPath.set(path, image);\n          onReady(image);\n        }, signal, decodeRetry,\n      ),"
+    ],
+    [
+      "      playUiOperationCue(\"reject\", \"pause:invalid\");\n      return;\n    }\n    playUiOperationCue(\"confirm\", `pause:${transition.paused ? \"pause\" : \"resume\"}`);\n    g.paused = transition.paused; setPaused(g.paused);\n",
+      "      playUiOperationCue(\"reject\", \"pause:invalid\");\n      return;\n    }\n    g.paused = transition.paused; setPaused(g.paused);\n"
+    ],
+    [
+      "      resumeBattleAudioLoops(g);\n    }\n  }, [bgmMuted, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);\n",
+      "      resumeBattleAudioLoops(g);\n    }\n    playUiOperationCue(\"confirm\", `pause:${transition.paused ? \"pause\" : \"resume\"}`);\n  }, [bgmMuted, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);\n"
     ]
   ],
   "app/manualAbilities.js": [
