@@ -24,6 +24,8 @@ const base = new URL(publicUrl);
 if (localRehearsal) { assert.ok(["localhost", "127.0.0.1"].includes(base.hostname)); assert.equal(base.protocol, "http:"); }
 else assert.equal(base.href, "https://susano-ooo.github.io/Zombieee/", "Public QA is bound to the official URL");
 assert.match(expectedVersion ?? "", /^[1-9]\d*\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/u);
+const [major, minor, patch] = expectedVersion.split(/[.-]/u, 3).map(Number);
+const usesLegacyRegistrationNotice = major === 1 && minor === 0 && patch <= 8;
 assert.match(expectedReleaseSha ?? "", /^[0-9a-f]{40}$/u);
 assert.match(expectedRequestId ?? "", /^[0-9A-Za-z][0-9A-Za-z._-]{7,127}$/u);
 assert.match(expectedIssueNumber ?? "", /^[1-9]\d*$/u);
@@ -55,15 +57,20 @@ async function boot(page, url, { reload = false, record, phase } = {}) {
   const response = reload ? await page.reload({ waitUntil: "domcontentloaded", timeout: 120000 }) : await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
   assert.ok(response?.ok(), `Document HTTP ${response?.status()}`);
   await page.waitForFunction(() => document.querySelector('.v100-shell, [role=dialog][aria-label="ゲームデータの準備"] button'), null, { timeout: 30000 });
-  await acknowledgeBlockedWorkerEntry(page, record, { phase });
+  const choseBrowserPlay = await acknowledgeBlockedWorkerEntry(page, record, { phase });
+  if (!usesLegacyRegistrationNotice) assert.ok(choseBrowserPlay, "A failed registration must offer recovery before play");
   const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }); if (await offer.isVisible()) await offer.click();
 }
-async function closeBlockedWorkerNotice(page, record, phase) {
+async function checkBlockedWorkerNotice(page, record, phase) {
   const text = "オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。";
   const notice = page.locator(".pwa-notice[role=status]").filter({ has: page.getByText(text, { exact: true }) });
-  await notice.waitFor({ state: "visible" });
   const warning = record.diagnostics.warnings.find(value => value.includes("Service Worker registration blocked by Playwright"));
-  assert.ok(warning, "Only the deliberately blocked service-worker fixture notice may be dismissed");
+  assert.ok(warning, "This check requires the deliberately blocked service-worker fixture");
+  if (!usesLegacyRegistrationNotice) {
+    assert.equal(await notice.count(), 0, "Browser play must not repeat the registration warning over the game");
+    return;
+  }
+  await notice.waitFor({ state: "visible" });
   record.blockedWorkerNotices ??= [];
   record.blockedWorkerNotices.push({ phase, text, warning, reason: "context.serviceWorkers=block" });
   await shot(page, record, `${phase}-worker-blocked`);
@@ -124,7 +131,7 @@ try {
         await page.evaluate(() => window.__PUBLIC_RESTORE_IDB__()); await page.getByRole("button", { name: "もう一度確認する", exact: true }).click();
       }
       await ready(page);
-      await closeBlockedWorkerNotice(page, record, "initial-entry");
+      await checkBlockedWorkerNotice(page, record, "initial-entry");
       await enterV100FromTitle(page);
       await ready(page);
       if (oldBytes) { const gift = page.getByRole("dialog", { name: /^(?:新しい戦闘記録を開始しました|引き継ぎ特典を受け取った)$/u }); await gift.waitFor(); await shot(page, record, "gift"); await gift.getByRole("button", { name: "確認する", exact: true }).click(); await ready(page); }
@@ -136,7 +143,7 @@ try {
       record.phase = "intentional-map-reload"; await boot(page, target.href, { reload: true, record, phase: "map-reload" }); record.phase = "after-map-reload"; await ready(page); record.afterReload = await mirror(page); assert.equal(record.afterReload.caps, record.beforeReload.caps); assert.equal(record.afterReload.playerName, record.beforeReload.playerName); assert.deepEqual(record.afterReload.completedStageIds, record.beforeReload.completedStageIds); assert.deepEqual(record.afterReload.receipts, record.beforeReload.receipts);
       assert.equal(await page.getByRole("dialog", { name: /^(?:新しい戦闘記録を開始しました|引き継ぎ特典を受け取った)$/u }).count(), 0);
       if (oldBytes) { assert.equal(record.afterReload.receipts.filter(id => id === V100_LEGACY_GIFT.entitlementReceipt).length, 1); assert.equal(record.afterReload.legacy.popupAcknowledged, true); }
-      await closeBlockedWorkerNotice(page, record, "map-reload");
+      await checkBlockedWorkerNotice(page, record, "map-reload");
       await enterV100FromTitle(page);
       await ready(page);
       record.native = await nativeSave(page); assert.equal(record.native.origin, base.origin); assert.equal(record.native.database, key); assert.deepEqual(JSON.parse(record.native.record.serialized), record.afterReload);
