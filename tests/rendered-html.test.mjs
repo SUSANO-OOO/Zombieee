@@ -1850,7 +1850,10 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.doesNotMatch(deployAudio, /playProductionCue\("weapon-melee-impact"/);
   assert.doesNotMatch(game, /if \(f\.gateEntering\)[\s\S]{0,1800}playProductionCue\("weapon-melee-impact"/);
   assert.doesNotMatch(deployAudio, /weaponCueForUnit\(kind\)/);
-  const newcomerAudio = game.slice(game.indexOf("const weaponEvent ="), game.indexOf('if (f.kind === "scout"'));
+  const weaponStart = game.indexOf("const targetIsHeavy =", game.indexOf("const playEnemyContactCue ="));
+  const contactEnd = game.indexOf('if (f.kind === "mayo-chan" && target.side === "zombie")', weaponStart);
+  assert.ok(weaponStart >= 0 && contactEnd > weaponStart, "normal weapon and contact audio block exists");
+  const newcomerAudio = game.slice(weaponStart, contactEnd);
   assert.match(newcomerAudio, /const contactAudioX = f\.kind === "crazy-king" \|\| f\.kind === "kumaverson" \? \(f\.x \+ target\.x\) \/ 2 : f\.x/);
   assert.match(newcomerAudio, /volume: f\.kind === "crazy-king" \? \.66 : f\.kind === "kumaverson" \? \.52 : undefined/);
   assert.match(newcomerAudio, /f\.kind === "crazy-king"[\s\S]*"fleshHit"[\s\S]*maxInstances: 1/);
