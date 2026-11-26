@@ -9,6 +9,7 @@ import {createAudioManifest} from '../app/audioManifest.js';
 import {V100_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS} from '../app/productionAudio.js';
 import {PWA_GUN_FINISH_FILES as files} from '../app/pwaGunFinishFiles.js';
 import {PWA_HACHI_CROWBAR_FILES as crowbarFiles} from '../app/pwaHachiCrowbarFiles.js';
+import {PWA_PISTOL_TAKE_FILES as pistolFiles} from '../app/pwaPistolTakeFiles.js';
 import {withV100GunFinish,selectV100GunFinishPlayback} from '../app/v100GunFinishAudio.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 const ids=['v104-handgun','weapon-rifle-01','weapon-rifle-02','weapon-gunner-01','weapon-gunner-02','weapon-smg-01','weapon-smg-02','weapon-suppressed-pistol'];
@@ -17,6 +18,29 @@ const sha=b=>createHash('sha256').update(b).digest('hex');
 const baseRef='b228ee4a6ae944af4cec62524a4b2dd5b1205946';
 const oldJson=p=>JSON.parse(execFileSync('git',['show',baseRef+':'+p],{maxBuffer:8*1024*1024,encoding:'utf8'}));
 const allPaths=Object.values(files).map(f=>f.path).join(String.fromCharCode(10));
+
+test('each pistol keeps its cue and falls back until all three distinct recordings are available offline',()=>{
+ const installedManifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));
+ for(const [cue,name] of [['v104-handgun','handgun'],['weapon-suppressed-pistol','suppressed-pistol']]){
+  const descriptors=[files[cue],pistolFiles[name+'-02'],pistolFiles[name+'-03']];
+  for(const missing of [null,...descriptors]){
+   const storedHashes=new Set(descriptors.filter(file=>file!==missing).map(file=>file.hash));
+   const allowed=verifiedPwaArtworkPaths({artworks:{...files,...pistolFiles},installedManifest,storedHashes,gameBlocked:false});
+   const result=selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,allowed);
+   if(missing){assert.ok(result.assetById[cue]);assert.equal(result.poolById[cue],undefined);continue;}
+   const pool=result.poolById[cue],base=V100_AUDIO_MANIFEST.assetById[cue];
+   assert.equal(pool.avoidImmediateRepeat,true);assert.equal(pool.strategy,'shuffle');
+   assert.deepEqual(pool.assetIds.map(id=>result.assetById[id].sources[0].src),descriptors.map(f=>f.path));
+   for(const take of pool.assetIds){assert.equal(result.assetById[take].gain,base.gain);assert.equal(result.assetById[take].priority,base.priority);}
+   for(const descriptor of descriptors.slice(1)){
+    const entry=installedManifest.assets.find(a=>a.path===descriptor.path);
+    assert.equal(entry.hash,descriptor.hash);assert.equal(entry.audioChannel,'se');assert.equal(entry.bundlePath,undefined);
+    assert.equal('sha256-'+sha(fs.readFileSync('public'+entry.path)),descriptor.hash);
+   }
+   assert.equal(result.aliasById['enemy-red-panther-commander-attack'].targetId,'v104-handgun');
+  }
+ }
+});
 
 test('eight recorded takes replace only their eleven gun/shot assets and preserve all playback policies',()=>{
  assert.deepEqual(Object.keys(files).sort(),[...ids].sort());

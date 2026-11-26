@@ -5604,6 +5604,50 @@
       "audioType": "audio/mpeg"
     },
     {
+      "path": "/audio/quality-20261127/firearms/handgun-02.mp3",
+      "bytes": 7985,
+      "hash": "sha256-3a3c1f8e65d27830ff78d5e293b07a6c0a2aa5e77c63cce32836ceff56b4ebd4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "handgun-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/firearms/handgun-03.mp3",
+      "bytes": 7985,
+      "hash": "sha256-af4b42969873a487a836bb71740ed062d019255bc3a94bec31d74acd422d2880",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "handgun-03",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/firearms/suppressed-pistol-02.mp3",
+      "bytes": 7985,
+      "hash": "sha256-7ae31da1be45e8aa720b01691e997fc32dd2025d0b35fd98221594ea509c1d9b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "suppressed-pistol-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/firearms/suppressed-pistol-03.mp3",
+      "bytes": 7985,
+      "hash": "sha256-cb4d7496c0ae17f7f6640dbadc4e1481b3a887f7df3baa0897fb8d2669d0d306",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "suppressed-pistol-03",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3",
       "bytes": 7149,
       "hash": "sha256-4ca313e12d3d0397f3ef168ac76dc6fb08943bea06ddf2a5b6d122759f72d354",
