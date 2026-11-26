@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import ts from "typescript";
 import { canDeploy } from "../app/gameRules.js";
 import { humanDeploymentCapacity } from "../app/deploymentCapacity.js";
+import { v100BasePresentationFor } from "../app/v100BasePresentation.js";
 import { V100_FORMATION_MAX_SLOTS } from "../app/v100Registry.js";
 
 const source = await readFile("app/AshfallGame.tsx", "utf8");
@@ -28,7 +29,7 @@ function fixture(active = 6, queued = [], v100 = true) {
     nextId:50,deployQueue:[...queued],formationKinds:["scout"],energy:150,deployCooldowns:{scout:0},running:true,paused:false,over:false };
   const cues=[],gameRef={current:game},deploymentHistoryRef={current:null};
   const runtime = vm.runInNewContext(code, {
-    humanDeploymentCapacity,V100_FORMATION_MAX_SLOTS,canDeploy,gameRef,deploymentHistoryRef,useCallback:fn=>fn,
+    humanDeploymentCapacity,v100BasePresentationFor,V100_FORMATION_MAX_SLOTS,canDeploy,gameRef,deploymentHistoryRef,useCallback:fn=>fn,
     equippedCardForGame:()=>({kind:"scout",name:"ハチ",cost:25,deployCooldown:5,hp:100}),
     playUiOperationCue:(...args)=>cues.push(args),rejectBattleSaveBoundary:()=>false,
     survivalUpgradeEffects:()=>({redeployMultiplier:1}),
@@ -55,6 +56,7 @@ test("actual spawn refuses an eighth live instance and permits replacement after
   assert.equal(f.spawnHuman(f.game,"scout"),null);assert.equal(f.game.nextId,50);assert.equal(f.game.fighters.length,7);
   f.game.fighters[0].hp=0;
   assert.ok(f.spawnHuman(f.game,"scout"));
+  assert.equal(f.game.banner,"ハチ、出撃！");
   assert.equal(humanDeploymentCapacity({fighters:f.game.fighters,limit:7}).active,7);
   assert.equal(f.spawnHuman(f.game,"scout"),null);
 });
