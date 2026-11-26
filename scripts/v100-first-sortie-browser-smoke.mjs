@@ -3,8 +3,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium, webkit } from "playwright";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
-import { V100_STAGE_IDS } from "../app/v100Registry.js";
+import { V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
 import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -15,6 +17,10 @@ const report = { evidenceKind: "seeded UI/save-boundary fixtures; not normal com
 const sizes = [{width:1280,height:720},{width:844,height:390},{width:844,height:340}];
 const readSave = page => page.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100")));
 const phase = (page, value) => page.locator(`.v100-shell[data-v100-phase="${value}"]`).waitFor({state:"visible"});
+async function enterGame(page) {
+  await dismissInstallOffer(page, { readySelector: ".v100-start-screen", waitForFictionDismissal: true });
+  await enterV100FromTitle(page);
+}
 async function openFixture(page, save) {
   await page.addInitScript(({origin, save}) => {
     if(location.origin !== origin || localStorage.getItem("nishijin-campaign-v100")) return;
@@ -22,8 +28,7 @@ async function openFixture(page, save) {
     localStorage.setItem("nishijin-campaign-v1", "legacy-preservation-sentinel");
   }, {origin:origin.origin,save:serializeV100Save(save)});
   await page.goto(origin.href);
-  const browserPlay=page.getByRole("button", {name:"ブラウザで遊ぶ",exact:true});
-  await browserPlay.click();
+  await enterGame(page);
 }
 async function renderedImagesReady(page) { await page.waitForFunction(() => [...document.images].every(img => img.complete && img.naturalWidth > 0)); }
 async function click(page, name) { await page.waitForFunction(() => !document.querySelector('.v100-shell[aria-busy="true"]')); await renderedImagesReady(page); await page.getByRole("button",{name,exact:true}).click(); await page.waitForFunction(() => !document.querySelector('.v100-shell[aria-busy="true"]')); }
@@ -56,7 +61,7 @@ try {
       await click(page,"出撃編成へ");
       await click(page,"枠を空ける");
       await click(page,"パイセンを枠1へ配置");
-      await renderedImagesReady(page); await page.reload(); await click(page,"ブラウザで遊ぶ"); await phase(page,"formation");
+      await renderedImagesReady(page); await page.reload(); await enterGame(page); await phase(page,"formation");
       assert.equal((await readSave(page)).formationSlots[0],"unit-paisen");
       await click(page,"ステージ選択へ"); await phase(page,"map");
       const saved=await readSave(page);
@@ -64,6 +69,7 @@ try {
       assert.ok(saved.readStoryEventIds.includes("v100:event:s01:pre"));
       item.savedFormation=saved.formationSlots;
      } else {
+      const expectedCaps=v100StageReward(1, "first-clear");
       const result=createV100BattleResult({stageId:V100_STAGE_IDS[0],battleRunId:name,won:true,vehicleHp:408,vehicleMaxHp:680,objectiveComplete:true,elapsedSeconds:132,unitDeaths:3});
       const pending=recordV100PendingResult(initial,result); assert.equal(pending.applied,true);
       await openFixture(page,normalizeV100Save({...pending.save,flowState:{phase:"result",stageId:V100_STAGE_IDS[0],stageNumber:1,firstClear:true}}));
@@ -81,16 +87,18 @@ try {
        if(++nodes>80)throw new Error("post-event did not finish");
       }
       await phase(page,"first-clear-post");
-      const reward=page.getByLabel("確定したクリア報酬");
-      assert.match(await reward.innerText(),/\+90/); assert.match(await reward.innerText(),/ナオの出撃を準備/);
-      assert.equal((await readSave(page)).caps,90);
+      const reward=page.locator(".v100-reward-summary");
+      const capsText = await reward.locator(".v100-reward-caps-value").innerText();
+      assert.equal(capsText.replace(/\s/g, ""), `+${expectedCaps}CAPS`);
+      assert.match(await reward.innerText(), /ナオが合流/);
+      assert.equal((await readSave(page)).caps,expectedCaps);
       await page.screenshot({path:path.join(out,`${name}-reward.png`)});
       item.rewardFits=await reward.evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth;});
       assert.equal(item.rewardFits,true);
-      await renderedImagesReady(page); await page.reload(); await click(page,"ブラウザで遊ぶ"); await phase(page,"first-clear-post");
-      assert.equal((await readSave(page)).caps,90);
+      await renderedImagesReady(page); await page.reload(); await enterGame(page); await phase(page,"first-clear-post");
+      assert.equal((await readSave(page)).caps,expectedCaps);
       await page.locator('.v100-event-actions .v100-primary').click(); await phase(page,"map");
-      assert.equal((await readSave(page)).caps,90);
+      assert.equal((await readSave(page)).caps,expectedCaps);
       assert.equal(await page.locator(".v100-map-side h3").innerText(), "早良区役所・最後の一台"); item.postNodes=nodes;
      }
      assert.equal(await page.evaluate(()=>localStorage.getItem("nishijin-campaign-v1")),"legacy-preservation-sentinel");

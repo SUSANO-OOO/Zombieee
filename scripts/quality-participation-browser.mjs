@@ -28,7 +28,7 @@ try {
       await dismissInstallOffer(page,{timeout:20000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
       await enterV100FromTitle(page);
       const stored=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
-      if(await page.getByRole('heading',{name:'出撃する仲間を選び直そう',exact:true}).isVisible()){
+      if(await page.getByRole('heading',{name:'出撃できる仲間がいません',exact:true}).isVisible()){
         await page.screenshot({path:path.join(out,label+'-recovery.png')});
         await page.getByRole('button',{name:'編成を見直す',exact:true}).click();
       }
