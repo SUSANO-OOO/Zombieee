@@ -192,6 +192,39 @@ test('Red Panther combat cues alternate recordings from the same voice family at
     }
   }
 });
+test('named allies vary recorded hurt reactions while keeping the fighter and first take', async () => {
+  const roles = [
+    ['kumaverson', 'heavy', ['01', '02']],
+    ['crazy-king', 'heavy', ['02', '01']],
+    ['babayaga', 'light', ['02', '01', '03', '04']],
+  ];
+  const installed = new Set(INSTALL_AUDIO_ASSETS.flatMap(asset => asset.sources.map(source => source.src)));
+  for (const [kind, family, takes] of roles) {
+    const cue = humanVoiceCueForUnit(kind, 'hurt');
+    for (const external of [true, false]) {
+      const manifest = external ? V100_AUDIO_MANIFEST : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST;
+      const player = actualPlayer({external});
+      player.play(cue, 640, {ownerId: 12, semantic: 'battle-hurt', receiptId: 'injury:12', volume: .8});
+      await flush();
+      assert.equal(player.requests.length, 1);
+      const request = player.requests[0];
+      const pool = manifest.poolById[request.cueId];
+      assert.equal(pool.strategy, 'round-robin');
+      assert.equal(pool.assetIds[0], cue);
+      assert.equal(request.options.instanceKey, 'fighter-voice:5:12');
+      assert.equal(request.options.volume, .8);
+      assert.equal(request.options.maxInstances, 1);
+      assert.equal(pool.assetIds.length, takes.length);
+      for (const [i, id] of pool.assetIds.entries()) {
+        const asset = manifest.assetById[id];
+        assert.equal(asset.sources[0].src.split('/').pop(), 'human-male-' + family + '-hurt-' + takes[i] + '.mp3');
+        assert.ok(asset.sources.every(source => installed.has(source.src)));
+        assert.equal(asset.gain, manifest.assetById[cue].gain);
+      }
+      for (const event of ['attack', 'death']) assert.equal(manifest.poolById['voice-' + kind + '-' + event + '-takes'], undefined);
+    }
+  }
+});
 test('the actual game keeps the weapon request unchanged and adds one independently controlled actor voice',async()=>{
  for(const kind of kinds)for(const event of events){
   const player=actualPlayer(),cueId=enemyVoiceCue(kind,event);

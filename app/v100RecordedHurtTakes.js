@@ -1,6 +1,7 @@
 const takes = ["03", "04"];
 const lightHurtPools = new Set([
   "human-male-light-hurt",
+  "voice-babayaga-hurt-takes",
   "voice-red-panther-knife-hurt-takes",
   "voice-red-panther-smg-hurt-takes",
 ]);
