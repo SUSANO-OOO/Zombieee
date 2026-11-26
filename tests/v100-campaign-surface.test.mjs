@@ -85,6 +85,11 @@ test("map briefings describe the authored task rather than number words in objec
     assert.equal(v100BattleDefinitionFor(id).objective, goal);
   }
   const platform = v100BattleDefinitionFor(V100_STAGE_IDS[4]);
+  const beforeBoss = { barricadeHp: 350, fighters: [{ side: "zombie", kind: "walker" }] };
+  assert.equal(objectiveForBattle(platform, beforeBoss), "退路を守る");
+  const gateEater = { side: "zombie", kind: platform.bossEnemyKind };
+  assert.equal(objectiveForBattle(platform, { ...beforeBoss, fighters: [gateEater] }), "改札喰いを撃破");
+  assert.equal(objectiveForBattle(platform, { ...beforeBoss, bossDefeatPending: true }), "改札喰いを撃破");
   assert.equal(objectiveForBattle(platform, { barricadeHp: 350 }), "改札喰いを撃破");
   assert.equal(objectiveForBattle(platform, { barricadeVulnerable: true, barricadeHp: 350 }), "感染核を破壊");
   assert.equal(objectiveForBattle(platform, { barricadeVulnerable: true, barricadeHp: 0 }), "残る敵を倒して退路を守る");
