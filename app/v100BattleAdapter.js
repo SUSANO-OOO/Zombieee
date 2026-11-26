@@ -90,7 +90,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (stageId === V100_CENTRAL_SEAL_STAGE) return "三基のゲートを閉じ、感染者の流入を止める";
   if (stageId === V100_BAY_EVACUATION_STAGE) return "クロメを退け、十二人を避難させる";
   if (stageId === V100_ARCHIVE_STAGE) return "遠隔消去を止め、紙台帳を搬出する";
-  if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
+  if (stage.number === 30) return "装甲車を守り、TAKUYA-Ωと増援を倒せ";
   if (stageId === V100_LURE_CONTROL_STAGE) return V100_LURE_CONTROL_OBJECTIVE;
   if (stageId === V100_ARMORY_STAGE) return V100_ARMORY_OBJECTIVE;
   if (stage.number === 24) return "中央制御盤を止め、フタゴを撃破";
@@ -357,8 +357,8 @@ function stageTimeline(stage, missionType, bossKind) {
       freeze({ at: PREP_SECONDS + 57, advanceOnClearAfter: PREP_SECONDS + 49, wave: 4, label: "最終防衛 // 突破を阻止", waitForPriorWaveClear: true, units: freeze(["crusher", "spitter", "walker", "runner", "spitter"]) }),
       freeze({ at: PREP_SECONDS + 78, advanceOnClearAfter: PREP_SECONDS + 69, wave: 5, label: "最終防衛 // 目前の群れ", waitForPriorWaveClear: true, units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker"]) }),
       freeze({ at: PREP_SECONDS + 90, wave: 6, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", bossHpRatio: firstReinforcement, units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter", "walker"]), addWave: true }),
-      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", bossHpRatio: secondReinforcement, waitForReinforcementsClear: true, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher", "spitter", "crusher"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "敵の増援が来た！", bossHpRatio: firstReinforcement, units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter", "walker"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "これが最後の増援だ！", bossHpRatio: secondReinforcement, waitForReinforcementsClear: true, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher", "spitter", "crusher"]), addWave: true }),
     ]);
   }
   if (stage.number === 24 || stage.number === 25) {
