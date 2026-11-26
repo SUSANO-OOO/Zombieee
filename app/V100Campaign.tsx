@@ -1420,7 +1420,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
           </dl>}
         </aside>
         <div className="v100-callin-roster">
-          <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上タップで手動アビリティ"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、埋まった枠なら入れ替え。" : requestedUnit ? "この仲間は、別の作戦で試そう。" : modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
+          <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "迎撃メンバー" : "出撃メンバー"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、仲間がいる枠なら交代。" : requestedUnit ? "この仲間は別の作戦で編成できます。" : "枠をタップして、連れていく仲間を選ぼう。"}</small></div>
           {briefingOpen && (
             <V100BattleBriefing
               allowControls={!modePreparation}

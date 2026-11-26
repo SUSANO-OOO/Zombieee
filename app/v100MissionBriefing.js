@@ -80,8 +80,12 @@ export function v100MissionBriefingFor(stageId) {
   if (stage.number === 24) return { mode: "advance", origin: "中央制御盤", target: "フタゴ", verb: "制御を止めて二体を撃破" };
   if (stage.number === 25) return { mode: "hold", origin: "医療物資", target: "変異ムガリアン社長", verb: "医療物資を守って撃破" };
   if (stage.number === 29) return { mode: "dual-target", targets: ["国外起動回線", "感染源原株"], verb: "両方を破壊" };
-  if (stage.missionType === "timed-defense") return { mode: "hold", origin: V100_DEFENSE_OBJECTIVES[stageId]?.label ?? "防衛線", target: "敵侵入", verb: "維持" };
+  if (stage.missionType === "timed-defense") return { mode: "hold", origin: V100_DEFENSE_OBJECTIVES[stageId]?.label ?? "防衛線", target: "敵", verb: "近づく敵を食い止める" };
   const control = V100_CORPORATE_CONTROLS[stageId];
-  if (stage.missionType === "boss") return { mode: "advance", origin: "部隊", target: control ?? (stage.number === 3 || stage.number === 30 ? "ボス" : "ボス・感染核"), verb: control ? "ボス撃破 → 破壊" : stage.number === 3 || stage.number === 30 ? "撃破・残敵排除" : "撃破 → 核破壊" };
+  if (stage.missionType === "boss") {
+    if (control) return { mode: "advance", origin: "部隊", target: control, verb: "ボスを倒して装置を壊す" };
+    if (stage.number === 3 || stage.number === 30) return { mode: "advance", origin: "部隊", target: "ボス", verb: "ボスと残りの敵を倒す" };
+    return { mode: "advance", origin: "部隊", target: "ボス・感染核", verb: "ボスを倒し、感染核を壊す" };
+  }
   return { mode: "advance", origin: "部隊", target: control ?? "感染拠点", verb: "制圧" };
 }
