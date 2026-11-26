@@ -88,10 +88,12 @@ test('Hachi gets two stored crowbar takes while knife attacks and older packs ke
 
 test('the old 411-file audio pack stays intact before the gun takes and later foley',()=>{
  const old=oldJson('public/pwa-bundles/audio-v1.json'),index=JSON.parse(fs.readFileSync('public/pwa-bundles/audio-v1.json','utf8'));
- assert.equal(Object.keys(old.assets).length,411);assert.equal(INSTALL_AUDIO_ASSETS.length,424);assert.equal(Object.keys(index.assets).length,422);
+ assert.equal(Object.keys(old.assets).length,411);assert.equal(INSTALL_AUDIO_ASSETS.length,426);assert.equal(Object.keys(index.assets).length,422);
  assert.deepEqual(INSTALL_AUDIO_ASSETS.slice(422).map(asset=>asset.sources[0].src),[
   '/audio/quality-20261125/voices/human-male-heavy-death-02.wav',
   '/audio/quality-20261125/voices/human-male-heavy-death-01.wav',
+  '/audio/quality-20261126/voices/human-male-light-hurt-03.mp3',
+  '/audio/quality-20261126/voices/human-male-light-hurt-04.mp3',
  ]);
  assert.deepEqual(Object.keys(index.assets).slice(0,411),Object.keys(old.assets));for(const[path,row]of Object.entries(old.assets))assert.deepEqual(index.assets[path],row,path);
  const body=fs.readFileSync('public/pwa-bundles/audio-v1.bin');assert.equal(sha(body.subarray(0,36151187)),'701142bdb09c8e409ad63c30bd4c29397df90dc9ed0ad92b36a1cce9fbe3130b');

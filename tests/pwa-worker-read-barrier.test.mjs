@@ -3,6 +3,66 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
 
+test("metadata keeps the live response when storage fails and uses the last copy only when offline", async () => {
+  const source = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
+  const scope = "https://example.test/Zombieee/";
+  const request = new Request(new URL("asset-manifest.json", scope));
+  const offline = new Error("network unavailable");
+  const unavailable = new Error("storage unavailable");
+  let storageFailure, live = Response.json({ version: "current" });
+  let stored = Response.json({ version: "previous" });
+  let onFetch;
+  const cache = {
+    async put(key, value) {
+      assert.equal(key.url, request.url);
+      if (storageFailure === "put") throw unavailable;
+      stored = value;
+    },
+  };
+  runInNewContext(source, {
+    self: { registration: { scope }, addEventListener(type, listener) { if (type === "fetch") onFetch = listener; } },
+    caches: {
+      async open(name) {
+        assert.equal(name, "zombieee-meta-v1");
+        if (storageFailure === "open") throw unavailable;
+        return cache;
+      },
+      async match(key, { cacheName }) {
+        assert.equal(cacheName, "zombieee-meta-v1");
+        assert.equal(key.url, request.url);
+        if (storageFailure === "open") throw unavailable;
+        return stored?.clone();
+      },
+    },
+    async fetch() {
+      if (!live) throw offline;
+      return live.clone();
+    },
+    URL, Request, Response,
+  });
+  function get() {
+    let result;
+    onFetch({ request, respondWith(work) { result = work; } });
+    return result;
+  }
+  for (storageFailure of ["put", "open"]) {
+    assert.equal((await (await get()).json()).version, "current");
+    assert.equal((await stored.clone().json()).version, "previous");
+  }
+  storageFailure = null;
+  assert.equal((await (await get()).json()).version, "current");
+  live = new Response("maintenance", { status: 503 });
+  assert.equal((await get()).status, 503);
+  live = new Response("<html>fallback</html>", { headers: { "content-type": "text/html" } });
+  assert.equal(await (await get()).text(), "<html>fallback</html>");
+  live = null;
+  assert.equal((await (await get()).json()).version, "current");
+  stored = null;
+  await assert.rejects(get(), error => error === offline);
+  storageFailure = "open";
+  await assert.rejects(get(), error => error === offline);
+});
+
 test("state confirmation waits for an earlier asset clear rather than exposing the old pack", async () => {
   const source = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
   const scope = "https://example.test/Zombieee/";
