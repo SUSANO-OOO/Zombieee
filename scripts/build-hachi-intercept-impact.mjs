@@ -19,13 +19,23 @@ const composites=[], anchors=[];
 for(let cell=0;cell<6;cell++){
  const left=cell%3*sourceSize, top=Math.floor(cell/3)*sourceSize;
  const rgba=await sharp(master).extract({left,top,width:sourceSize,height:sourceSize}).ensureAlpha().raw().toBuffer();
+ const localLight = await sharp(rgba,{raw:{width:sourceSize,height:sourceSize,channels:4}})
+  .removeAlpha().greyscale().blur(9).raw().toBuffer();
  let mass=0, sumX=0, sumY=0;
  for(let y=0;y<sourceSize;y++){
   for(let x=0;x<sourceSize;x++){
    const i=(y*sourceSize+x)*4, a=rgba[i+3];
    const edge=Math.min(x,y,sourceSize-1-x,sourceSize-1-y);
-   // Taper the source's mist at cell edges before adding a clear atlas gutter.
-   rgba[i+3]=Math.round(a*Math.min(1,edge/24)**2*Math.min(1,a/48));
+   // The source has a pale, nearly uniform backing behind the painted grit.
+   // Keep the gold sparks and the local contrast of the flying particles.
+   const red=rgba[i], green=rgba[i+1], blue=rgba[i+2];
+   const light=.2126*red+.7152*green+.0722*blue;
+   const contrast=localLight[y*sourceSize+x]-light;
+   const detail=contrast>=0?contrast:-contrast*.35;
+   const warmth=Math.max(0,red-blue);
+   const paint=Math.min(1,Math.max(detail/46,warmth/54));
+   const opacity=.045+.955*paint*paint;
+   rgba[i+3]=Math.round(a*opacity*Math.min(1,edge/42)**2*Math.min(1,a/48));
    const intensity=Math.min(rgba[i],rgba[i+1],rgba[i+2]);
    if(cell<3&&a>=216&&intensity>=226&&x<203&&y>=316&&y<402){
     const weight=(intensity-214)*a/255;
@@ -67,7 +77,8 @@ const provenance={
  producerApproval:'The active mobile game goal requests dedicated material animation for manual abilities.',
  generation:{mode:'built-in image_gen',characterReferences:[],promptPath,promptSha256:hash(prompt)},
  source:{path:masterPath,bytes:master.length,sha256:hash(master),width:1536,height:1024,hasAlpha:true},
- processing:{script:'scripts/build-hachi-intercept-impact.mjs',sourceCellSize:sourceSize,transparentGutter:gutter},
+ processing:{script:'scripts/build-hachi-intercept-impact.mjs',sourceCellSize:sourceSize,transparentGutter:gutter,
+  alphaExtraction:'Suppress the neutral backing while preserving painted sparks and debris against the local luminance.'},
  output:{...material,bytes:encoded.length},runtimeAssetCount:1,logicalBytes:encoded.length,distinctBytes:encoded.length,
 };
 const provenancePath=sourceFolder+'/provenance.json';

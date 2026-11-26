@@ -26,7 +26,7 @@ test('quality candidate contains exactly the reviewed art, audio and VFX delta w
   assertDelta(candidate);
   assert.equal(contract.added.length,525);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54548349);
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54558377);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);

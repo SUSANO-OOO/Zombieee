@@ -97,7 +97,7 @@ export const V100_MANUAL_IMPACT_ART=Object.freeze({
   "scout": {
     "id": "v100-hachi-intercept-impact",
     "path": "/art/quality-20261126/vfx/hachi-intercept-six-r1.webp",
-    "hash": "sha256-e3579346951cd87904a9e6686e2211126a94d8a625288300cdb877a58ef7a273",
+    "hash": "sha256-dff77d4bc37b1dfc64434e096494d2fc23c53dacefe6dc63b068e27493ad8f13",
     "width": 768,
     "height": 512,
     "columns": 3,
