@@ -178,6 +178,8 @@ test('Red Panther combat cues alternate recordings from the same voice family at
       assert.equal(first.id, voice.asset.id);
       assert.deepEqual(first.sources, voice.asset.sources);
       assert.equal(pool.cooldownMs, voice.asset.cooldownMs);
+      const firing = kind === 'red-panther-smg' || kind === 'red-panther-commander';
+      if (event === 'attack') assert.equal(pool.cooldownMs, firing ? 5000 : 1400);
       assert.equal(pool.priority, voice.asset.priority);
       assert.equal(pool.maxInstances, voice.asset.maxInstances);
       assert.equal(second.gain, first.gain);
