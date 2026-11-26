@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BOSS_DEFINITIONS,bossTelegraphSnapshot} from '../app/bossFoundation.js';
-import {v100BossCounterplayHint,v100BossCounterplayTapObstacles,V100_BOSS_COUNTERPLAY_FALLBACK} from '../app/v100BossCounterplay.js';
-import {MANUAL_ABILITY_REGISTRY,layoutManualAbilityIcons} from '../app/manualAbilities.js';
+import {v100BossWarningText,v100BossCounterplayTapObstacles} from '../app/v100BossCounterplay.js';
+import {layoutManualAbilityIcons} from '../app/manualAbilities.js';
 const ally=(kind='kumaverson',changes={})=>({id:1,kind,side:'human',hp:100,maxHp:100,combatReady:true,x:200,y:282,lane:1,
  bodyRadius:12,manualAbility:{kind,phase:'ready'},...changes});
 const warning=kind=>({id:9,kind,side:'zombie',hp:100,maxHp:100,combatReady:true,x:400,y:282,
  abilityWindup:1.4,stationAbility:{phase:kind==='kurome'?'tracking':kind==='gate-eater'?'windup':'warning',
  remainingSeconds:1.4,targetId:1,targetX:200,targetY:282,targetIds:[]}});
-const hint=(boss,fighters=[],readyAbilities=[])=>v100BossCounterplayHint({boss,telegraph:bossTelegraphSnapshot(boss),fighters,readyAbilities,
+const hint=(boss,fighters=[])=>v100BossWarningText({boss,telegraph:bossTelegraphSnapshot(boss),fighters,
  beamOrigin:{x:boss.x,y:boss.y-64}});
 
 test('the targeted ally retains a clear tap area without shrinking nearby native skill buttons',()=>{
@@ -31,77 +31,38 @@ test('the targeted ally retains a clear tap area without shrinking nearby native
  assert.deepEqual(v100BossCounterplayTapObstacles({fighters:[boss,ally()]}),[]);
 });
 
-for(const definition of BOSS_DEFINITIONS){
- test(definition.id+': no usable skill never advertises unavailable defense, healing or artillery',()=>{
-  const boss=warning(definition.enemyKind),owner=ally();
-  const before=structuredClone({boss,owner});
-  const actual=hint(boss,[owner],[{id:1,kind:owner.kind,available:false}]);
-  if(boss.kind==='kurome')assert.match(actual,/タップして回避/u);
-  else assert.equal(actual,V100_BOSS_COUNTERPLAY_FALLBACK);
-  assert.deepEqual({boss,owner},before);
-  assert.equal(Object.isFrozen(boss.stationAbility.targetIds),false,'read-only guidance must not freeze live runtime arrays');
- });
- if(definition.enemyKind!=='kurome')test(definition.id+': ready defense becomes advice only before its wind-up deadline',()=>{
-  const boss=warning(definition.enemyKind),owner=ally(),ready=[{id:1,kind:owner.kind,available:true}];
-  assert.match(hint(boss,[owner],ready),/クマバーソン/u);
-  boss.abilityWindup=.2;boss.stationAbility.remainingSeconds=.2;
-  assert.equal(hint(boss,[owner],ready),V100_BOSS_COUNTERPLAY_FALLBACK);
+for (const definition of BOSS_DEFINITIONS) {
+ test(definition.id + ': warning names the attack with any party, without prescribing a skill', () => {
+  const boss = warning(definition.enemyKind);
+  for (const party of [[], [ally()], [ally('medic')], [ally('scout', {hp: 0})]]) {
+   const before = structuredClone({boss, party});
+   const name = bossTelegraphSnapshot(boss).displayName;
+   const text = hint(boss, party);
+   if (boss.kind === 'kurome' && party.some(member => member.hp > 0)) assert.ok(text.startsWith(name) && text.includes('タップして回避'));
+   else assert.equal(text, name);
+   assert.deepEqual({boss, party}, before);
+   assert.equal(Object.isFrozen(boss.stationAbility.targetIds), false);
+  }
  });
 }
-test('dead, stunned, entering, contained, cooling-down, missing and wrong owners cannot retain a stale ready hint',()=>{
- const boss=warning('takuya'),row={id:1,kind:'kumaverson',available:true};
- for(const change of [{hp:0},{side:'zombie'},{combatReady:false},{stunned:1},{gateEntering:true},{contained:true},
-  {manualAbility:{kind:'kumaverson',phase:'cooldown'}},{kind:'guardian'},{id:2}]){
-  assert.equal(hint(boss,[ally('kumaverson',change)],[row]),V100_BOSS_COUNTERPLAY_FALLBACK);
- }
- assert.equal(hint(boss,[],[row]),V100_BOSS_COUNTERPLAY_FALLBACK);
-});
-test('healing needs an available native target; ready attack skills produce timing advice instead of imaginary protection',()=>{
- const boss=warning('gairen'),medic=ally('medic');
- assert.equal(hint(boss,[medic],[{id:1,kind:'medic',available:false}]),V100_BOSS_COUNTERPLAY_FALLBACK);
- assert.match(hint(boss,[medic],[{id:1,kind:'medic',available:true}]),/ナオ.*回復/u);
- const gunner=ally('babayaga');
- assert.match(hint(boss,[gunner],[{id:1,kind:'babayaga',available:true}]),/外殻が開いたら/u);
- assert.match(hint(warning('mother'),[ally('zakimiya')],[{id:1,kind:'zakimiya',available:true}]),/増える敵.*範囲技/u);
-});
-test('Gairen interruption advice requires Tatara to cover that boss before the warning ends',()=>{
- const boss=warning('gairen'),tatara=ally('brute'),guard=ally('guardian',{id:2});
- const row={id:tatara.id,kind:tatara.kind,available:true,targetIds:['9','20']};
- assert.equal(hint(boss,[tatara],[row]),'タタラの技で阻止を狙おう');
- assert.match(hint(boss,[tatara],[{...row,targetIds:[20]}]),/外殻が開いたら/u);
- assert.equal(hint(boss,[tatara],[{...row,available:false}]),V100_BOSS_COUNTERPLAY_FALLBACK);
- assert.match(hint(boss,[tatara,guard],[row,{id:guard.id,kind:guard.kind,available:true}]),/ガンテツ/u);
- assert.doesNotMatch(hint(warning('futago'),[tatara],[row]),/阻止/u);
- boss.stationAbility.remainingSeconds=MANUAL_ABILITY_REGISTRY.brute.windupSeconds+.1;
- assert.match(hint(boss,[tatara],[row]),/外殻が開いたら/u);
-});
 
-test('each defensive suggestion uses its own real wind-up and returns to neutral after activation',()=>{
- for(const kind of ['guardian','kumaverson','miyamoto-musashi']){
-  const boss=warning('takuya'),owner=ally(kind),ready=[{id:1,kind,available:true}];
-  boss.abilityWindup=MANUAL_ABILITY_REGISTRY[kind].windupSeconds+.09;
-  assert.equal(hint(boss,[owner],ready),V100_BOSS_COUNTERPLAY_FALLBACK);
-  boss.abilityWindup+=.02;assert.notEqual(hint(boss,[owner],ready),V100_BOSS_COUNTERPLAY_FALLBACK);
-  owner.manualAbility.phase='windup';assert.equal(hint(boss,[owner],ready),V100_BOSS_COUNTERPLAY_FALLBACK);
- }
-});
 test('Kurome uses the actual targeted ally and beam: safe, dead and missing targets are not urged to evade again',()=>{
  const boss=warning('kurome'),owner=ally();
  assert.match(hint(boss,[owner]),/タップして回避/u);
  boss.stationAbility.phase='locked';
  assert.match(hint(boss,[owner]),/タップして回避/u);
  owner.y=212;owner.lane=0;
- assert.match(hint(boss,[owner]),/照準線を外れた/u);
+ assert.match(hint(boss,[owner]),/射線外/u);
  owner.hp=0;assert.doesNotMatch(hint(boss,[owner]),/タップ/u);
  assert.doesNotMatch(hint(boss,[]),/タップ/u);
- assert.equal(v100BossCounterplayHint(),null);
+ assert.equal(v100BossWarningText(),null);
 });
 
 test('clear-ray advice uses the painted eye position and is withheld when that origin is unavailable',()=>{
  const boss=warning('kurome'),owner=ally('scout',{x:330,y:265});
  boss.stationAbility.phase='locked';
  const options={boss,telegraph:bossTelegraphSnapshot(boss),fighters:[owner]};
- assert.match(v100BossCounterplayHint({...options,beamOrigin:{x:400,y:150}}),/照準線を外れた/u);
- assert.match(v100BossCounterplayHint({...options,beamOrigin:{x:400,y:218}}),/タップして回避/u);
- assert.match(v100BossCounterplayHint(options),/タップして回避/u);
+ assert.match(v100BossWarningText({...options,beamOrigin:{x:400,y:150}}),/射線外/u);
+ assert.match(v100BossWarningText({...options,beamOrigin:{x:400,y:218}}),/タップして回避/u);
+ assert.match(v100BossWarningText(options),/タップして回避/u);
 });

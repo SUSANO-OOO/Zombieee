@@ -40,7 +40,6 @@ html[data-pwa-ui-materials="ready"] .v100-battle-briefing { --v100-briefing-mate
 .v100-briefing-plan .v100-briefing-route { fill:none; stroke:#e6c786; stroke-width:2; }
 .v100-briefing-plan .v100-briefing-node { fill:#344d38; stroke:#dfc48b; }
 .v100-briefing-plan .v100-briefing-label,.v100-briefing-plan .v100-briefing-step { fill:#f5e4bd; font-size:14px; }
-.v100-briefing-plan .v100-briefing-advice { grid-column:1/-1; margin:0; padding:8px 11px 8px 13px; border-left:4px solid #b68d4c; color:#f2e5c5; background:#2b4334; }
 .v100-battle-briefing .v100-star-criteria { display:flex; flex-direction:column; gap:5px; padding-top:5px; border-top:1px solid #8a89675c; font-size:14px; }
 .v100-battle-briefing .v100-stage-stars { display:inline-flex; gap:2px; vertical-align:middle; }
 .v100-battle-briefing .v100-stage-stars svg { width:16px; height:16px; fill:#9d9e7c; }

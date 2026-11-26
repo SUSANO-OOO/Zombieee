@@ -996,12 +996,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     <h3>アプリの容量・更新</h3>
     {!standalone && guidance && <details className="pwa-return-install-help"><summary>ホーム画面で遊ぶ</summary><div className="pwa-return-install-columns"><div>{guidance.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}{installPromptUsed && <p>追加画面が出ないときは、下の手順を試してください。</p>}<InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div><p>{storageHost ? "続きから遊ぶには、「進行の保存」で先にセーブを書き出してください。" : "続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。"}追加したアプリで復元してください。保存先が別になる場合があります。</p></div></details>}
     <dl>
-      <div><dt>保存中のバージョン</dt><dd>{installedManifest?.version ?? "ブラウザでプレイ中"}</dd></div>
+      <div><dt>端末に保存したバージョン</dt><dd>{installedManifest?.version ?? "未保存"}</dd></div>
       <div><dt>ひとつ前のバージョン</dt><dd>{previousManifest?.version ?? "なし"}</dd></div>
-      <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>
-      <div><dt>このバージョンが使用中</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "未インストール"}</dd></div>
+      <div><dt>保存済みのファイル</dt><dd>{storedHashes.size}件</dd></div>
+      <div><dt>この版で使えるデータ</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "未確認"}</dd></div>
       <div><dt>{installedManifest ? "不足・破損" : "オフライン未保存"}</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未保存"}</dd></div>
-      <div><dt>参照されていないデータ</dt><dd>{orphanCount == null ? "なし" : `${orphanCount}件`}</dd></div>
+      {orphanCount != null && <div><dt>使われていないファイル</dt><dd>{orphanCount}件</dd></div>}
     </dl>
     <details><summary>保存先と診断情報</summary><dl>
       <div><dt>release SHA</dt><dd>{installedManifest?.releaseSha ?? "未インストール"}</dd></div>

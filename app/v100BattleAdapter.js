@@ -81,7 +81,7 @@ const MISSION_LABELS = Object.freeze({
 export function v100MissionObjectiveFor(stageId) {
   const stage = V100_STAGE_BY_ID[stageId];
   if (!stage) return "ステージの目標を達成";
-  if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
+  if (stage.number === 3) return "TAKUYAを撃破";
   if (stage.number === 5) return "改札喰いを倒し、感染核を破壊";
   if (stage.number === 9) return "電源盤の周りを味方で守り、3基を順に起動";
   if (stageId === V100_SUPPLY_VALVE_STAGE) return "供給管を復旧し、MOTHERを倒す";
@@ -94,7 +94,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (stageId === V100_LURE_CONTROL_STAGE) return V100_LURE_CONTROL_OBJECTIVE;
   if (stageId === V100_ARMORY_STAGE) return V100_ARMORY_OBJECTIVE;
   if (stage.number === 24) return "中央制御盤を止め、フタゴを撃破";
-  if (stage.number === 25) return "医療物資を守り、変異ムガリアン社長を止める";
+  if (stage.number === 25) return "医療物資を守り、変異した社長を止める";
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
     const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
@@ -106,12 +106,12 @@ export function v100MissionObjectiveFor(stageId) {
   if (defense) return defense.recordCount ? `${defense.goal}（全${defense.recordCount}室）` : defense.goal;
   if (stage.number === 29) return researchCoreObjective(null);
   const node = V100_NODE_PROFILES[stageId];
-  if (node?.shutdown) return `国内${node.label}4基を順番に物理${node.verb}`;
+  if (node?.shutdown) return `国内の${node.label}4基を現地で1基ずつ止める`;
   if (node) return `${stage.objectiveId.includes("four") ? 4 : 3}基の${node.label}を順番に${node.verb}`;
   const vehicle = V100_MISSION_VEHICLES[stageId];
   if (stageId === V100_BRIDGE_STAGE) return "証拠搬送車を護衛し、遮断機を開けて対岸へ";
   if (stageId === V100_FLOODGATE_STAGE) return "ガイレンを倒し、防潮門を閉める";
-  if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点へ追い込み、停止・確保";
+  if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点に追い込んで確保する";
   if (vehicle) return `${vehicle.targetLabel}を目的地へ護送`;
   return MISSION_LABELS[stage.missionType] ?? "ステージの目標を達成";
 }

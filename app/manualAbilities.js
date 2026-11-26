@@ -111,7 +111,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   babayaga: {
     unitId: "unit-babayaga",
     displayName: "弱点査定",
-    summary: "厄介な敵を狙い撃ち、しばらく弱点をさらす。仲間の追撃も通りやすくなる。",
+    summary: "敵の弱点を撃ち抜く。しばらくの間、味方がその敵に与えるダメージが増える。",
     iconMotif: "weak-point-ledger",
     runtimeStatus: "integrated",
     cooldownSeconds: 17,

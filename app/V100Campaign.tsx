@@ -78,7 +78,7 @@ import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
 import { v100MapStageName, v100StageDiscovered } from "./v100MapDisclosure.js";
 import { V100_BOSS_DOSSIER_ART, V100_BOSS_DOSSIER_FRAMING } from "./v100BossDossierArt.js";
 import { v100StoryPageFor } from "./v100StoryPages.js";
-import { formatV100Number, v100SupportPurposeFor, v100TacticalHintFor, v100UnitPresentation } from "./v100UnitPresentation.js";
+import { formatV100Number, v100SupportPurposeFor, v100UnitPresentation } from "./v100UnitPresentation.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
 import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { unitContentFor } from "./content/unitCatalog.js";
@@ -168,16 +168,16 @@ function formatReason(reason: string | undefined) {
     "stage-locked": "ひとつ前の作戦をクリアすると、ここへ進める。",
     "read-replay-required": "初回クリアの報酬は、続きの会話を読んでから受け取れる。「次の場面へ」進もう。",
     "unread-post-story": "まだ読んでいない会話があります。物語の続きへ進もう。",
-    "objective-incomplete": "まだ目標が残っている。画面の目標を確認。",
+    "objective-incomplete": "作戦目標がまだ残っている。戦闘画面で目標を確認しよう。",
     "vehicle-destroyed": "車両が破壊された。これ以上は出撃できない。",
     "formation-full": "同時に出撃できるのは7体まで。枠が空くまで待とう。",
-    "unit-not-owned": "この仲間は支度待ち。ユニット画面で出撃の支度を整えよう。",
+    "unit-not-owned": "この仲間はまだ編成に加えられない。「ユニット」で出撃の条件を確認しよう。",
     "insufficient-battle-resource": "指揮が足りない。回復するまで少し待とう。",
     "not-unlocked": "この装備はまだ買えない。先の作戦をクリアして解放しよう。",
     "insufficient-caps": "CAPSが足りない。作戦のクリア報酬で補充できる。",
-    "support-not-owned": "使う支援をまだ持っていない。支援画面で手に入れよう。",
-    "upgrade-cap": "これ以上は強化できない。最大まで強化済みだ。",
-    "level-cap": "今の育成上限に到達。先の作戦をクリアすると、さらに育てられる。",
+    "support-not-owned": "この支援物資は持っていない。「支援」で入手しよう。",
+    "upgrade-cap": "すでに最大まで強化している。",
+    "level-cap": "今はこれ以上レベルを上げられない。",
     "invalid-level-target": "育成するレベルを選び直そう。",
     "stale-level": "レベルが変わっている。いまの表示を確認してから、もう一度選ぼう。",
     "unknown-unit": "仲間の情報を読み込めなかった。前の画面に戻って選び直そう。",
@@ -272,8 +272,8 @@ const ENEMY_PACK_LABELS: Record<string, string> = {
 function missionLabelFor(stage: (typeof V100_STAGES)[number] | undefined) {
   if (stage?.number === 16) return "地下道のゲート閉鎖";
   if (stage?.number === 17) return "避難路確保";
-  if (stage?.number === 26) return "車列停止・確保";
-  if (stage?.number === 28) return "散布装置停止";
+  if (stage?.number === 26) return "車列の確保";
+  if (stage?.number === 28) return "散布装置の停止";
   return OPERATION_LABELS[stage?.missionType ?? ""] ?? "キャンペーンステージ";
 }
 
@@ -1325,7 +1325,6 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           </div>
           <details className="v100-map-detail"><summary>ステージ詳細・記録</summary>
             <div className="v100-map-detail-content">
-              {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
               {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
               <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
               <StarCriteria maxHp={save.vehicle.maxHp} stageNumber={stage?.number} />
@@ -1381,9 +1380,6 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   const stage = stageId ? V100_STAGE_BY_ID[stageId] : null;
   const basePresentation = v100BasePresentationFor(stage?.number);
   const threats = v100MissionThreatsFor(stageId);
-  const tacticalAdvice = briefingOpen && stage ? <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p> : null;
-  const showAdviceBeforePlan = stage?.number === 2 || stage?.number === 3;
-  const showChargeAdvice = stage?.number === 5;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
   const absenceDescriptionId = useId();
@@ -1420,7 +1416,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
           </dl>}
         </aside>
         <div className="v100-callin-roster">
-          <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上タップで手動アビリティ"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、埋まった枠なら入れ替え。" : requestedUnit ? "この仲間は、別の作戦で試そう。" : modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
+          <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "迎撃メンバー" : "出撃メンバー"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、仲間がいる枠なら交代。" : requestedUnit ? "この仲間は別の作戦で編成できます。" : "枠をタップして仲間を選択"}</small></div>
           {briefingOpen && (
             <V100BattleBriefing
               allowControls={!modePreparation}
@@ -1429,7 +1425,6 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
               onClose={() => setBriefingOpen(false)}
             >
               <div className="v100-briefing-plan">
-                {showAdviceBeforePlan && tacticalAdvice}
                 <section>
                   <h3>{stage ? stageDisplayNameFor(stage) : "次の迎撃に備える"}</h3>
                   <strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>
@@ -1441,7 +1436,6 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                 </section>
                 <section>
                   <h3>敵の動き</h3>
-                  {showChargeAdvice && tacticalAdvice}
                   {threats.length > 0 ? (
                     <ul aria-label="出現候補の行動">
                       {threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}
@@ -1449,7 +1443,6 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                   ) : <p>ステージを選ぶと、出現する敵を確認できます。</p>}
                   <p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p>
                 </section>
-                {!showAdviceBeforePlan && !showChargeAdvice && tacticalAdvice}
               </div>
             </V100BattleBriefing>
           )}
@@ -1649,18 +1642,18 @@ function RewardSummaryView({ result }: { result: Record<string, unknown> | null 
         </div>
       </article>}
     </div>
-    <div className="v100-reward-next-step"><p>獲得したCAPSで、仲間の出撃の支度や強化をしよう。</p><small className="v100-reward-saved">報酬とステージ進行は保存済み</small></div>
+    <div className="v100-reward-next-step"><p className="v100-reward-saved">報酬とステージ進行は保存済み</p></div>
   </div>;
 }
 
 
 function StarCriteria({ maxHp, stageNumber }: { maxHp: number; stageNumber?: number }) {
   const targets = v100StarTargetsForVehicle(maxHp);
-  const protection = v100BasePresentationFor(stageNumber).onFoot ? "退路確保" : "車両生存";
-  return <div className="v100-star-criteria" aria-label={`ステージ達成と${protection}で星1。星2は耐久70%以上で${targets[2]}、星3は90%以上で${targets[3]}`}>
-    <span><V100StageStars stars={1} label="条件" /> ステージ達成・{protection}</span>
-    <span><V100StageStars stars={2} label="条件" /> 耐久70%以上 / {targets[2]}</span>
-    <span><V100StageStars stars={3} label="条件" /> 耐久90%以上 / {targets[3]}</span>
+  const { label } = v100BasePresentationFor(stageNumber);
+  return <div className="v100-star-criteria" aria-label={`${label}を守ってクリアすると星1。残り耐久が${targets[2]}以上で星2、${targets[3]}以上で星3`}>
+    <span><V100StageStars stars={1} label="条件" /> {label}を守ってクリア</span>
+    <span><V100StageStars stars={2} label="条件" /> 残り耐久 {targets[2]}以上（70%）</span>
+    <span><V100StageStars stars={3} label="条件" /> 残り耐久 {targets[3]}以上（90%）</span>
   </div>;
 }
 
@@ -1714,7 +1707,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const deviceResult = v100DeviceResultText(result);
   const outcome = won ? defenseResult?.progress ?? "目標達成！"
     : escortResult?.outcome ?? (typeof result?.vehicleHp === "number" && result.vehicleHp <= 0 ? `${basePresentation.label}を守りきれませんでした。`
-      : "目標を達成できなかった。編成と戦い方を見直して、もう一度挑もう。");
+      : "作戦目標を達成できませんでした。");
   const resultStageId = typeof result?.stageId === "string" ? result.stageId : null;
   const resultStage = resultStageId ? V100_STAGE_BY_ID[resultStageId] : null;
   return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="戦闘結果" style={{ "--v100-result-scene": `url(${resultStageId ? stageVisualFor(resultStageId) : PRODUCTION_VISUALS.command})` } as CSSProperties}>
@@ -1726,19 +1719,18 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
       </header>
       {won && <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span><b>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</b><small className="v100-result-pending-reward">受取予定 +{rewardCaps + bonusStar2 + bonusStar3} CAPS</small></span></div>}
       <dl className="v100-result-records" id={resultDetailsId} ref={resultDetailsRef} tabIndex={-1}>
-        <div><dt>{basePresentation.healthLabel}</dt><dd>{hasVehicleIntegrity ? `${vehicleHp} / ${maxHp}（${Math.floor(hpPercent)}%）` : "記録なし"}</dd></div>
+        <div><dt>{escortResult && basePresentation.label === "装甲車両" ? "装甲車の耐久" : basePresentation.healthLabel}</dt><dd>{hasVehicleIntegrity ? `${vehicleHp} / ${maxHp}（${Math.floor(hpPercent)}%）` : "記録なし"}</dd></div>
         <div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : report?.bayEvacuation?.evacuatedCount === 12 ? "十二人全員が避難" : "達成" : "未達"}</dd></div>
       </dl>
       {!won && <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
           <strong>{escortResult?.progress ?? defenseResult?.progress ?? deviceResult?.progress ?? (boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし")}</strong>
           {defenseResult && <span>{defenseResult.detail}</span>}
-          {deviceResult && <span>{deviceResult.detail}</span>}
+          {deviceResult?.detail && <span>{deviceResult.detail}</span>}
           {boss?.state === "active" && <span>{bossRemainingHpText}</span>}
           <small className="v100-defeat-facts">
             <span>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</span>
           </small>
           {lastVehicleHit && <small className="v100-result-last-hit"><b>直前の被害</b> {lastVehicleHit}</small>}
-          {escortResult?.advice && <small>{escortResult.advice}</small>}
         </div>}
       <p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}</small></span> : outcome}</p>
       {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}

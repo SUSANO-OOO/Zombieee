@@ -45,7 +45,7 @@ try{for(const {scenario,viewport} of specs){
   const initial=await saved(),panel=page.locator('.v100-result-panel'),progress=panel.getByLabel('今回どこまで進めたか',{exact:true});
   row.initial=initial;row.progress=await progress.innerText();const expected=v100DefenseResultText(result);
   if(expected){assert.ok(row.progress.includes(expected.progress));assert.ok(row.progress.includes(expected.detail));assert.deepEqual(initial.lastResult.battleReport.defenseProgress,result.battleReport.defenseProgress);}
-  else{assert.ok(row.progress.includes('第5波まで到達'));assert.doesNotMatch(row.progress,/室を開放|防衛完了まで|秒維持/);}
+  else{assert.ok(row.progress.includes('第5波まで到達'));assert.doesNotMatch(row.progress,/室を開放|防衛完了まで|防衛時間/);}
   for(const locator of [progress,...await panel.locator('.v100-result-actions button').all()]){
    const box=await locator.boundingBox();assert.ok(box&&box.x>=0&&box.y>=0&&box.x+box.width<=viewport.width+1&&box.y+box.height<=viewport.height+1);
    assert.ok(await locator.evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}));

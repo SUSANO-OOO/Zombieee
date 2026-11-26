@@ -35,15 +35,15 @@ test('all four device objectives retain measured counts through result/save with
       const text = v100DeviceResultText(parsed.save.lastResult);
       if (stageId === V100_CENTRAL_SEAL_STAGE) {
         assert.equal(text.progress, `ゲート ${count}/${total} 閉鎖`);
-        assert.equal(text.detail, count === total ? '流入停止後、残る感染者を倒す'
-          : '次の閉鎖盤へ仲間を送り、周囲の敵を倒す');
+        assert.equal(text.detail, count === total ? '地下道への流入は止まった。'
+          : `開いたままのゲートがあと${total - count}基`);
       } else if (stageId === V100_RESCUE_CONTROL_STAGE) {
         assert.equal(text.progress, `救難回線 ${count}/${total} 復旧`);
-        assert.equal(text.detail, count === total ? '回線を復旧したら、残る敵から制御区を守る'
-          : '仲間を次の制御盤へ送り、周囲の敵を倒す');
+        assert.equal(text.detail, count === total ? '救難回線はすべて復旧した。'
+          : `未復旧の回線があと${total - count}か所`);
       } else {
         assert.equal(text.progress, `${profile.label} ${count}/${total}基を${profile.verb}`);
-        assert.equal(text.detail, count === total ? '装置の操作後も、敵の掃討と全員帰還が必要' : `残り${total - count}基の${profile.label}を${profile.verb}`);
+        assert.equal(text.detail, count === total ? '' : `残り${total - count}基`);
       }
       assert.equal(parsed.save.lastResult.won, false);
       assert.equal(parsed.save.lastResult.objectiveComplete, false);
@@ -55,7 +55,7 @@ test('S09 full activation is progress, not a completed mission or invented retur
   const value = result(raw('stage-hospital-evacuation-route', 3));
   assert.deepEqual(value.battleReport.deviceProgress, { stageId: value.stageId, powerActivated: 3 });
   assert.deepEqual(v100DeviceResultText(value), {
-    progress: '電源 3/3基を起動', detail: '装置の操作後も、敵の掃討と全員帰還が必要',
+    progress: '電源 3/3基を起動', detail: '',
   });
 });
 

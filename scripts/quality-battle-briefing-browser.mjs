@@ -32,13 +32,13 @@ try{
    }
    await page.setViewportSize({width:844,height:340});await dialog.getByRole('button',{name:'作戦',exact:true}).click();
    const planText=await dialog.locator('.v100-briefing-plan').innerText();
-   if(stage===1){assert.match(planText,/鉄鍋仁王立ち/u);assert.match(planText,/自分のHP/u);}
+   assert.equal(await dialog.locator('.v100-briefing-advice').count(),0);
+   assert.match(planText,/敵の動き/u);
    if(stage===25)assert.match(planText,/変異ムガリアン社長/u);
    assert.doesNotMatch(planText,/射撃と回復で|回復支援で持ちこたえる/u);
    const diagram=await dialog.locator('.v100-mission-diagram').evaluate(el=>{const r=el.getBoundingClientRect(),parent=el.parentElement.getBoundingClientRect();return{top:r.top,bottom:r.bottom,left:r.left,right:r.right,parent:{top:parent.top,bottom:parent.bottom,left:parent.left,right:parent.right}};});
    assert.ok(diagram.top>=diagram.parent.top&&diagram.bottom<=diagram.parent.bottom&&diagram.left>=diagram.parent.left&&diagram.right<=diagram.parent.right,'mission diagram must stay in its plan column, outside the modal header');
    await page.screenshot({path:path.join(out,`s${stage}-plan.png`)});
-   await dialog.locator('.v100-briefing-advice').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,`s${stage}-advice.png`)});
    await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>!!document.activeElement?.closest('.v100-battle-briefing')),true);
    await page.keyboard.press('Escape');await dialog.waitFor({state:'detached'});assert.equal(await opener.evaluate(el=>el===document.activeElement),true,'restore opener focus');
    await opener.click();await dialog.getByRole('button',{name:'閉じる',exact:true}).click();await dialog.waitFor({state:'detached'});assert.equal(await page.getByRole('button',{name:'戦闘へ',exact:true}).evaluate(el=>!!el.closest('[inert]')),false);

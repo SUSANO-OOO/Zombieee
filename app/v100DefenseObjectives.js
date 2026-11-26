@@ -1,8 +1,8 @@
 import { hasClinicalRescue } from "./v100ClinicalRescue.js";
 
 export const V100_DEFENSE_OBJECTIVES = Object.freeze({
-  "stage-sawara-ward-office": Object.freeze({ label: "避難誘導", goal: "避難誘導を守る" }),
-  "stage-university-hospital-approach": Object.freeze({ label: "医薬品搬出", goal: "医薬品の搬出を守る" }),
+  "stage-sawara-ward-office": Object.freeze({ label: "救援車", goal: "全員が戻るまで、救援車と区役所の玄関を守る" }),
+  "stage-university-hospital-approach": Object.freeze({ label: "救急搬入口", goal: "患者と薬を病院に運び込むまで、搬入口を守る" }),
   "stage-civic-archive-route": Object.freeze({ label: "記録搬出", goal: "記録の搬出を守る" }),
   "stage-mugarian-clinical-trial-wing": Object.freeze({ label: "収容室開放", goal: "収容室を順次開放", recordCount: 43 }),
 });

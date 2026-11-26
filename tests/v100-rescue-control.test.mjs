@@ -113,6 +113,6 @@ test("the energized security panel is physically distinct and the report keeps a
     battleReport: v100BattleReportFor({ ...raw, missionRuntime: { ...runtime, powerActivated } }),
   });
   assert.equal(result(1).progress, "救難回線 1/3 復旧");
-  assert.match(result(3).detail, /制御区を守る/u);
+  assert.equal(result(3).detail, '救難回線はすべて復旧した。');
   assert.equal(result(4), null);
 });

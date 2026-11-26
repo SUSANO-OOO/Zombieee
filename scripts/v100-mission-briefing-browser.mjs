@@ -29,7 +29,7 @@ for(const [engine,type]of Object.entries({chromium,webkit})){
    const observed=await objective.evaluate(el=>{const r=el.getBoundingClientRect();return {text:el.textContent,width:r.width,height:r.height,top:r.top,bottom:r.bottom,viewport:innerHeight,overflow:el.scrollWidth-el.clientWidth};});
    assert.ok(observed.width>0&&observed.height>0);assert.ok(observed.top>=-1&&observed.bottom<=observed.viewport+1,'Briefing must be reachable by normal scrolling');assert.ok(observed.overflow<=2,'Briefing text must wrap within its column');
    const category=await page.locator('.v100-stage-intel > strong').innerText();
-   if(stage.number===26)assert.equal(category,'車列停止・確保');if(stage.number===28)assert.equal(category,'散布装置停止');
+   if(stage.number===26)assert.equal(category,'車列の確保');if(stage.number===28)assert.equal(category,'散布装置の停止');
    const boss=V100_BOSSES.find(b=>b.stageNumber===stage.number),bossSpecial=boss?await page.locator('.v100-boss-callout > small').innerText():null;
    if(boss){assert.equal(bossSpecial.includes(boss.special),false);assert.match(bossSpecial,/特殊：.+/u);}
    const equipmentLabel=await page.locator('.v100-map-actions button[aria-label="出撃装備を選ぶ"] strong').evaluate(el=>{const r=el.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {text:el.textContent,lines:range.getClientRects().length,overflow:el.scrollWidth-el.clientWidth,width:r.width};});

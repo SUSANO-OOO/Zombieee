@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createDefaultV100Save } from "../app/v100Save.js";
-import { V100_STAGES, V100_UNITS } from "../app/v100Registry.js";
-import { formatV100Number, v100TacticalHintFor, v100UnitPresentation } from "../app/v100UnitPresentation.js";
+import { V100_UNITS } from "../app/v100Registry.js";
+import { formatV100Number, v100UnitPresentation } from "../app/v100UnitPresentation.js";
 
 const nearly = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} differs from ${expected}`);
 const fixture = () => {
@@ -11,13 +11,6 @@ const fixture = () => {
   save.registeredUnitIds = [...save.registeredUnitIds, "unit-nao"];
   return save;
 };
-
-test("the first boss briefing names the current guard move and the response to reinforcements", () => {
-  const firstBoss = V100_STAGES.find(stage => stage.number === 3);
-  const advice = v100TacticalHintFor(firstBoss);
-  assert.match(advice, /大剣の予告に.+鉄鍋仁王立ち/);
-  assert.match(advice, /増援が集まったら車両砲撃/);
-});
 
 test("unarmed level quote uses battle HP, damage, defense, timing and command resources", () => {
   const quote = v100UnitPresentation(fixture(), "unit-hachi");

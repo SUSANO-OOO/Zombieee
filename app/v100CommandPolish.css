@@ -340,7 +340,6 @@
 #v100-campaign .v100-command-map .v100-stage-intel > span { display: none; }
 #v100-campaign .v100-command-map .v100-stage-intel strong { font-size: 14px; }
 #v100-campaign .v100-command-map .v100-stage-intel p { margin: 0; font-size: 13px; line-height: 1.2; }
-#v100-campaign .v100-map-tactical-hint { grid-row: 3; margin: 0; color: #d7dfc5; font-size: 12px; line-height: 1.25; }
 #v100-campaign .v100-command-map .v100-map-detail { flex: 0 0 auto; min-height: 44px; height: auto; overflow-y: auto; font-size: 12px; }
 #v100-campaign .v100-command-map .v100-map-detail summary { font-size: 13px; }
 #v100-campaign .v100-command-map .v100-map-side > .v100-primary { grid-row: 5; min-height: 44px; height: 44px; margin: 0; padding: 5px 8px; font-size: 15px; }
@@ -348,7 +347,6 @@
 #v100-campaign .v100-command-map .v100-map-side.is-locked .v100-lock-banner { grid-row: 2; display: flex; align-items: baseline; gap: 7px; margin: 0; padding: 3px 5px; font-size: 12px; }
 #v100-campaign .v100-command-map .v100-map-side.is-locked .v100-lock-banner strong { font-size: 13px; }
 #v100-campaign .v100-command-map .v100-map-side.is-locked .v100-stage-intel { grid-row: 3; }
-#v100-campaign .v100-command-map .v100-map-side.is-locked .v100-map-tactical-hint { grid-row: 4; }
 #v100-campaign .v100-command-map .v100-map-side.is-locked .v100-map-detail { grid-row: 5; }
 #v100-campaign .v100-command-map .v100-map-side.is-locked > .v100-primary { grid-row: 6; }
 

@@ -76,7 +76,7 @@ for (const [stageId, profile] of Object.entries(V100_NODE_PROFILES)) {
     }
     assert.equal(nodes.length, profile.shutdown ? 4 : 3);
     if (profile.shutdown) {
-      assert.match(definition.objective, /4基.*物理停止/u);
+      assert.match(definition.objective, /散布装置4基.*現地で1基ずつ止める/u);
       assert.doesNotMatch(definition.phaseSchedule.map((phase) => phase.label).join(" "), /起動/u);
       assert.match(stationMissionObjective(createStationMissionRuntime(definition.missionType, config), config), /散布装置1を停止/u);
     }

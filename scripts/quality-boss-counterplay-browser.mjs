@@ -24,7 +24,7 @@ const browserType={chromium,webkit}[engine];assert.ok(browserType,'known renderi
 const browser=await browserType.launch({headless:true});
 report.browser={version:browser.version(),executable:browserType.executablePath(),
  playwrightVersion:JSON.parse(await readFile(new URL('../node_modules/playwright/package.json',import.meta.url),'utf8')).version,
- scope:'Existing rendering baseline; service workers blocked for isolation. Not persistent PWA storage evidence.'};
+ scope:'Fresh browser context with the normal install choice. Not persistent PWA storage evidence.'};
 try{
  for(const viewport of sizes)for(const boss of bosses){
   const kind=boss.id.slice(5),label=engine+'-'+kind+'-'+viewport.width+'x'+viewport.height;
@@ -34,7 +34,7 @@ try{
    registeredUnitIds:V100_UNITS.map(u=>u.id),ownedUnitIds:V100_UNITS.map(u=>u.id),
    formationSlots:['unit-kumaverson','unit-hachi','unit-babayaga','unit-gantetsu','unit-nao','unit-miyamoto-musashi','unit-zakimiya'],
    flowState:{phase:'formation',stageId:V100_STAGE_IDS[boss.stageNumber-1],stageNumber:boss.stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
-  const context=await browser.newContext({viewport,hasTouch:viewport.width<1000,serviceWorkers:'block',recordVideo:{dir:path.join(out,label),size:viewport}});
+  const context=await browser.newContext({viewport,hasTouch:viewport.width<1000,serviceWorkers:'allow',recordVideo:{dir:path.join(out,label),size:viewport}});
   await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
   await context.addInitScript(({captureRay,readability})=>{
    window.__BOSS_LABEL_PAINTS__=[];window.__ALLY_HP_PAINTS__=[];
@@ -195,7 +195,7 @@ try{
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__.getBossFoundationProof('kurome').lastCounterplay?.input==='battlefield-pointer');
     row.evadePointerEvents=await page.evaluate(at=>window.__BOSS_POINTER_EVENTS__.filter(e=>e.at>=at),evadeArmed.at);
     if(!before){
-     await page.waitForFunction(()=>document.querySelector('.v100-boss-telegraph-warning')?.textContent.includes('照準線を外れた')||window.__BOSS_HINT_PAINTS__.at(-1)?.text.includes('照準線を外れた'));
+     await page.waitForFunction(()=>document.querySelector('.v100-boss-telegraph-warning')?.textContent.includes('射線外')||window.__BOSS_HINT_PAINTS__.at(-1)?.text.includes('射線外'));
      await observe('evade-clear',evadeArmed.at);
     }
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__.getBossFoundationProof('kurome').stationPhase==='recovery');
@@ -209,8 +209,8 @@ try{
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.some(f=>f.kind==='kumaverson'&&f.hp>0&&f.combatReady&&!f.gateEntering));
     const owner=await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.kind==='kumaverson'&&f.hp>0&&f.combatReady));
     const defense=await arm(owner.id);
-    if(!before)await page.waitForFunction(()=>document.querySelector('.v100-boss-telegraph-warning')?.textContent.includes('クマバーソン')||window.__BOSS_HINT_PAINTS__.at(-1)?.text.includes('クマバーソン'));
-    await observe('defense-ready',defense.at);
+    const readyWarning=await observe('defense-ready',defense.at);
+    if(!before)assert.equal(readyWarning.text,readyWarning.proof.telegraph.displayName);
     const marker=page.locator('.manual-ability-ready[data-fighter-id="'+owner.id+'"]');
     assert.equal(await nativeBattleTap(page,marker),true);
     await page.waitForFunction(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.some(f=>f.id===id&&f.manualAbility?.activationId>0),owner.id);

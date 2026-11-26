@@ -281,7 +281,7 @@ import {
   isBossEnemyKind,
   isBossFighter,
 } from "./bossFoundation.js";
-import { v100BossCounterplayHint, v100BossCounterplayTapObstacles, V100_BOSS_COUNTERPLAY_FALLBACK } from "./v100BossCounterplay.js";
+import { v100BossWarningText, v100BossCounterplayTapObstacles } from "./v100BossCounterplay.js";
 import { layoutV100AllyHealthBars } from './v100BattleStatusLayout.js';
 import { TAKUYA_SLAM_PRESENTATION, TAKUYA_STABLE_POSE, takuyaSlamPresentationPose } from "./v100TakuyaPresentation.js";
 import { mugarianPresidentCompactScale, phoneLateBossCameraOffsetY } from "./v100BossPresentation.js";
@@ -6600,8 +6600,7 @@ const COMPACT_BOSS_TELEGRAPH_LABELS: Record<string, string> = {
   "cross-strike": "交差中心 // 離脱",
 };
 
-function bossTelegraphDisplayLabel(telegraph: { bossId?: string; kind: string; displayName: string; counterplay: string }, compact: boolean, v100 = false, actionHint?: string) {
-  if (v100) return `${telegraph.displayName}！ ${actionHint ?? V100_BOSS_COUNTERPLAY_FALLBACK}`;
+function bossTelegraphDisplayLabel(telegraph: { bossId?: string; kind: string; displayName: string; counterplay: string }, compact: boolean) {
   return compact && COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
     ? COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
     : `${telegraph.displayName} // ${telegraph.counterplay}`;
@@ -25675,10 +25674,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           for (const fighter of g.fighters) {
             const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48, twinLinkCut: v100TwinLinkIsCut(g) });
             if (!telegraph) continue;
-            const hint = v100BossCounterplayHint({ boss: fighter, telegraph, readyAbilities: readyAbilityFighters,
-              fighters: g.fighters, laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });
-            if (!hint) continue;
-            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, compactBattleViewport(), true, hint);
+            bossTelegraphWarning = v100BossWarningText({ boss: fighter, telegraph, fighters: g.fighters,
+              laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });
             break;
           }
         }

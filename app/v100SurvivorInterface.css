@@ -299,7 +299,7 @@
 /* The map remains the illustrated world; the briefing reads as a mission sheet. */
 #v100-campaign .v100-map-side { background: linear-gradient(115deg,#e1d4b3,#cbbc97); border: 0; border-top: 3px solid #9c4a31; border-radius: 0; color: #24392b; }
 #v100-campaign .v100-map-side :is(h3,.v100-stage-intel strong) { color: #1d3c29; }
-#v100-campaign .v100-map-side :is(.v100-map-side-heading,.v100-stage-intel,.v100-map-tactical-hint) { color: #3e4c38; background: transparent; }
+#v100-campaign .v100-map-side :is(.v100-map-side-heading,.v100-stage-intel) { color: #3e4c38; background: transparent; }
 #v100-campaign .v100-map-side-heading { border-bottom: 1px dashed #938261; padding-bottom: 6px; }
 #v100-campaign .v100-map-side.is-boss { border-top-color: #a93629; }
 #v100-campaign .v100-chapter-tabs button { border-radius: 0; border: 0; border-bottom: 2px solid #59634e; background: #263229; }
@@ -352,7 +352,7 @@
 #v100-campaign .v100-command-equipment .v100-equipment-focus-heading :is(p,small), #v100-campaign .v100-command-equipment .v100-equipment-focus-detail :is(p,small,strong) { color: #2e4631; }
 
 /* Mission information and item effects remain readable before the main action. */
-#v100-campaign .v100-command-map .v100-map-side :is(.v100-stage-intel p,.v100-map-tactical-hint,.v100-map-detail summary,.v100-kicker) { color: #30472e; text-shadow: none; }
+#v100-campaign .v100-command-map .v100-map-side :is(.v100-stage-intel p,.v100-map-detail summary,.v100-kicker) { color: #30472e; text-shadow: none; }
 #v100-campaign .v100-command-map .v100-map-side h3 { text-shadow: none; }
 #v100-campaign .v100-command-map .v100-map-briefing { flex: 1; min-height: 0; overflow-y: auto; }
 #v100-campaign .v100-command-map .v100-stage-intel { height: auto; max-height: none; }
