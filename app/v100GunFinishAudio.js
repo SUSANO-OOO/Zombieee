@@ -51,10 +51,31 @@ function withPistolTakes(manifest, allowed) {
   });
   return { ...manifest, assets, pools };
 }
+
+function withChihaSalvo(manifest, allowed) {
+  const source = name => ({src:'/audio/quality-20261127/chiha/chiha-salvo-'+name+'.mp3',type:'audio/mpeg'});
+  const launches = ['launch-a','launch-b'];
+  const poolId = 'ability-mrs-chiha-salvo-shot';
+  const pools = [...manifest.pools];
+  const assets = manifest.assets.flatMap(asset => {
+    if (asset.id === poolId && launches.every(name => allowed.has(source(name).src))) {
+      const takes = launches.map(name => ({...asset,id:'chiha-salvo-'+name,sources:[source(name),...asset.sources]}));
+      pools.push({id:poolId,category:asset.category,assetIds:takes.map(take=>take.id),strategy:'shuffle',
+        avoidImmediateRepeat:true,cooldownMs:asset.cooldownMs,priority:asset.priority,maxInstances:asset.maxInstances});
+      return takes;
+    }
+    if (asset.id === 'ability-mrs-chiha-salvo-impact' || asset.id === 'ability-mrs-chiha-salvo-final') {
+      const sound = source(asset.id.slice('ability-mrs-chiha-salvo-'.length));
+      if (allowed.has(sound.src)) return [{...asset,sources:[sound,...asset.sources]}];
+    }
+    return [asset];
+  });
+  return {...manifest,assets,pools};
+}
 // A battle/conversation snapshots this whitelist at entry. Old committed packs,
 // uncommitted bytes and unwrapped callers retain the original recorded cues.
 export function selectV100GunFinishPlayback(manifest,verifiedPaths=''){
   const allowed = new Set(verifiedPaths.split('\n').filter(Boolean));
   const guns=withPistolTakes(rewrite(manifest, allowed),allowed);
-  return createAudioManifest(withV100HachiCrowbar(guns, allowed));
+  return createAudioManifest(withV100HachiCrowbar(withChihaSalvo(guns, allowed), allowed));
 }
