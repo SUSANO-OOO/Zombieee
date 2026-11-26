@@ -99,9 +99,16 @@ export const V104_PAN_GUARD_AUDIO = {
 };
 const rpVoiceEvents={attack:{priority:67,cooldownMs:1400,gain:.72},hurt:{priority:76,cooldownMs:700,gain:.78},death:{priority:86,cooldownMs:300,gain:.8}};
 const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander']
- .flatMap(kind=>Object.entries(rpVoiceEvents).map(([event,settings])=>Object.freeze({kind,event,
-  asset:Object.freeze({id:`voice-${kind}-${event}`,category:'humanVoices',sources:sources(`voice-${kind}-${event}`),
-   preload:'lazy',loop:false,maxInstances:1,...settings})})));
+ .flatMap(kind=>Object.entries(rpVoiceEvents).map(([event,settings])=>{
+  // Leave several shots between the ranged soldiers' calls. The bullet and
+  // the target's injury each keep their own timing.
+  const rangedCall=event==='attack' && (kind==='red-panther-smg' || kind==='red-panther-commander');
+  const id=`voice-${kind}-${event}`;
+  return Object.freeze({kind,event,asset:Object.freeze({
+   id,category:'humanVoices',sources:sources(id),preload:'lazy',loop:false,maxInstances:1,
+   ...settings,cooldownMs:rangedCall?5000:settings.cooldownMs,
+  })});
+ }));
 export const V104_RED_PANTHER_VOICES=Object.freeze(rpVoices.map(row=>row.asset));
 const rpMaterialVoices=new Map(rpVoices.map(row=>[`enemy-${row.kind}-${row.event}`,Object.freeze({...row,
  cueId: reactionPoolId(row.asset.id),
