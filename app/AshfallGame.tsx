@@ -20021,7 +20021,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             continue;
           }
           playProductionCue(pendingCue.cueId, pendingCue.x, {
-            hurtVoiceCueId: pendingCue.hurtVoiceCueId,
             priority: pendingCue.priority ?? 88,
             cooldownMs: pendingCue.cooldownMs ?? 80,
             volume: pendingCue.volume,
@@ -20058,6 +20057,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         });
         for (const pendingCue of dueBattleAudioCues) {
           playProductionCue(pendingCue.cueId, pendingCue.x, {
+            hurtVoiceCueId: pendingCue.hurtVoiceCueId,
             priority: pendingCue.priority ?? 88,
             cooldownMs: pendingCue.cooldownMs ?? 80,
             volume: pendingCue.volume,

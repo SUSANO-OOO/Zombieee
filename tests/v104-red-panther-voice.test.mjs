@@ -252,9 +252,11 @@ test('a rapid series of minor injuries selects short takes for the same fighter 
   assert.equal(scheduleDelayedBattleAudioCue(runtime,repeat),true);
   const [due]=takeDueBattleAudioCues(runtime,{simulationTime:2,resolveOwner:()=>({alive:true,retreat:false,activationId:0})});
   assert.equal(due.hurtVoiceCueId,brief);
+  const dispatch=nodes.filter(n=>ts.isForOfStatement(n) && n.expression.getText(tree)==='dueBattleAudioCues');
+  assert.equal(dispatch.length,1);
   for(const external of [true,false]) {
     const player=actualPlayer({external});
-    player.play(due.cueId,640,due);
+    vm.runInNewContext(dispatch[0].getText(tree),{dueBattleAudioCues:[due],playProductionCue:player.play});
     await flush();
     assert.equal(player.requests.length,1);
     assert.equal(player.requests[0].cueId,brief);

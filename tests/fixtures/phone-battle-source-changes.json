@@ -1125,8 +1125,8 @@
       "              return productionMixer.play(options.hurtVoiceCueId ?? voice.cueId, {\n"
     ],
     [
-      "          }\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            priority: pendingCue.priority ?? 88,\n            cooldownMs: pendingCue.cooldownMs ?? 80,\n",
-      "          }\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            hurtVoiceCueId: pendingCue.hurtVoiceCueId,\n            priority: pendingCue.priority ?? 88,\n            cooldownMs: pendingCue.cooldownMs ?? 80,\n"
+      "        for (const pendingCue of dueBattleAudioCues) {\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            priority: pendingCue.priority ?? 88,\n",
+      "        for (const pendingCue of dueBattleAudioCues) {\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            hurtVoiceCueId: pendingCue.hurtVoiceCueId,\n            priority: pendingCue.priority ?? 88,\n"
     ]
   ],
   "app/manualAbilities.js": [
