@@ -24,7 +24,7 @@ const browserType={chromium,webkit}[engine];assert.ok(browserType,'known renderi
 const browser=await browserType.launch({headless:true});
 report.browser={version:browser.version(),executable:browserType.executablePath(),
  playwrightVersion:JSON.parse(await readFile(new URL('../node_modules/playwright/package.json',import.meta.url),'utf8')).version,
- scope:'Existing rendering baseline; service workers blocked for isolation. Not persistent PWA storage evidence.'};
+ scope:'Fresh browser context with the normal install choice. Not persistent PWA storage evidence.'};
 try{
  for(const viewport of sizes)for(const boss of bosses){
   const kind=boss.id.slice(5),label=engine+'-'+kind+'-'+viewport.width+'x'+viewport.height;
@@ -34,7 +34,7 @@ try{
    registeredUnitIds:V100_UNITS.map(u=>u.id),ownedUnitIds:V100_UNITS.map(u=>u.id),
    formationSlots:['unit-kumaverson','unit-hachi','unit-babayaga','unit-gantetsu','unit-nao','unit-miyamoto-musashi','unit-zakimiya'],
    flowState:{phase:'formation',stageId:V100_STAGE_IDS[boss.stageNumber-1],stageNumber:boss.stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
-  const context=await browser.newContext({viewport,hasTouch:viewport.width<1000,serviceWorkers:'block',recordVideo:{dir:path.join(out,label),size:viewport}});
+  const context=await browser.newContext({viewport,hasTouch:viewport.width<1000,serviceWorkers:'allow',recordVideo:{dir:path.join(out,label),size:viewport}});
   await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
   await context.addInitScript(({captureRay,readability})=>{
    window.__BOSS_LABEL_PAINTS__=[];window.__ALLY_HP_PAINTS__=[];
