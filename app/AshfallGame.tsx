@@ -25908,14 +25908,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       : hud.supportGauge < airstrikeCost
         ? `支援ゲージ不足 ${hud.supportGauge}/${airstrikeCost}`
         : null);
-  const barragePhaseLabel = hud.crawlerPhase === "cooldown" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%`
-    : hud.crawlerPhase === "deploying" ? "射撃準備中"
+  const barragePhaseLabel = hud.crawlerPhase === "cooldown" ? `装填${Math.round(hud.crawlerCharge * 100)}%`
+    : hud.crawlerPhase === "deploying" ? "射撃準備"
     : hud.crawlerPhase === "firing" ? "射撃中"
     : hud.crawlerPhase === "recovering" ? "射撃終了" : null;
   const crawlerBlockReason = commonBattleActionBlockReason ?? barragePhaseLabel
     ?? (hud.supportGauge < barrageCost ? `支援ゲージ不足 ${hud.supportGauge}/${barrageCost}` : null);
   const barrageStatus = commonBattleActionBlockReason ?? barragePhaseLabel
-    ?? (hud.supportGauge < barrageCost ? `支援 ${hud.supportGauge}/${barrageCost}` : `支援 ${barrageCost}`);
+    ?? (hud.supportGauge < barrageCost ? `${hud.supportGauge}/${barrageCost}` : `支援 ${barrageCost}`);
   const selectedSupplyCompactDetail = (!selectedSupplyDefinition ? "出撃装備で選択" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
@@ -26292,11 +26292,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               >
                 <span className="support-key">{(selectedSupplyDefinition?.key ?? "—")}</span>
                 <b>{externalSessionActive ? selectedSupplyDefinition ? selectedSupplyName : "戦術支援" : hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : selectedSupplyName}</b>
-                <small>{externalSessionActive ? <span className="v100-support-status">{!selectedSupplyDefinition ? "未装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? `再使用 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></>}</small>
+                <small>{externalSessionActive ? <span className="v100-support-status">{!selectedSupplyDefinition ? "未装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? `あと${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></>}</small>
                  <em>{!selectedSupplyDefinition ? "未装備" : hud.supportItemCooldowns[selectedSupply] > 0 ? "再準備" : `必要 ${selectedSupplyCost}`}</em>
                </button>
                <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-cooldown={Math.ceil(airstrikeCooldown)} data-state={airstrikeCooldown > 0 ? "cooldown" : hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={Boolean(airstrikeBlockReason)} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${airstrikeCost}支援ゲージ`}>
-                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>{externalSessionActive ? <span className="v100-support-status">{airstrikeCooldown > 0 ? `再使用 ${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== "idle" ? "飛来・着弾" : `支援 ${airstrikeCost}`}</span> : <><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>
+                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>{externalSessionActive ? <span className="v100-support-status">{airstrikeCooldown > 0 ? `あと${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== "idle" ? "支援中" : `支援 ${airstrikeCost}`}</span> : <><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>
                </button>
               <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={Boolean(crawlerBlockReason)} onClick={triggerCrawlerBarrage} aria-label={crawlerBlockReason ? `${vehicleBarrageControlLabel} ${crawlerBlockReason}` : vehicleBarrageControlLabel}>
                  <span className="support-key">G</span><b>{externalSessionActive ? basePresentation.barrageLabel : hud.crawlerPhase === "ready" ? "車両一斉砲撃" : barragePhaseLabel}</b><small>{externalSessionActive ? <span className="v100-support-status">{barrageStatus}</span> : <><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></>}</small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : basePresentation.onFoot ? "援護" : "車両"}</em>

@@ -1075,6 +1075,26 @@
     [
       "    : isFinalDefense && gameRef.current.bossDefeated ? \"残敵を掃討\"\n",
       "    : isFinalDefense && gameRef.current.bossDefeated ? \"最終防衛\"\n"
+    ],
+    [
+      "  const barragePhaseLabel = hud.crawlerPhase === \"cooldown\" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%`\n",
+      "  const barragePhaseLabel = hud.crawlerPhase === \"cooldown\" ? `装填${Math.round(hud.crawlerCharge * 100)}%`\n"
+    ],
+    [
+      "    : hud.crawlerPhase === \"deploying\" ? \"射撃準備中\"\n",
+      "    : hud.crawlerPhase === \"deploying\" ? \"射撃準備\"\n"
+    ],
+    [
+      "    ?? (hud.supportGauge < barrageCost ? `支援 ${hud.supportGauge}/${barrageCost}` : `支援 ${barrageCost}`);\n",
+      "    ?? (hud.supportGauge < barrageCost ? `${hud.supportGauge}/${barrageCost}` : `支援 ${barrageCost}`);\n"
+    ],
+    [
+      "                <small>{externalSessionActive ? <span className=\"v100-support-status\">{!selectedSupplyDefinition ? \"未装備\" : hud.supportItemCooldowns[selectedSupply] > 0 ? `再使用 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className=\"support-detail-full\">{selectedSupplyBlockReason ?? (selectedSupply === \"pod\" ? \"着地衝撃＋進路封鎖\" : selectedSupply === \"drum\" ? \"タップ／被弾で起爆\" : \"周辺の味方を継続回復\")}</span><span className=\"support-detail-compact\">{selectedSupplyCompactDetail}</span></>}</small>\n",
+      "                <small>{externalSessionActive ? <span className=\"v100-support-status\">{!selectedSupplyDefinition ? \"未装備\" : hud.supportItemCooldowns[selectedSupply] > 0 ? `あと${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className=\"support-detail-full\">{selectedSupplyBlockReason ?? (selectedSupply === \"pod\" ? \"着地衝撃＋進路封鎖\" : selectedSupply === \"drum\" ? \"タップ／被弾で起爆\" : \"周辺の味方を継続回復\")}</span><span className=\"support-detail-compact\">{selectedSupplyCompactDetail}</span></>}</small>\n"
+    ],
+    [
+      "                 <span className=\"support-key\">Q</span><b>{hud.airstrikePhase === \"idle\" ? \"航空支援\" : \"支援実行中\"}</b><small>{externalSessionActive ? <span className=\"v100-support-status\">{airstrikeCooldown > 0 ? `再使用 ${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== \"idle\" ? \"飛来・着弾\" : `支援 ${airstrikeCost}`}</span> : <><span className=\"support-detail-full\">{airstrikeBlockReason ?? \"照準・飛来・着弾\"}</span><span className=\"support-detail-compact\">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>\n",
+      "                 <span className=\"support-key\">Q</span><b>{hud.airstrikePhase === \"idle\" ? \"航空支援\" : \"支援実行中\"}</b><small>{externalSessionActive ? <span className=\"v100-support-status\">{airstrikeCooldown > 0 ? `あと${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== \"idle\" ? \"支援中\" : `支援 ${airstrikeCost}`}</span> : <><span className=\"support-detail-full\">{airstrikeBlockReason ?? \"照準・飛来・着弾\"}</span><span className=\"support-detail-compact\">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>\n"
     ]
   ],
   "app/manualAbilities.js": [
