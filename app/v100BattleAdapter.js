@@ -109,10 +109,10 @@ export function v100MissionObjectiveFor(stageId) {
   if (node?.shutdown) return `国内の${node.label}4基を現地で1基ずつ止める`;
   if (node) return `${stage.objectiveId.includes("four") ? 4 : 3}基の${node.label}を順番に${node.verb}`;
   const vehicle = V100_MISSION_VEHICLES[stageId];
-  if (stageId === V100_BRIDGE_STAGE) return "証拠搬送車を護衛し、遮断機を開けて対岸へ";
+  if (stageId === V100_BRIDGE_STAGE) return "遮断機を開け、対岸でも証拠搬送車を守り抜く";
   if (stageId === V100_FLOODGATE_STAGE) return "ガイレンを倒し、防潮門を閉める";
-  if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点に追い込んで確保する";
-  if (vehicle) return `${vehicle.targetLabel}を目的地へ護送`;
+  if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点に追い込んで確保し、最後まで守る";
+  if (vehicle) return `${vehicle.targetLabel}を護衛し、出口に着いたあとも守り抜く`;
   return MISSION_LABELS[stage.missionType] ?? "ステージの目標を達成";
 }
 

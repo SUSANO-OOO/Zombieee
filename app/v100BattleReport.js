@@ -151,6 +151,10 @@ export function v100EscortResultText(result) {
     return { outcome: "遮断機が閉じ、搬送車が取り残された。",
       progress: "遮断機まで到達" };
   }
+  if (destroyed && escort.progress >= 1) {
+    return { outcome: `${vehicle.destinationLabel ?? "出口"}に着いたあと、${vehicle.targetLabel}が破壊された。`,
+      progress: vehicle.count === 3 ? "冷蔵車3台が封鎖地点に到着" : "護送距離 100%" };
+  }
   return {
     outcome: destroyed ? `${vehicle.targetLabel}が破壊された。` : null,
     progress: escort.progress >= 1 ? `${vehicle.targetLabel}は${vehicle.destinationLabel ?? "目的地"}に到着`
