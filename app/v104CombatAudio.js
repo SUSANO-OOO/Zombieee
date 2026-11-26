@@ -1,5 +1,6 @@
 import {v177JointActorKey} from './v177JointActorHistory.js';
 import {PWA_PAN_GUARD_FILE} from './pwaPanGuardFile.js';
+import {withRecordedLightHurtTakes} from './v100RecordedHurtTakes.js';
 const recordedMayoVoices=Object.freeze({
  'voice-mayo-deploy':'recorded-bark',
  'voice-mayo-attack':'recorded-bark',
@@ -78,11 +79,11 @@ export function withV104CombatAudio(base) {
       },
     }];
   });
-  return {
+  return withRecordedLightHurtTakes({
     ...base,
     assets: [...assets, ...reactionTakes.map(({ alternate }) => alternate)],
     pools: [...(base.pools ?? []), ...reactionTakes.map(({ pool }) => pool)],
-  };
+  });
 }
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};

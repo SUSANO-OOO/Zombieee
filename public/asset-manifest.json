@@ -5582,6 +5582,28 @@
       "audioType": "audio/mpeg"
     },
     {
+      "path": "/audio/quality-20261126/voices/human-male-light-hurt-03.mp3",
+      "bytes": 5895,
+      "hash": "sha256-4fac3d49c98ed219e9c0a078e7139c8ca5700b8c415b0d0499806da519858e8d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261126-voices-human-male-light-hurt-03",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261126/voices/human-male-light-hurt-04.mp3",
+      "bytes": 10075,
+      "hash": "sha256-7fa844d6e9aa92e4e54bf93c1955fa561cc8ea0cb7a0c05b4c7638c87646b6d8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261126-voices-human-male-light-hurt-04",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/v060/music/battle-stage1.mp3",
       "bytes": 925037,
       "hash": "sha256-71613b42c69632a6b6bb8db7a1bd8d92144eb217b147ebc0699e10f11f3514c9",

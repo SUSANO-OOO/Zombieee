@@ -1,6 +1,7 @@
 import {withV100BossCollapseAudio} from './v100BossCollapseAudio.js';
 import {withV100BossSkillAudio} from './v100BossSkillAudio.js';
 import {withV104CombatAudio,V104_SHORT_HEAVY_DEATH_PATHS} from './v104CombatAudio.js';
+import {lightHurtFiles} from './v100RecordedHurtTakes.js';
 import { createAudioManifest } from "./audioManifest.js";
 import { withRecordedWeapons, recordedWeaponSources } from "./weaponRecordingRecipes.js";
 import {v100GunFinishInstallAssets} from "./v100GunFinishAudio.js";
@@ -799,11 +800,15 @@ const isShortHeavyDeath = asset => shortHeavyDeathPaths.has(asset.sources[0].src
 const precedingInstallAssets = [
   ...legacyVoiceInstallAssets, ...existingV100InstallAssets,
   ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,
-].filter(asset => !isShortHeavyDeath(asset));
+].filter(asset => !isShortHeavyDeath(asset) && !lightHurtFiles.includes(asset.sources[0].src));
 // The older formats are already inventoried under their original cue IDs.
 const shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)
   .map(asset => ({ ...asset, sources: asset.sources.slice(0, 1) }));
-for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {
+const lightHurtInstallAssets = lightHurtFiles.map(src => ({
+  ...V100_AUDIO_MANIFEST.assets.find(asset => asset.sources[0].src === src),
+  sources: [{src, type:"audio/mpeg"}],
+}));
+for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...lightHurtInstallAssets]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
     const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');
