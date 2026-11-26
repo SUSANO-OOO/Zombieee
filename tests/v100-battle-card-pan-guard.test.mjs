@@ -28,7 +28,8 @@ test('declared ref and leaf import alone restore the complete accepted applicati
  for (const [before, after] of [
   ["background={backgroundCacheRef.current[activeBattlefieldVisualId]}", "background={null}"],
   ["kind === departureCrewKind", "kind !== departureCrewKind"],
-  ["productionMixer.play(voice.cueId", "productionMixer.play(voice.asset.id"],
+  ["productionMixer.play(options.hurtVoiceCueId ?? voice.cueId", "productionMixer.play(voice.cueId"],
+  ["productionMixer.play(options.hurtVoiceCueId ?? voice.cueId", "productionMixer.play(options.hurtVoiceCueId ?? voice.asset.id"],
   ["precisionEnd: lastHit", "precisionEnd: firstHit"],
   ["playEnemyContactCue(g, reactionTarget, reactionDamage)", "playEnemyContactCue(g, reactionTarget, 0)"],
  ]) {

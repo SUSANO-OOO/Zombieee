@@ -77,7 +77,7 @@ export function mobileBattleHudLayout({
 } = {}) {
   const viewportWidth = finiteDimension(width);
   const viewportHeight = finiteDimension(height);
-  const landscapePhone = viewportWidth >= 640
+  const landscapePhone = viewportWidth >= 568
     && viewportWidth <= 960
     && viewportHeight >= 320
     && viewportHeight <= 430
@@ -131,7 +131,7 @@ export function mobileBattleHudLayout({
   const bannerHeight = topHeight - bannerTop - 4;
 
   const resourcesWidth = Math.max(104, Math.round(content.width * .14));
-  const supportWidth = Math.max(216, Math.round(content.width * .36));
+  const supportWidth = Math.max(viewportWidth < 640 ? 228 : 216, Math.round(content.width * .36));
   const unitsWidth = Math.max(0, content.width - resourcesWidth - supportWidth);
   const bottom = Object.freeze({
     resources: freezeRect({

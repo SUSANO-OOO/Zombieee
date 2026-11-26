@@ -1075,12 +1075,68 @@
     [
       "    : isFinalDefense && gameRef.current.bossDefeated ? \"残敵を掃討\"\n",
       "    : isFinalDefense && gameRef.current.bossDefeated ? \"最終防衛\"\n"
+    ],
+    [
+      "  const barragePhaseLabel = hud.crawlerPhase === \"cooldown\" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%`\n",
+      "  const barragePhaseLabel = hud.crawlerPhase === \"cooldown\" ? `装填${Math.round(hud.crawlerCharge * 100)}%`\n"
+    ],
+    [
+      "    : hud.crawlerPhase === \"deploying\" ? \"射撃準備中\"\n",
+      "    : hud.crawlerPhase === \"deploying\" ? \"射撃準備\"\n"
+    ],
+    [
+      "    ?? (hud.supportGauge < barrageCost ? `支援 ${hud.supportGauge}/${barrageCost}` : `支援 ${barrageCost}`);\n",
+      "    ?? (hud.supportGauge < barrageCost ? `${hud.supportGauge}/${barrageCost}` : `支援 ${barrageCost}`);\n"
+    ],
+    [
+      "                <small>{externalSessionActive ? <span className=\"v100-support-status\">{!selectedSupplyDefinition ? \"未装備\" : hud.supportItemCooldowns[selectedSupply] > 0 ? `再使用 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className=\"support-detail-full\">{selectedSupplyBlockReason ?? (selectedSupply === \"pod\" ? \"着地衝撃＋進路封鎖\" : selectedSupply === \"drum\" ? \"タップ／被弾で起爆\" : \"周辺の味方を継続回復\")}</span><span className=\"support-detail-compact\">{selectedSupplyCompactDetail}</span></>}</small>\n",
+      "                <small>{externalSessionActive ? <span className=\"v100-support-status\">{!selectedSupplyDefinition ? \"未装備\" : hud.supportItemCooldowns[selectedSupply] > 0 ? `あと${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : `物資 ${selectedSupplyCost}`}</span> : <><span className=\"support-detail-full\">{selectedSupplyBlockReason ?? (selectedSupply === \"pod\" ? \"着地衝撃＋進路封鎖\" : selectedSupply === \"drum\" ? \"タップ／被弾で起爆\" : \"周辺の味方を継続回復\")}</span><span className=\"support-detail-compact\">{selectedSupplyCompactDetail}</span></>}</small>\n"
+    ],
+    [
+      "                 <span className=\"support-key\">Q</span><b>{hud.airstrikePhase === \"idle\" ? \"航空支援\" : \"支援実行中\"}</b><small>{externalSessionActive ? <span className=\"v100-support-status\">{airstrikeCooldown > 0 ? `再使用 ${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== \"idle\" ? \"飛来・着弾\" : `支援 ${airstrikeCost}`}</span> : <><span className=\"support-detail-full\">{airstrikeBlockReason ?? \"照準・飛来・着弾\"}</span><span className=\"support-detail-compact\">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>\n",
+      "                 <span className=\"support-key\">Q</span><b>{hud.airstrikePhase === \"idle\" ? \"航空支援\" : \"支援実行中\"}</b><small>{externalSessionActive ? <span className=\"v100-support-status\">{airstrikeCooldown > 0 ? `あと${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== \"idle\" ? \"支援中\" : `支援 ${airstrikeCost}`}</span> : <><span className=\"support-detail-full\">{airstrikeBlockReason ?? \"照準・飛来・着弾\"}</span><span className=\"support-detail-compact\">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>\n"
+    ],
+    [
+      "import { v100ScoutApproachStep } from \"./v100ScoutApproach.js\";",
+      "import { v100ScoutApproachStep } from \"./v100ScoutApproach.js\";\nimport { drawV100ScoutApproachDust } from \"./v100ManualImpactVfx.js\";"
+    ],
+    [
+      "    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);",
+      "    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);"
+    ],
+    [
+      "              const from = { x: owner.x, y: owner.y };\n              owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);",
+      "              const from = event.target.dashOrigin ?? { x: owner.x, y: owner.y };\n              owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);"
+    ],
+    [
+      "type PendingBattleAudioCue = {\n  cueId: string;\n  x: number;\n  dedupeKey: string;\n",
+      "type PendingBattleAudioCue = {\n  cueId: string;\n  hurtVoiceCueId?: string;\n  x: number;\n  dedupeKey: string;\n"
+    ],
+    [
+      "      voiceAllowed?: boolean;\n      fighterVoiceEvent?: FighterVoiceEvent;\n",
+      "      voiceAllowed?: boolean;\n      hurtVoiceCueId?: string;\n      fighterVoiceEvent?: FighterVoiceEvent;\n"
+    ],
+    [
+      "          ? playV104FighterVoice(productionMixer, cueId, fighterVoiceEvent, playback)\n",
+      "          ? playV104FighterVoice(productionMixer, options.hurtVoiceCueId ?? cueId, fighterVoiceEvent, playback)\n"
+    ],
+    [
+      "              return productionMixer.play(voice.cueId, {\n",
+      "              return productionMixer.play(options.hurtVoiceCueId ?? voice.cueId, {\n"
+    ],
+    [
+      "        for (const pendingCue of dueBattleAudioCues) {\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            priority: pendingCue.priority ?? 88,\n",
+      "        for (const pendingCue of dueBattleAudioCues) {\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            hurtVoiceCueId: pendingCue.hurtVoiceCueId,\n            priority: pendingCue.priority ?? 88,\n"
     ]
   ],
   "app/manualAbilities.js": [
     [
       "    windupSeconds: .56,\n    recoverySeconds: .2,",
       "    windupSeconds: .56,\n    throwReleaseSeconds: .4,\n    recoverySeconds: .2,"
+    ],
+    [
+      "  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;\n}\n\nexport function selectRangerAbilityTarget({",
+      "  if (!candidates.length) return null;\n  const dashOrigin = Object.freeze({ x: owner.x, y: owner.y });\n  return Object.freeze({ ...candidates[0], dashOrigin });\n}\n\nexport function selectRangerAbilityTarget({"
     ]
   ],
   "app/v105CurrentAbilityPose.js": [
@@ -1333,6 +1389,22 @@
     [
       "  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset));\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath);\nfor (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {\n  const key = asset.sources.map(source => source.src).join('|');\n",
       "  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset));\n// The older formats are already inventoried under their original cue IDs.\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)\n  .map(asset => ({ ...asset, sources: asset.sources.slice(0, 1) }));\nfor (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {\n  const key = asset.sources.map(source => source.src).join('|');\n"
+    ],
+    [
+      "import {lightHurtFiles} from './v100RecordedHurtTakes.js';\n",
+      "import {recordedHurtFiles} from './v100RecordedHurtTakes.js';\n"
+    ],
+    [
+      "].filter(asset => !isShortHeavyDeath(asset) && !lightHurtFiles.includes(asset.sources[0].src));\n",
+      "].filter(asset => !isShortHeavyDeath(asset) && !recordedHurtFiles.includes(asset.sources[0].src));\n"
+    ],
+    [
+      "const lightHurtInstallAssets = lightHurtFiles.map(src => ({\n",
+      "const recordedHurtInstallAssets = recordedHurtFiles.map(src => ({\n"
+    ],
+    [
+      "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...lightHurtInstallAssets]) {\n",
+      "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...recordedHurtInstallAssets]) {\n"
     ]
   ]
 }

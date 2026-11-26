@@ -465,7 +465,9 @@ export function selectScoutAbilityTarget({
       || left.ownerDistance - right.ownerDistance
       || stableId(left.targetId, right.targetId)
     ));
-  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;
+  if (!candidates.length) return null;
+  const dashOrigin = Object.freeze({ x: owner.x, y: owner.y });
+  return Object.freeze({ ...candidates[0], dashOrigin });
 }
 
 export function selectRangerAbilityTarget({

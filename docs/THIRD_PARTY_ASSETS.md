@@ -536,3 +536,7 @@ HaelDBの「Male Grunt/Yelling sounds」のうち、既存の重い退場声と�
 |---|---|---|---|
 | `public/audio/quality-20261125/voices/human-male-heavy-death-01.wav` | `cc8769e8f2ceac666394ac0b1f519792f6feeef46d09e241b6860951dee11ae3` | `cf9e4be9a41d74971e1292774b37bddf14143fb57e341e024df7270c5be97331` | 1.32秒 |
 | `public/audio/quality-20261125/voices/human-male-heavy-death-02.wav` | `f8ccec37601dc31bcf4fb326bef158ce713548d6a30df940edbdf37c27450df7` | `2bdd776104acae0e6c22419602f106f5e6e22d8d7972a46b312c33efdffeb4b1` | 1.07秒 |
+
+### 連続被弾時の短い声（2026-11-27）
+
+HaelDBによる「Male Grunt/Yelling sounds」（CC0 1.0）の `3yell3.wav` と `3yell4.wav` を使用。無音部分を切り、両端と音量を整えた。再生速度と音程は原音のまま。原音・配布音声の照合値と加工内容は [素材記録](../assets/source/quality-20261127/recorded-heavy-hurt/provenance.json) に収録。

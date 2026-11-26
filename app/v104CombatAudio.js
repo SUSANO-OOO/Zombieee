@@ -1,6 +1,6 @@
 import {v177JointActorKey} from './v177JointActorHistory.js';
 import {PWA_PAN_GUARD_FILE} from './pwaPanGuardFile.js';
-import {withRecordedLightHurtTakes} from './v100RecordedHurtTakes.js';
+import {shortHeavyHurtPool,withRecordedHurtTakes} from './v100RecordedHurtTakes.js';
 const recordedMayoVoices=Object.freeze({
  'voice-mayo-deploy':'recorded-bark',
  'voice-mayo-attack':'recorded-bark',
@@ -79,7 +79,7 @@ export function withV104CombatAudio(base) {
       },
     }];
   });
-  return withRecordedLightHurtTakes({
+  return withRecordedHurtTakes({
     ...base,
     assets: [...assets, ...reactionTakes.map(({ alternate }) => alternate)],
     pools: [...(base.pools ?? []), ...reactionTakes.map(({ pool }) => pool)],
@@ -99,9 +99,16 @@ export const V104_PAN_GUARD_AUDIO = {
 };
 const rpVoiceEvents={attack:{priority:67,cooldownMs:1400,gain:.72},hurt:{priority:76,cooldownMs:700,gain:.78},death:{priority:86,cooldownMs:300,gain:.8}};
 const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander']
- .flatMap(kind=>Object.entries(rpVoiceEvents).map(([event,settings])=>Object.freeze({kind,event,
-  asset:Object.freeze({id:`voice-${kind}-${event}`,category:'humanVoices',sources:sources(`voice-${kind}-${event}`),
-   preload:'lazy',loop:false,maxInstances:1,...settings})})));
+ .flatMap(kind=>Object.entries(rpVoiceEvents).map(([event,settings])=>{
+  // Leave several shots between the ranged soldiers' calls. The bullet and
+  // the target's injury each keep their own timing.
+  const rangedCall=event==='attack' && (kind==='red-panther-smg' || kind==='red-panther-commander');
+  const id=`voice-${kind}-${event}`;
+  return Object.freeze({kind,event,asset:Object.freeze({
+   id,category:'humanVoices',sources:sources(id),preload:'lazy',loop:false,maxInstances:1,
+   ...settings,cooldownMs:rangedCall?5000:settings.cooldownMs,
+  })});
+ }));
 export const V104_RED_PANTHER_VOICES=Object.freeze(rpVoices.map(row=>row.asset));
 const rpMaterialVoices=new Map(rpVoices.map(row=>[`enemy-${row.kind}-${row.event}`,Object.freeze({...row,
  cueId: reactionPoolId(row.asset.id),
@@ -121,6 +128,15 @@ export const V104_BEAM_AUDIO=['warning','fire'].map(event=>({id:`v104-eye-${even
 // actor and game clock, rather than a random roll that can silence a character
 // for an entire encounter. The existing mixer still owns overlap and priority.
 const voiceClocks=new WeakMap();
+// A fighter under sustained fire uses a short breath between hits. An isolated
+// hit, or one that costs a quarter of full health, keeps the full performance.
+function followupHurtCue(world, actor, damage, cueId) {
+ const pool = shortHeavyHurtPool(cueId);
+ if (!pool || !(damage > 0 && damage < actor.maxHp * .25)) return undefined;
+ const previous = voiceClocks.get(v177JointActorKey(actor,world))?.hurt;
+ const elapsed = world?.time - previous;
+ return elapsed >= 0 && elapsed <= 2 ? pool : undefined;
+}
 // Close-contact effort uses the existing recorded nonverbal voice family.
 // Steady ranged fire keeps the weapon cue; hurt and death stay separate.
 const weaponOnlyAttackKinds=new Set(['ranger','gunner','medic','engineer','mrs-chiha','babayaga']);
@@ -136,9 +152,11 @@ export function battleVoiceReady(actor,event,time,world){
 export function v104EnemyContactAudio(world,actor,damage,cueId){
  if(actor?.side!=='zombie'||!cueId||!Number.isFinite(damage)||damage<0)return null;
  const voiceAllowed=damage>0;
- if(!voiceAllowed&&v104SupplementalEnemyVoice(cueId)?.event!=='hurt')return null;
+ const voice=v104SupplementalEnemyVoice(cueId);
+ if(!voiceAllowed&&voice?.event!=='hurt')return null;
+ const hurtVoiceCueId=voiceAllowed ? followupHurtCue(world,actor,damage,voice?.asset.id) : undefined;
  if(!battleVoiceReady(actor,voiceAllowed?'hurt':'armor-contact',world?.time,world))return null;
- return {ownerId:actor.id,voiceAllowed};
+ return hurtVoiceCueId ? {ownerId:actor.id,voiceAllowed,hurtVoiceCueId} : {ownerId:actor.id,voiceAllowed};
 }
 // A monster's vocal reaction follows its actor. Weapon, impact and body-fall
 // aliases keep their separate playback, including the Red Panther material cues.
@@ -161,9 +179,10 @@ export function playV104FighterVoice(mixer,cueId,event,options){
  return mixer.play(takes ? takes.id : cueId,{...options,maxInstances:1});
 }
 export function queueV104HumanHurt(world,actor,hpBefore,cueId){
+ const hurtVoiceCueId=followupHurtCue(world,actor,hpBefore-actor.hp,cueId);
  if(!(hpBefore>actor.hp)||!cueId||!battleVoiceReady(actor,'hurt',world.time,world))return false;
  const receiptId=`hurt:${actor.id}:${world.time.toFixed(6)}:${actor.hp}`;
- (world.pendingBattleAudioCues??=[]).push({cueId,x:actor.x,battleGeneration:world.battleAudioGeneration,
+ (world.pendingBattleAudioCues??=[]).push({cueId,...(hurtVoiceCueId ? {hurtVoiceCueId} : {}),x:actor.x,battleGeneration:world.battleAudioGeneration,
   ownerId:actor.id,activationId:0,semantic:'battle-hurt',receiptId,dueSimulationTime:world.time,
   priority:72,cooldownMs:0,maxInstances:2,volume:['brute','brawler'].includes(actor.kind)?.94:.8});
  return true;

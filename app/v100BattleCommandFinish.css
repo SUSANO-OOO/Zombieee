@@ -388,3 +388,40 @@
 #v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-result-records > div { background: transparent; border-left-color: #9d8d65; }
 #v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-result-records dt { color: #405136; font-size: 12px; }
 #v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-result-actions button.v100-primary { background: linear-gradient(110deg,#e1bd77,#b79760) !important; color: #211f14 !important; border-color: #ead094 !important; }
+
+@media (orientation: landscape) and (max-width: 639px) and (max-height: 460px) {
+  #v100-campaign[data-v100-phase="result"] > section.v100-result-panel {
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    grid-template-columns: minmax(105px, 24%) minmax(0, 1fr);
+  }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll .v100-result-records {
+    display: grid;
+    grid-template-columns: minmax(90px, .7fr) minmax(0, 1.3fr);
+    gap: 8px;
+  }
+  #v100-campaign[data-v100-phase="result"] .v100-result-records > div {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    padding: 2px 6px;
+  }
+  #v100-campaign[data-v100-phase="result"] .v100-result-records dd {
+    margin: 0;
+    text-align: left;
+  }
+  #v100-campaign[data-v100-phase="result"] .v100-result-footer {
+    grid-template-columns: minmax(124px, .72fr) minmax(0, 2fr);
+  }
+  #v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-battle-report > summary {
+    padding-inline: 6px;
+  }
+  #v100-campaign[data-v100-phase="result"] .v100-result-actions button {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+  #v100-campaign[data-v100-phase="result"] .v100-result-actions .v100-primary {
+    flex-grow: 1.3;
+  }
+}

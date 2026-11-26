@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {V100_MANUAL_IMPACT_ART as ART} from '../app/v100ManualImpactArt.js';
-import {drawV100TataraImpact} from '../app/v100ManualImpactVfx.js';
+import {drawV100ScoutApproachDust,drawV100TataraImpact} from '../app/v100ManualImpactVfx.js';
+import {selectScoutAbilityTarget,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
 import {drawV100ContactQueue,getV100SkillContactSnapshot,queueV100Contact,queueV100ScoutIntercept,queueV100TataraGroundContact,queueV100TakuyaGroundContact} from '../app/v100CombatVfx.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {canUseVerifiedPwaArtwork} from '../app/pwaArtworkAvailability.js';
@@ -85,6 +86,33 @@ test('the actual formation and committed path are both required, and the new ima
  assert.equal(canUseVerifiedPwaArtwork({...facts,installedManifest:{assets:[{path:ART.brute.path,hash:'old'}]}}),false);
  assert.equal(canUseVerifiedPwaArtwork({...facts,installedManifest:{assets:[{path:ART.brute.path,hash:ART.brute.hash}]},storedHashes:new Set()}),false);
  assert.equal(canUseVerifiedPwaArtwork({...facts,installedManifest:{assets:[{path:ART.brute.path,hash:ART.brute.hash}]}}),true);
+});
+
+test('Hachi kicks up dust along the actual dash before impact and keeps its origin through the hit', () => {
+  const owner = {kind:'scout',side:'human',hp:100,combatReady:true,x:300,y:260};
+  const target = {id:8,kind:'runner',side:'zombie',hp:100,combatReady:true,x:170,y:280,lane:1};
+  const selected = selectScoutAbilityTarget({owner, fighters:[target]});
+  owner.manualAbility = beginManualAbility(createManualAbilityRuntime('scout'), selected).runtime;
+  const {ctx,calls} = canvas();
+  const objects = {'v100-dust':image('dust')};
+
+  drawV100ScoutApproachDust(ctx,objects,owner);
+  assert.equal(calls.length,0);
+  owner.x = 276;
+  drawV100ScoutApproachDust(ctx,objects,owner);
+  assert.equal(calls.length,1);
+  calls.length = 0;
+  owner.x = 216;
+  owner.y = 280;
+  drawV100ScoutApproachDust(ctx,objects,owner);
+  assert.equal(calls.length,3);
+
+  const result = advanceManualAbility(owner.manualAbility, owner.manualAbility.windupRemaining);
+  assert.deepEqual(result.events[0].target.dashOrigin,{x:300,y:260});
+  owner.manualAbility = result.runtime;
+  calls.length = 0;
+  drawV100ScoutApproachDust(ctx,objects,owner);
+  assert.equal(calls.length,0);
 });
 
 test('only Hachi’s manual intercept uses the sparks and the installed fallback stays fixed for the strike',()=>{

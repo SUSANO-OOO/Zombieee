@@ -208,11 +208,20 @@ test("mobile type contract meets the final readability minima without global sca
 
 test("the focused helper does not silently claim unsupported desktop or portrait layouts", () => {
   assert.equal(mobileBattleHudLayout({ width: 1280, height: 720 }), null);
-  assert.equal(mobileBattleHudLayout({ width: 639, height: 375 }), null);
+  assert.equal(mobileBattleHudLayout({ width: 567, height: 320 }), null);
   assert.ok(mobileBattleHudLayout({ width: 932, height: 430 }));
   assert.equal(mobileBattleHudLayout({ width: 961, height: 390 }), null);
   assert.equal(mobileBattleHudLayout({ width: 390, height: 844 }), null);
   assert.equal(mobileBattleHudLayout({ width: 844, height: 0 }), null);
+});
+
+test("small landscape phones retain the support buttons and a scrollable unit strip", () => {
+  for (const width of [568, 600, 639]) {
+    const layout = mobileBattleHudLayout({ width, height: 320, deploymentReadout: true });
+    assert.ok(layout.bottom.support.width >= 228);
+    assert.ok(layout.bottom.units.width >= 210);
+    assertHorizontalPartition([layout.bottom.resources, layout.bottom.units, layout.bottom.support], 0, width, "small phone");
+  }
 });
 
 test("the battle strip always exposes seven logical slots without making empty slots interactive", () => {
