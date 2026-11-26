@@ -233,7 +233,13 @@ export function objectiveForBattle(definition, state) {
     }
     if (definition.missionConfig?.v100StageNumber === 5) {
       if (state.barricadeHp <= 0) return "残る敵を倒して退路を守る";
-      if (!state.barricadeVulnerable) return "改札喰いを撃破";
+      if (!state.barricadeVulnerable) {
+        if (Array.isArray(state.fighters) && !state.bossDefeatPending && !state.bossDefeated
+          && !state.fighters.some(fighter => fighter.side === "zombie" && fighter.kind === definition.bossEnemyKind)) {
+          return "退路を守る";
+        }
+        return "改札喰いを撃破";
+      }
     }
     return state.barricadeVulnerable ? "感染核を破壊" : definition.objective;
   }
