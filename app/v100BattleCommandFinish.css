@@ -128,6 +128,7 @@
   line-height: 14px;
   white-space: normal;
   text-wrap: balance;
+  line-break: strict;
   overflow-wrap: anywhere;
 }
 /* Leave the face and shoulders above the cost, with room for the readiness
@@ -175,20 +176,20 @@
   color: #e4c890;
   font: 700 12px/1 var(--v100-reading-font);
 }
-@container command-deck (width >= 812px) {
-  .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-name { line-break: strict; }
+@container command-deck (width < 812px) {
+  .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-heading { padding-inline: 1px; }
 }
-@container command-deck (width >= 578px) {
+@container command-deck (width >= 640px) {
   .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards { --command-card-width: calc((100% - 6px) / 3); }
 }
-@container command-deck (width >= 738px) {
+@container command-deck (width >= 812px) {
   .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards { --command-card-width: calc((100% - 9px) / 4); }
   .bottom-hud:has(.unit-cards > .v100-deploy-card:nth-child(n+5)) .battle-objective::before { content: "カードを横にスライド"; }
 }
-@container command-deck (578px <= width < 738px) {
+@container command-deck (640px <= width < 812px) {
   .bottom-hud:has(.unit-cards > .v100-deploy-card:nth-child(n+4)) .battle-objective::before { content: "カードを横にスライド"; }
 }
-@container command-deck (width < 578px) {
+@container command-deck (width < 640px) {
   .bottom-hud:has(.unit-cards > .v100-deploy-card:nth-child(n+3)) .battle-objective::before { content: "カードを横にスライド"; }
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card.v100-deploy-card {
