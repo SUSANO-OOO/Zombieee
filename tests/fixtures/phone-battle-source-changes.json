@@ -1,6 +1,10 @@
 {
   "app/AshfallGame.tsx": [
     [
+      "          g.battlePresentation = advanceBattlePresentationRuntime(g.battlePresentation, dt);",
+      "          // The outcome freezes combat, but the boss can still be falling while the result waits.\n          if (g.over && !g.resultPresented && !g.survivalRun) {\n            for (const [index, corpse] of g.corpses.entries()) {\n              if (corpse.side === \"zombie\" && corpse.deathClass === \"boss\" && corpse.state === \"dying\") {\n                g.corpses[index] = advanceEnemyLifecycle(corpse, dt) as Corpse;\n              }\n            }\n          }\n          g.battlePresentation = advanceBattlePresentationRuntime(g.battlePresentation, dt);"
+    ],
+    [
       "import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';\nimport { v100StoryPortraitPath } from \"./v100StoryPortraitPaths.js\";\n",
       "import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';\nimport { V100BattleDeparture } from \"./V100BattleDeparture\";\nimport { v100StoryPortraitPath } from \"./v100StoryPortraitPaths.js\";\n"
     ],
