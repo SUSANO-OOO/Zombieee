@@ -106,6 +106,26 @@ button[aria-disabled="true"]:focus-visible {
   background: linear-gradient(145deg, #c4ac7845, #3a493333 55%, #171b18), #29312d;
 }
 .v100-departure-portrait { position: absolute; inset: 0; overflow: hidden; }
+.v100-departure-crew[data-boss-ready="true"] {
+  background: linear-gradient(145deg, #59453a, #362922 55%, #201b19);
+  border-left-color: #b67852;
+}
+.v100-departure-specimen {
+  position: absolute;
+  inset: 6px 4px 52px;
+  container-type: size;
+  visibility: hidden;
+}
+.v100-departure-crew[data-boss-ready="true"] .v100-departure-specimen { visibility: visible; }
+.v100-departure-specimen img {
+  position: absolute;
+  left: 50%;
+  width: min(calc(100cqw * var(--specimen-width)), calc(100cqh * var(--specimen-height)));
+  max-width: none;
+  height: auto;
+  transform: translate(calc(-100% * var(--specimen-x)), calc(-100% * var(--specimen-top)));
+  filter: drop-shadow(2px 5px 3px #160f0b99);
+}
 .v100-departure-portrait > img {
   position: absolute;
   top: calc(12px + var(--departure-head-size) * var(--portrait-top-factor));

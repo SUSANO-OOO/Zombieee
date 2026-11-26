@@ -1,10 +1,11 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { combatKindToCampaignUnitId } from "./campaign.js";
 import { MANUAL_ABILITY_REGISTRY } from "./manualAbilities.js";
 import { v100MissionObjectiveFor } from "./v100BattleAdapter.js";
+import { V100_BOSS_DOSSIER_ART, V100_BOSS_DOSSIER_FRAMING } from "./v100BossDossierArt.js";
 import { v100MissionThreatsFor } from "./v100MissionBriefing.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
-import { V100_STAGE_BY_ID, V100_UNIT_BY_ID } from "./v100Registry.js";
+import { V100_BOSSES, V100_STAGE_BY_ID, V100_UNIT_BY_ID } from "./v100Registry.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
 
 type DepartureSession = {
@@ -48,6 +49,12 @@ export function v100DepartureCrewKind(session: DepartureSession) {
 
 export function V100BattleDeparture({ session, progress, assetError, background, images, onRetry }: BattleDepartureProps) {
   const stage = departureStageFor(session);
+  const boss = stage?.missionType === "boss" ? V100_BOSSES.find(entry => entry.stageNumber === stage.number) : null;
+  const bossArt = boss && typeof document !== "undefined" && document.documentElement.dataset.pwaBossDossiers === "ready"
+    ? V100_BOSS_DOSSIER_ART[boss.id] : null;
+  const bossFrame = bossArt && boss ? V100_BOSS_DOSSIER_FRAMING[boss.id] : null;
+  const [loadedBoss, setLoadedBoss] = useState<string | null>(null);
+  const showBoss = Boolean(bossArt && boss && loadedBoss === boss.id);
   const threats = useMemo(() => stage ? v100MissionThreatsFor(stage.id) : [], [stage]);
   const threat = threats.find((candidate) => session.enemyKinds.includes(candidate.id));
   const stageNumber = stage?.number ?? 1;
@@ -86,14 +93,19 @@ export function V100BattleDeparture({ session, progress, assetError, background,
             </button>}
         </div>
       </article>
-      {crew && crewId && <figure className="v100-departure-crew" data-portrait-ready={Boolean(portrait)} style={v100PortraitFraming(crewId) as CSSProperties}>
+      {crew && crewId && <figure className="v100-departure-crew" data-portrait-ready={Boolean(portrait) || showBoss} data-boss-ready={showBoss} style={v100PortraitFraming(crewId) as CSSProperties}>
         <div className="v100-departure-portrait" aria-hidden="true">
-          {portrait && <img src={portrait} alt="" draggable={false} />}
+          {portrait && !showBoss && <img src={portrait} alt="" draggable={false} />}
         </div>
+        {boss && bossArt && bossFrame && <div className="v100-departure-specimen" aria-hidden="true">
+          <img key={boss.id} src={bossArt.path} alt="" draggable={false} onLoad={() => setLoadedBoss(boss.id)}
+            style={{ "--specimen-x": bossFrame.centerX, "--specimen-top": bossFrame.top,
+              "--specimen-width": bossFrame.widthFit, "--specimen-height": bossFrame.heightFit } as CSSProperties} />
+        </div>}
         <figcaption>
-          <span>{v100RoleLabelFor(crew.role)}</span>
-          <strong>{crew.displayName}</strong>
-          {ability && <small>{ability.displayName}</small>}
+          <span>{showBoss ? "交戦対象" : v100RoleLabelFor(crew.role)}</span>
+          <strong>{showBoss ? boss?.displayName : crew.displayName}</strong>
+          {!showBoss && ability && <small>{ability.displayName}</small>}
         </figcaption>
       </figure>}
     </div>
