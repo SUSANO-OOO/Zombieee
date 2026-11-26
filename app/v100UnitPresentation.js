@@ -15,7 +15,7 @@ const ABILITY_SELECTION_ADVICE = Object.freeze({
   scout: "速い敵に追いつき、バールで怯ませる。",
   brawler: "拳波を飛ばし、前方の敵を押し戻す。",
   kumaverson: "敵を引きつけ、耐えながら自分を回復する。",
-  babayaga: "危険な敵を狙い撃ちし、弱点をさらす。",
+  babayaga: "敵の弱点を撃ち抜き、仲間の追撃を助ける。",
   medic: "傷ついた味方を回復し、敵の攻撃から守る。",
   ranger: "離れた強敵を、貫通する一発で狙い撃つ。",
   engineer: "罠で敵を捕らえ、動きを鈍らせる。",
