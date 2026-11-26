@@ -2320,7 +2320,7 @@ function addEnemyFirearmShot(
   targetHeight = 28,
 ) {
   if (!g.definition.missionConfig.v100StageNumber || fighter.side !== "zombie"
-    || !Object.hasOwn(ENEMY_FIREARM_WEAPON_PROFILE, fighter.kind)) return;
+    || !Object.hasOwn(ENEMY_FIREARM_WEAPON_PROFILE, fighter.kind)) return false;
   const origin = weaponAnchorForTarget(fighter, target);
   // The existing attack has already resolved its hit. Paint that same shot
   // without scheduling another hit, changing its cadence or borrowing a hand.
@@ -2328,6 +2328,7 @@ function addEnemyFirearmShot(
   addShot(g, origin.x, origin.y, target.x, target.y - targetHeight, .16,
     "zombie", .16, "projectile", fighter.kind, undefined, fighter.id, target.id,
     undefined, undefined, 0, 0, false, 0, 0);
+  return true;
 }
 
 function laneY(lane: Lane, id = 0) {
@@ -24669,7 +24670,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const deferredEnemyProjectile = ENEMY_PROJECTILE_KINDS.includes(f.kind);
                 if (!deferredEnemyProjectile) {
                   g.baseHp = Math.max(0, g.baseHp - siegeDamage);
-                  addEnemyFirearmShot(g, f, { x: BASE_X + 8, y: f.y }, 18);
+                  if (addEnemyFirearmShot(g, f, { x: BASE_X + 8, y: f.y }, 18)) {
+                    playProductionCue(normalAttackProductionCueId(f), f.x, {
+                      ownerId: f.id,
+                      voiceAllowed: false,
+                      priority: 65,
+                      cooldownMs: 160,
+                      maxInstances: 3,
+                    });
+                  }
                   g.lastVehicleHit = v100VehicleHitFor({ enemyKind: f.kind, time: g.time, beforeHp: beforeHit, afterHp: g.baseHp }) ?? g.lastVehicleHit;
                 }
                 // A vehicle strike belongs to the metal impact route. Enemy
