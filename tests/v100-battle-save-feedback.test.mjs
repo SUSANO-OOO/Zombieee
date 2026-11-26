@@ -51,7 +51,7 @@ for(const action of ['result','loadout']){
   if(action==='result')assert.deepEqual(h.state.unsaved,rawResult);
  });
  test(`${action}: an exception cannot be followed by a success clear`,async()=>{
-  const h=harness('throw');await invoke(h);assert.match(h.state.notice,/保存を確認できなかった/u);assert.equal(h.state.notices.length,1);assert.equal(h.state.published,null);
+  const h=harness('throw');await invoke(h);assert.match(h.state.notice,/保存を確認できませんでした。この画面を閉じずに/u);assert.equal(h.state.notices.length,1);assert.equal(h.state.published,null);
  });
  test(`${action}: an already busy save leaves existing feedback untouched`,async()=>{
   const h=harness('success',{busy:true});await invoke(h);assert.equal(h.state.writes,0);assert.equal(h.state.notice,'previous notice');assert.deepEqual(h.state.notices,[]);

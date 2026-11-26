@@ -165,37 +165,37 @@ function formatReason(reason: string | undefined) {
   const labels: Record<string, string> = {
     "invalid-characters": "使用できない文字が含まれています",
     "too-long": "名前は12文字以内で入力してください",
-    "stage-locked": "ひとつ前の作戦をクリアすると、ここへ進める。",
-    "read-replay-required": "初回クリアの報酬は、続きの会話を読んでから受け取れる。「次の場面へ」進もう。",
-    "unread-post-story": "まだ読んでいない会話があります。物語の続きへ進もう。",
-    "objective-incomplete": "作戦目標がまだ残っている。戦闘画面で目標を確認しよう。",
-    "vehicle-destroyed": "車両が破壊された。これ以上は出撃できない。",
-    "formation-full": "同時に出撃できるのは7体まで。枠が空くまで待とう。",
-    "unit-not-owned": "この仲間はまだ編成に加えられない。「ユニット」で出撃の条件を確認しよう。",
-    "insufficient-battle-resource": "指揮が足りない。回復するまで少し待とう。",
-    "not-unlocked": "この装備はまだ買えない。先の作戦をクリアして解放しよう。",
-    "insufficient-caps": "CAPSが足りない。作戦のクリア報酬で補充できる。",
-    "support-not-owned": "この支援物資は持っていない。「支援」で入手しよう。",
-    "upgrade-cap": "すでに最大まで強化している。",
-    "level-cap": "今はこれ以上レベルを上げられない。",
-    "invalid-level-target": "育成するレベルを選び直そう。",
-    "stale-level": "レベルが変わっている。いまの表示を確認してから、もう一度選ぼう。",
-    "unknown-unit": "仲間の情報を読み込めなかった。前の画面に戻って選び直そう。",
-    "boss-undiscovered": "物語でこのボスを倒すと、ここで再戦できる。",
-    "activity-active": "戦闘や結果の確認が途中だ。先にそちらを終わらせよう。",
-    "formation-empty": "まずは出撃する仲間を編成しよう。",
-    "invalid-mode-run": "いまの作戦と保存内容が合っていない。ステージ画面へ戻って確認しよう。",
-    "equipment-unavailable": "この装備は、いまは購入できない。",
-    "equipment-locked": "指定の作戦をクリアすると、この装備を買える。",
-    "equipment-not-owned": "まだ持っていない装備だ。手持ちの装備から選ぼう。",
-    "equipment-cap": "この装備は、これ以上持てない。",
-    "stale-equipment": "装備の数か強化段階が変わっている。選び直してから試そう。",
-    "invalid-equipment-slot": "この枠には付けられない。装備の種類を確認しよう。",
-    "equipment-in-use": "同じ装備は重ねて付けられない。ほかの仲間が使っているなら、もう1個用意するか、その仲間から外そう。",
-    "unknown-support": "支援を読み込めなかった。支援画面へ戻って選び直そう。",
+    "stage-locked": "ひとつ前のステージをクリアすると挑戦できます。",
+    "read-replay-required": "初回報酬は戦闘後の会話を読んだあとに受け取れます。",
+    "unread-post-story": "戦闘後の会話が残っています。",
+    "objective-incomplete": "まだ作戦目標を達成していません。",
+    "vehicle-destroyed": "防衛に失敗したため、これ以上出撃できません。",
+    "formation-full": "出撃枠がいっぱいです。",
+    "unit-not-owned": "この仲間はまだ出撃の支度が整っていません。",
+    "insufficient-battle-resource": "出撃に必要な指揮が足りません。",
+    "not-unlocked": "この支援はまだ購入できません。",
+    "insufficient-caps": "CAPSが足りません。",
+    "support-not-owned": "この支援は未購入です。",
+    "upgrade-cap": "すでに最大まで強化されています。",
+    "level-cap": "選んだレベルは現在の上限を超えています。",
+    "invalid-level-target": "上げたいレベルを選び直してください。",
+    "stale-level": "仲間のレベルが変わりました。強化先のレベルを選び直してください。",
+    "unknown-unit": "仲間の情報を読み込めませんでした。前の画面から選び直してください。",
+    "boss-undiscovered": "物語でこのボスを倒すと再戦できます。",
+    "activity-active": "進行中の作戦を終えてから挑戦できます。",
+    "formation-empty": "出撃する仲間が編成されていません。",
+    "invalid-mode-run": "現在の戦闘とセーブの内容が一致しません。ステージ選択に戻ってください。",
+    "equipment-unavailable": "この装備は購入できません。",
+    "equipment-locked": "この装備は、対象のステージをクリアすると購入できます。",
+    "equipment-not-owned": "この装備は持っていません。",
+    "equipment-cap": "この装備の所持数は上限に達しています。",
+    "stale-equipment": "装備の数か強化段階が変わりました。装備を選び直してください。",
+    "invalid-equipment-slot": "この種類の装備は、この枠に付けられません。",
+    "equipment-in-use": "この装備は別の枠で使用中です。",
+    "unknown-support": "支援を読み込めませんでした。「戦術支援」から選び直してください。",
     "invalid-result": "戦果の内容を確認できませんでした。保存データは保持しています。",
     "duplicate-result": "この戦果は確定済みです。報酬は重ねて受け取れません。",
-    "pending-result-exists": "前の戦闘の結果がまだ残っている。先に戦果画面へ進もう。",
+    "pending-result-exists": "前の戦闘の戦果が未確認です。",
     "pending-result-missing": "確定する戦果が見つかりません。保存データを確認してください。",
     "pending-result-mismatch": "保存済みの戦果と一致しません。保存データは保持しています。",
   };
@@ -203,15 +203,15 @@ function formatReason(reason: string | undefined) {
 }
 
 function storageFailureMessage(reason: string | undefined) {
-  if (reason === "stale-writer") return "別のタブでセーブが更新された。この画面の操作は保存していない。再読み込みして続けよう。";
-  if (reason === "popup-owned-by-another-tab") return "別のタブで引き継ぎ特典を表示している。そのタブで確認を済ませてから、もう一度試そう。";
+  if (reason === "stale-writer") return "別のタブでセーブが更新されました。この画面での変更は保存されていません。再読み込みしてください。";
+  if (reason === "popup-owned-by-another-tab") return "引き継ぎ特典は別のタブで開いています。そちらで受け取りを確認してください。";
   if (reason === "invalid-export-size") return "ファイルが空か、容量が大きすぎます。このゲームから書き出したセーブファイルを選んでください。現在のセーブは変更していません。";
   if (["invalid-export-json", "invalid-export-envelope"].includes(reason ?? "")) return "このファイルは復元できません。このゲームから書き出したセーブファイルを選んでください。現在のセーブは変更していません。";
   if (reason === "invalid-inner-save") return "セーブの内容を確認できませんでした。別のバックアップを選んでください。現在のセーブは変更していません。";
   if (reason === "legacy-history-not-eligible") return "このファイルでは旧版のプレイ履歴を確認できません。旧版から書き出したデータを選んでください。現在の進行と残高は変更していません。";
   if (reason === "recovery-source-changed") return "復旧対象のセーブが更新されました。再読み込みして確認してください。";
   if (reason === "recovery-required") return "セーブの復旧が必要です。再読み込みして復旧画面を確認してください。";
-  return "保存を確認できなかった。画面はそのまま残している。閉じずに、もう一度試そう。";
+  return "保存を確認できませんでした。この画面を閉じずに、もう一度お試しください。";
 }
 
 function portraitFor(owner: string | null | undefined) {
@@ -292,7 +292,7 @@ function eventDisplayLabel(eventId: string | null | undefined) {
   const match = /^v100:event:s(\d{2}):(pre|post|first-clear-post)$/u.exec(eventId);
   if (match) {
     const stage = V100_STAGES[Number(match[1]) - 1];
-    const suffix = match[2] === "pre" ? "出撃前" : match[2] === "post" ? "戦闘後" : "初回制圧後";
+    const suffix = match[2] === "pre" ? "出撃前" : match[2] === "post" ? "戦闘後" : "初回クリア報酬";
     return `${stage ? stageDisplayNameFor(stage) : `第${match[1]}ステージ`} / ${suffix}`;
   }
   if (eventId === "v100:event:ending") return "最終章";
@@ -450,7 +450,7 @@ export function V100Campaign() {
       publish?.(outcome.save, outcome);
       if (!outcome.mirrorSaved) setNotice("セーブ本体は保存できた。予備コピーを最新にできなかったので、データ管理からセーブを書き出そう。");
       return outcome.save;
-    } catch { setNotice("保存を確認できなかった。画面はそのまま残している。閉じずに、もう一度試そう。"); return null; }
+    } catch { setNotice("保存を確認できませんでした。この画面を閉じずに、もう一度お試しください。"); return null; }
     finally {
       saveBusyRef.current = false;
       // Balance the immediate publication even when React batches true -> false
@@ -916,7 +916,7 @@ export function V100Campaign() {
   const downloadBackup = () => downloadSaveFile(save, "nishijin-campaign-v100-backup.json");
   const downloadNewGameBackup = async () => {
     const archive = await readV100NewGameArchive();
-    if (!archive.ok || !archive.save) { setNotice(archive.reason === "new-game-archive-unavailable" ? "「初めから」を選ぶ前のバックアップは見つからなかった。" : "バックアップを読み込めなかった。もう一度試そう。"); return; }
+    if (!archive.ok || !archive.save) { setNotice(archive.reason === "new-game-archive-unavailable" ? "「初めから」を選ぶ前のバックアップは見つからなかった。" : "バックアップを読み込めませんでした。もう一度お試しください。"); return; }
     downloadSaveFile(archive.save, "nishijin-campaign-v100-before-new-game.json");
   };
   const beginNewCampaign = async () => {
@@ -1069,7 +1069,7 @@ export function V100Campaign() {
         <section key={flow.eventId ?? flow.phase} className={`v100-event-layout v100-event-${flow.phase} v100-event-category-${eventPresentation?.category ?? "scene"}`} aria-label={flow.phase === "first-clear-post" ? "確定したクリア報酬" : `${eventDisplayLabel(flow.eventId)}イベント`} data-v100-surface={flow.phase} data-v100-event-id={flow.eventId ?? undefined} data-v100-event-category={eventPresentation?.category ?? undefined} data-v100-node-index={eventPresentation?.nodeIndex ?? undefined} data-v100-transition={eventPresentation?.transition ?? undefined} data-v100-audio-owner={eventPresentation?.audioOwner ?? undefined} data-v100-audio-state={eventAudioSnapshot?.audioStatus?.state ?? "locked"} data-v100-audio-revision={eventAudioRevision}>
           <V100EventBackdrop src={eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")} description={eventPresentation?.backgroundAlt} scene={eventPresentation?.sceneLabel} location={currentNode?.sceneTag ?? currentNode?.sceneLabel} title={currentNode?.kind === "title"} cinematic={eventPresentation?.cinematic} />
           <article className="v100-event-panel">
-            <div className="v100-event-heading"><span className="v100-kicker">{flow.phase === "first-clear-post" && !flow.firstClear ? `${V100_STAGE_BY_ID[flow.stageId ?? ""]?.displayName ?? "ステージ"} / クリア報酬` : eventDisplayLabel(flow.eventId)}</span>{flow.phase !== "first-clear-post" && <div className="v100-story-tools"><button type="button" className="v100-event-readback" onClick={() => setLogOpen(true)}>会話ログ</button>{flow.canSkip && <button type="button" className="v100-event-skip" data-ui-sound="advance" onClick={() => markAndAdvanceEvent(true)}>スキップ</button>}</div>}</div>
+            <div className="v100-event-heading"><span className="v100-kicker">{flow.phase === "first-clear-post" ? stageDisplayNameFor(V100_STAGE_BY_ID[flow.stageId ?? ""]) : eventDisplayLabel(flow.eventId)}</span>{flow.phase !== "first-clear-post" && <div className="v100-story-tools"><button type="button" className="v100-event-readback" onClick={() => setLogOpen(true)}>会話ログ</button>{flow.canSkip && <button type="button" className="v100-event-skip" data-ui-sound="advance" onClick={() => markAndAdvanceEvent(true)}>スキップ</button>}</div>}</div>
             {flow.phase === "first-clear-post" ? <><RewardSummaryView result={save.lastResult} /><div className="v100-event-actions"><button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>続ける</button></div></> : currentNode ? <StoryNodeView node={currentNode} leadingNodes={storyPage.leadingNodes} eventId={flow.eventId} phase={flow.phase} nodeIndex={storyPage.nodeIndex} presentation={eventPresentation} actions={<div className="v100-event-actions">
               <button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>{storyPage.endIndex < event.nodes.length - 1 ? "次へ" : flow.phase === "ending" ? "次の場面へ" : "続ける"}</button>
             </div>} /> : <p className="v100-action-node">このイベントを確認して次へ進みます。</p>}
@@ -1169,7 +1169,7 @@ export function V100Campaign() {
       {flow.phase === "battle" && productionSession && (
         productionSession.formationKinds.length > 0
           ? <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction, onSettingsChange: handleProductionSettingsChange }} key={productionSession.resultId} />
-          : <section className="v100-panel"><h2>出撃する仲間を選び直そう</h2><p>{v100StageAbsenceReason(flow.stageId, "unit-paisen") ?? "出撃する仲間が編成されていません。"} 編成画面で別の仲間を選んでください。</p><button type="button" onClick={() => { const next = leaveV100Battle(flow, "loadout"); if (next.accepted) void updateFlow(next.state); }}>編成を見直す</button></section>
+          : <section className="v100-panel"><h2>出撃できる仲間がいません</h2><p>{v100StageAbsenceReason(flow.stageId, "unit-paisen") ?? "出撃する仲間が編成されていません。"} 編成画面で別の仲間を選んでください。</p><button type="button" onClick={() => { const next = leaveV100Battle(flow, "loadout"); if (next.accepted) void updateFlow(next.state); }}>編成を見直す</button></section>
       )}
 
       {flow.phase === "result" && (
@@ -1182,7 +1182,7 @@ export function V100Campaign() {
         const changed = applyV100SaveMutation(saveRef.current, (draft: Save) => ({ ...draft, settings: { ...draft.settings, ...settings } }));
         return changed.applied && Boolean(await commitSave(changed.save));
       }} />}
-      {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">仲間の出撃準備</span><div className="v100-recruit-content"><div className="v100-recruit-art"><CrewPortrait unitId={recruitOffer.id} label={recruitOffer.displayName+"の上半身"} /></div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><p className="v100-recruit-explanation">CAPSで支度を整えると、この仲間を編成に加えられる。</p><dl><div><dt>支度に必要</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSあれば支度を整えられる。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => {
+      {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">仲間の出撃準備</span><div className="v100-recruit-content"><div className="v100-recruit-art"><CrewPortrait unitId={recruitOffer.id} label={recruitOffer.displayName+"の上半身"} /></div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><p className="v100-recruit-explanation">CAPSで支度を整えると、この仲間を編成に加えられる。</p><dl><div><dt>支度費</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSあれば支度を整えられる。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => {
         const unitId = recruitOffer.id, result = purchaseV100Unit(save, unitId);
         if (result.applied) void Promise.resolve(applySaveTransaction(result)).then(saved => { if (saved) openSurface("personnel", unitId, true); });
         else applySaveTransaction(result);
@@ -1623,17 +1623,17 @@ function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, o
 function RewardSummaryView({ result }: { result: Record<string, unknown> | null }) {
   const summary = v100RewardPresentationFor(result);
   if (!summary) return null;
-  const rewardLabels = { firstClear: "初回達成", replay: "再挑戦報酬", star2: "★2 初達成", star3: "★3 初達成" };
+  const rewardLabels = { firstClear: "初回クリア", replay: "再挑戦報酬", star2: "★2 初達成", star3: "★3 初達成" };
   const breakdown = summary.breakdown ? Object.entries(summary.breakdown).filter(([, value]) => value > 0) : [];
   return <div className="v100-reward-summary" aria-label="確定したクリア報酬" data-has-unlocks={summary.unlocks.length > 0 ? "true" : "false"}>
-    <h2><span className="v100-reward-stage">S{String(summary.stageNumber).padStart(2, "0")}</span><span>ステージ達成</span></h2>
+    <h2><span className="v100-reward-stage">S{String(summary.stageNumber).padStart(2, "0")}</span><span>ステージクリア</span></h2>
     <div className="v100-reward-ledger">
       <article className="v100-reward-caps-sheet" aria-label="獲得CAPS">
         <span className="v100-reward-caps-label">獲得CAPS</span><strong className="v100-reward-caps-value">+{summary.rewardCaps}<small>CAPS</small></strong>
         {summary.breakdown && <details className="v100-reward-breakdown"><summary>CAPSの内訳</summary><dl>{breakdown.length ? breakdown.map(([key, value]) => <div key={key}><dt>{rewardLabels[key as keyof typeof rewardLabels]}</dt><dd>+{value}</dd></div>) : <div><dt>支給なし</dt><dd>0</dd></div>}</dl></details>}
       </article>
       {summary.unlocks.length > 0 && <article className="v100-reward-unlocks">
-        <h3>新たに使えるもの</h3>
+        <h3>初回クリアの記録</h3>
         <div className="v100-reward-unlock-body">
           {summary.unlockedUnitIds.length > 0 && <div className="v100-reward-crew-list">{summary.unlockedUnitIds.map(id => <figure className="v100-reward-crew" key={id}>
             <CrewPortrait unitId={id} /><figcaption>{UNIT_BY_ID.get(id)?.displayName ?? "ユニット"}</figcaption>
@@ -1742,7 +1742,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
         <div className="v100-result-threshold-labels"><span><V100StageStars stars={2} label="条件" /> 70% / {starTargets[2]} HP</span><span><V100StageStars stars={3} label="条件" /> 90% / {starTargets[3]} HP</span></div></>}
         {!won && <p className="v100-retained-stars">これまでの最高記録：★{previousBestStars}/3。今回の敗北で記録は下がりません。</p>}
         {won && nextStar && <p className="v100-result-next-star">★{nextStar}の条件：耐久{starTargets[nextStar]}以上を残してクリア（今回はあと{Math.max(0, Math.ceil(starTargets[nextStar] - vehicleHp))} HP不足）</p>}
-        {won && <div className="v100-result-caps-preview" aria-label="確定後に加算されるCAPSの内訳"><span>{alreadyCompleted ? "再挑戦報酬" : "初回達成"}<strong>+{rewardCaps} CAPS</strong></span>{bonusStar2 > 0 && <span><V100StageStars stars={2} label="新規獲得" /><strong>+{bonusStar2} CAPS</strong></span>}{bonusStar3 > 0 && <span><V100StageStars stars={3} label="新規獲得" /><strong>+{bonusStar3} CAPS</strong></span>}</div>}
+        {won && <div className="v100-result-caps-preview" aria-label="確定後に加算されるCAPSの内訳"><span>{alreadyCompleted ? "再挑戦報酬" : "初回クリア"}<strong>+{rewardCaps} CAPS</strong></span>{bonusStar2 > 0 && <span><V100StageStars stars={2} label="新規獲得" /><strong>+{bonusStar2} CAPS</strong></span>}{bonusStar3 > 0 && <span><V100StageStars stars={3} label="新規獲得" /><strong>+{bonusStar3} CAPS</strong></span>}</div>}
         {won && boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に戦闘終了" : boss.state === "defeated" ? "撃破済み" : bossRemainingHpText}</p>}
       </div>
     </div>

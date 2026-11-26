@@ -67,10 +67,23 @@ test("reward presentation reads only the finalized transaction and never predict
   assert.equal(pending.save.caps, 0);
   const final = finalizeV100PendingResult(pending.save);
   assert.equal(final.applied, true);
-  assert.deepEqual(v100RewardPresentationFor(final.save.lastResult), { stageNumber: 1, rewardCaps: 87, unlocks: ["ナオの出撃を準備しよう"], unlockedUnitIds: ["unit-nao"], breakdown: { firstClear: 87, replay: 0, star2: 0, star3: 0 } });
+  assert.deepEqual(v100RewardPresentationFor(final.save.lastResult), { stageNumber: 1, rewardCaps: 87, unlocks: ["ナオが合流"], unlockedUnitIds: ["unit-nao"], breakdown: { firstClear: 87, replay: 0, star2: 0, star3: 0 } });
   assert.equal(finalizeV100PendingResult(final.save).applied, false);
   assert.equal(final.save.caps, 87);
   assert.equal(v100RewardPresentationFor({ ...final.save.lastResult, won: false }), null);
+});
+
+test("first-clear rewards distinguish a new companion and a support that still costs CAPS", () => {
+  const stageId = V100_STAGE_IDS[1];
+  const initial = normalizeV100Save({ ...createDefaultV100Save(), completedStageIds: [V100_STAGE_IDS[0]], availableStageIds: V100_STAGE_IDS.slice(0, 2) });
+  const result = createV100BattleResult({ stageId, battleRunId: "first-support", won: true, objectiveComplete: true, vehicleHp: 408, vehicleMaxHp: 680 });
+  const settled = finalizeV100PendingResult(recordV100PendingResult(initial, result).save);
+  assert.equal(settled.applied, true);
+  assert.deepEqual(v100RewardPresentationFor(settled.save.lastResult).unlocks, ["ミズチが合流", "回復支援　50 CAPSで購入可"]);
+  assert.ok(settled.save.registeredUnitIds.includes("unit-mizuchi"));
+  assert.equal(settled.save.ownedUnitIds.includes("unit-mizuchi"), false);
+  assert.ok(settled.save.supportPurchaseUnlockedIds.includes("support-healing"));
+  assert.equal(settled.save.ownedSupportIds.includes("support-healing"), false);
 });
 
 test("reloading a settled first clear resumes confirmation and the Stage 30 ending without paying twice", () => {

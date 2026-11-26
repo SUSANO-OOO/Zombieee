@@ -7,12 +7,12 @@ export function v100RewardPresentationFor(result) {
   if (!stage) return null;
   const unlocks = result.firstClear ? stage.firstClearPayload.flatMap(id => {
     const unit = V100_UNITS.find(unit => unit.id === id);
-    if (unit) return [`${unit.displayName}の出撃を準備しよう`];
+    if (unit) return [`${unit.displayName}が合流`];
     const support = V100_SUPPORTS.find(support => support.id === id);
-    if (support) return [`${support.displayName}の解禁`];
+    if (support) return [`${support.displayName}　${support.unlockCostCaps} CAPSで購入可`];
     const boss = V100_BOSSES.find(boss => boss.id === id);
-    if (boss) return [`${boss.displayName}の討伐記録`];
-    if (id.startsWith("level-cap-")) return [`育成上限 Lv.${id.slice(10)}`];
+    if (boss) return [`${boss.displayName}を撃破`];
+    if (id.startsWith("level-cap-")) return [`レベル上限が${id.slice(10)}に上昇`];
     return [];
   }) : [];
   const rewardCaps = Math.max(0, Number(result.rewardCaps) || 0);
