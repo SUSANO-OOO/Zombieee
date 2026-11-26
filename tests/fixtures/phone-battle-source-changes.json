@@ -1057,6 +1057,22 @@
     [
       "配信データに接続できませんでした。通信環境を確認してください。",
       "通信を確認して「再試行」を押してください。"
+    ],
+    [
+      "      <div><dt>保存中のバージョン</dt><dd>{installedManifest?.version ?? \"ブラウザでプレイ中\"}</dd></div>",
+      "      <div><dt>端末に保存したバージョン</dt><dd>{installedManifest?.version ?? \"未保存\"}</dd></div>"
+    ],
+    [
+      "      <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>",
+      "      <div><dt>保存済みのファイル</dt><dd>{storedHashes.size}件</dd></div>"
+    ],
+    [
+      "      <div><dt>このバージョンが使用中</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : \"未インストール\"}</dd></div>",
+      "      <div><dt>この版で使えるデータ</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : \"未確認\"}</dd></div>"
+    ],
+    [
+      "      <div><dt>参照されていないデータ</dt><dd>{orphanCount == null ? \"なし\" : `${orphanCount}件`}</dd></div>",
+      "      {orphanCount != null && <div><dt>使われていないファイル</dt><dd>{orphanCount}件</dd></div>}"
     ]
   ],
   "app/globals.css": [
