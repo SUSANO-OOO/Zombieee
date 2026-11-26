@@ -232,11 +232,32 @@ function eventPhaseForId(eventId: string | null | undefined) {
 
 const OPERATION_LABELS: Record<string, string> = {
   assault: "拠点制圧",
-  "timed-defense": "防衛線維持",
+  "timed-defense": "防衛",
   boss: "ボス撃破",
-  escort: "目標護送",
-  power: "電源ノード起動",
-  seal: "封鎖ノード起動",
+  escort: "護衛",
+  power: "設備の復旧",
+  seal: "ゲートの閉鎖",
+};
+
+const STAGE_OPERATION_LABELS: Partial<Record<number, string>> = {
+  6: "保守台車の護衛",
+  9: "電源の復旧",
+  12: "搬送車の護衛",
+  14: "民間車両の避難",
+  15: "救難回線の復旧",
+  16: "地下道のゲート閉鎖",
+  17: "避難路の確保",
+  18: "台帳の搬出",
+  19: "証拠搬送車の護衛",
+  20: "防潮門の閉鎖",
+  21: "音響誘導装置の破壊",
+  22: "43人の救出",
+  23: "認証キーの回収",
+  25: "医療物資の防衛",
+  26: "車列の確保",
+  27: "封鎖装置の破壊",
+  28: "散布装置の停止",
+  29: "感染源の破壊",
 };
 
 const BOSS_SPECIAL_LABELS: Record<string, string> = {
@@ -270,11 +291,8 @@ const ENEMY_PACK_LABELS: Record<string, string> = {
 };
 
 function missionLabelFor(stage: (typeof V100_STAGES)[number] | undefined) {
-  if (stage?.number === 16) return "地下道のゲート閉鎖";
-  if (stage?.number === 17) return "避難路確保";
-  if (stage?.number === 26) return "車列の確保";
-  if (stage?.number === 28) return "散布装置の停止";
-  return OPERATION_LABELS[stage?.missionType ?? ""] ?? "キャンペーンステージ";
+  if (!stage) return "出撃準備";
+  return STAGE_OPERATION_LABELS[stage.number] ?? OPERATION_LABELS[stage.missionType] ?? "作戦目標";
 }
 
 function enemyPackLabelFor(value: string | undefined, stageNumber = 99) {
@@ -1285,9 +1303,9 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
         const stars = entries.reduce((sum, candidate) => sum + Math.max(0, Math.min(3, Number(save.bestStars[candidate.id]) || 0)), 0);
         const region = v100RegionalMapForChapter(entry.id);
         const disclosure = v100RegionalMapDisclosure(region, entries.map((candidate) => candidate.id), save);
-        return <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => selectChapter(index)} aria-pressed={index === chapterIndex} aria-label={`${entry.label} ${disclosure.regionLabel}、ステージ ${complete}/${entries.length}、記録星 ${stars}/${entries.length * 3}`}><strong>{entry.label}</strong><small>{disclosure.regionLabel}</small><span className="v100-chapter-counts"><b>{complete}/{entries.length}</b><b>★{stars}/{entries.length * 3}</b></span></button>;
+        return <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => selectChapter(index)} aria-pressed={index === chapterIndex} aria-label={`${entry.label} ${disclosure.regionLabel}、ステージ ${complete}/${entries.length}、獲得した星 ${stars}/${entries.length * 3}`}><strong>{entry.label}</strong><small>{disclosure.regionLabel}</small><span className="v100-chapter-counts"><b>{complete}/{entries.length}</b><b>★{stars}/{entries.length * 3}</b></span></button>;
       })}</nav>
-      <div className="v100-regional-progress" data-story-complete={storyComplete} aria-label={`全ステージの記録 ${save.completedStageIds.length} / ${V100_STAGES.length} ステージ、星 ${campaignStars} / ${V100_STAGES.length * 3}`}>{storyComplete ? <><strong>物語クリア</strong><span>ここからは、自由に再戦・星集め。</span></> : <><strong>{mapDisclosure.regionLabel}</strong><span>{chapterComplete}/{chapterStages.length} ステージ完了</span><span>記録星 {chapterStars}/{chapterStages.length * 3}</span></>}<span>全体 {save.completedStageIds.length}/{V100_STAGES.length} / ★ {campaignStars}/{V100_STAGES.length * 3}</span></div>
+      <div className="v100-regional-progress" data-story-complete={storyComplete} aria-label={`全ステージの記録 ${save.completedStageIds.length} / ${V100_STAGES.length} ステージ、星 ${campaignStars} / ${V100_STAGES.length * 3}`}>{storyComplete ? <><strong>物語クリア</strong><span>{chapter.label}の星 {chapterStars}/{chapterStages.length * 3}</span></> : <><strong>{mapDisclosure.regionLabel}</strong><span>クリア {chapterComplete}/{chapterStages.length}</span><span>獲得した星 {chapterStars}/{chapterStages.length * 3}</span></>}<span>全体 {save.completedStageIds.length}/{V100_STAGES.length} / ★ {campaignStars}/{V100_STAGES.length * 3}</span></div>
       <div className="v100-route-label" aria-label={`${mapDisclosure.regionLabel} ステージ経路`}><span>{mapDisclosure.regionLabel}</span><i />{chapterStages.map((entry) => <b key={`route-${entry.id}`} className={`${entry.number === completedNumber + 1 ? "current" : ""} ${save.completedStageIds.includes(entry.id) ? "clear" : ""}`} aria-hidden="true" />)}<span>次の区域</span></div>
       <div className="v100-map-grid">
         <div className="v100-map-canvas-shell v100-regional-map-canvas" data-map-region={chapter.id}>
@@ -1302,7 +1320,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
               const nodeState = completed ? "制圧済み" : available ? "出撃可" : "封鎖中";
               const stageStars = Math.max(0, Math.min(3, Number(save.bestStars[entry.id]) || 0));
               const stageName = available || completed ? v100MapStageName(entry, save) : "封鎖地点";
-              return <button type="button" key={entry.id} data-stage-number={entry.number} className={`v100-map-node v100-regional-pin ${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""} ${!available ? "locked" : "available"} ${isBoss ? "boss-node" : ""}`} style={{ "--node-x": `${x}%`, "--node-y": `${y}%` } as CSSProperties} onClick={() => selectStage(entry.id)} aria-label={`${stageName} S${String(entry.number).padStart(2, "0")} ${nodeState}、記録星 ${stageStars}/3`}>
+              return <button type="button" key={entry.id} data-stage-number={entry.number} className={`v100-map-node v100-regional-pin ${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""} ${!available ? "locked" : "available"} ${isBoss ? "boss-node" : ""}`} style={{ "--node-x": `${x}%`, "--node-y": `${y}%` } as CSSProperties} onClick={() => selectStage(entry.id)} aria-label={`${stageName} S${String(entry.number).padStart(2, "0")} ${nodeState}、獲得した星 ${stageStars}/3`}>
                 <span className="v100-map-node-marker"><i>{`S${String(entry.number).padStart(2, "0")}`}</i>{!available && <V100LockChain />}</span><span className="v100-map-node-copy"><strong>{stageName}</strong><small>{!available ? "前のステージクリアで解放" : `${nodeState} / ${missionLabelFor(entry)}`}</small><V100StageStars stars={stageStars} /></span>
               </button>;
             })}
@@ -1366,7 +1384,7 @@ function MissionBriefingDiagram({ stageId }: { stageId: string | null }) {
   </svg>;
 }
 
-function V100StageStars({ stars, label = "記録星" }: { stars: number; label?: string }) {
+function V100StageStars({ stars, label = "獲得した星" }: { stars: number; label?: string }) {
   const earned = Math.max(0, Math.min(3, Math.floor(stars)));
   return <span className="v100-stage-stars" role="img" aria-label={`${label} ${earned} / 3`} data-best-stars={earned}>
     {[1, 2, 3].map((star) => <svg key={star} viewBox="0 0 24 24" aria-hidden="true" className={star <= earned ? "earned" : "pending"}><path d="m12 1.8 3.15 6.38 7.04 1.02-5.1 4.97 1.2 7.02L12 17.88l-6.29 3.31 1.2-7.02-5.1-4.97 7.04-1.02L12 1.8Z" /></svg>)}

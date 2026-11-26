@@ -50,11 +50,16 @@ try{
     assert.equal(await hero.getAttribute('data-story-complete'),String(state==='complete'));
     row.text=await hero.innerText();
     if(state==='complete'){
-      assert.match(row.text,/物語クリア/u);assert.match(row.text,/自由に再戦・星集め/u);
+      assert.match(row.text,/物語クリア/u);
+      const selected = page.locator('.v100-chapter-tabs button[aria-pressed="true"]');
+      const chapter = await selected.locator('strong').innerText();
+      const stars = (await selected.locator('.v100-chapter-counts b').last().innerText()).replace('★','');
+      assert.ok(row.text.includes(chapter+'の星 '+stars));
       row.fits=await hero.evaluate(el=>{const r=el.getBoundingClientRect(),p=el.parentElement.getBoundingClientRect();return r.height>0&&r.width>0&&r.top>=p.top&&r.bottom<=p.bottom+1&&r.width<=p.width&&el.scrollWidth<=el.clientWidth+1;});assert.equal(row.fits,true);
       await page.screenshot({path:path.join(out,`${label}.png`)});
       await page.getByRole('navigation',{name:'エリアを選ぶ'}).getByRole('button').first().click();
       assert.equal(await hero.getAttribute('data-story-complete'),'true');
+      assert.match(await hero.innerText(),/第一章の星 6\/18/u);
       await page.screenshot({path:path.join(out,`${label}-first-area.png`)});
     }else assert.doesNotMatch(row.text,/物語クリア/u);
     const after=await save(page);
