@@ -33,7 +33,7 @@ function combatHuman(entity) {
   return living(entity) && entity.side === "human" && entity.combatReady !== false;
 }
 
-function unresolvedEnemy(entity) {
+export function unresolvedEnemy(entity) {
   return living(entity)
     && entity.side === "zombie"
     && !(entity.kind === "gate-eater" && entity.contained === true);

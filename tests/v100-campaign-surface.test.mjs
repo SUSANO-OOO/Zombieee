@@ -77,7 +77,7 @@ test("map briefings describe the authored task rather than number words in objec
     [26, "冷蔵車3台を封鎖地点に追い込んで確保し、最後まで守る"],
     [28, "国内の散布装置4基を現地で1基ずつ止める"],
     [29, "国外起動回線を止め、続いて感染源原株を破壊"],
-    [30, "TAKUYA-Ωを撃破し、西新を守る"],
+    [30, "装甲車を守り、TAKUYA-Ωと増援を倒せ"],
   ]);
   for (const [number, goal] of expected) {
     const id = V100_STAGE_IDS[number - 1];

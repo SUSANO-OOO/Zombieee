@@ -50,7 +50,7 @@ const replacements={
   const id=`voice-${kind}-${event}`;return[id,id];
  }))),
 };
-const redPantherReactionPoolId = (assetId) => `${assetId}-takes`;
+const reactionPoolId = (assetId) => `${assetId}-takes`;
 
 export function withV104CombatAudio(base) {
   const assets = base.assets.map(asset => {
@@ -61,15 +61,15 @@ export function withV104CombatAudio(base) {
   // Keep the first performance for each role and vary subsequent reactions
   // with the other recording from the same voice family.
   const reactionTakes = assets.flatMap(asset => {
-    const role = /^voice-(red-panther-.+)-(?:attack|hurt|death)$/.exec(asset.id)?.[1];
+    const [, role, event] = /^voice-(.+)-(attack|hurt|death)$/.exec(asset.id) ?? [];
     const voice = recordedHumanVoices[role];
-    if (!voice) return [];
+    if (!voice || (event !== 'hurt' && !role.startsWith('red-panther-'))) return [];
     const alternateTake = voice.take === '01' ? '02' : '01';
     const alternate = { ...asset, id: `${asset.id}-alternate`, sources: recordedSources(asset.id, alternateTake) };
     return [{
       alternate,
       pool: {
-        id: redPantherReactionPoolId(asset.id),
+        id: reactionPoolId(asset.id),
         category: asset.category,
         assetIds: [asset.id, alternate.id],
         strategy: 'round-robin',
@@ -104,7 +104,7 @@ const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-
    preload:'lazy',loop:false,maxInstances:1,...settings})})));
 export const V104_RED_PANTHER_VOICES=Object.freeze(rpVoices.map(row=>row.asset));
 const rpMaterialVoices=new Map(rpVoices.map(row=>[`enemy-${row.kind}-${row.event}`,Object.freeze({...row,
- cueId: redPantherReactionPoolId(row.asset.id),
+ cueId: reactionPoolId(row.asset.id),
  asset:Object.freeze({...row.asset,sources:recordedSources(row.asset.id)})})]));
 // Keep the original weapon/material cue; the dedicated human bark accompanies it.
 export function v104SupplementalEnemyVoice(cueId){return rpMaterialVoices.get(cueId)??null;}
@@ -157,7 +157,8 @@ export function v104MonsterVoiceEvent(manifest, cueId) {
 // held voice and invalidates an earlier take that is still loading.
 export function playV104FighterVoice(mixer,cueId,event,options){
  if(event!=='attack')mixer.stopInstance(options.instanceKey,{fadeMs:45});
- return mixer.play(cueId,{...options,maxInstances:1});
+ const takes = event === 'hurt' && mixer.manifest?.poolById?.[reactionPoolId(cueId)];
+ return mixer.play(takes ? takes.id : cueId,{...options,maxInstances:1});
 }
 export function queueV104HumanHurt(world,actor,hpBefore,cueId){
  if(!(hpBefore>actor.hp)||!cueId||!battleVoiceReady(actor,'hurt',world.time,world))return false;
