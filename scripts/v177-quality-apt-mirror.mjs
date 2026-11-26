@@ -7,7 +7,8 @@ import {pathToFileURL} from 'node:url';
 
 const mirrorFile='/etc/apt/apt-mirrors.txt';
 const azure='http://azure.archive.ubuntu.com/ubuntu/';
-const ec2East='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/';
+const ec2East1='http://us-east-1.ec2.archive.ubuntu.com/ubuntu/';
+const ec2East2='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/';
 const ec2West='http://us-west-2.ec2.archive.ubuntu.com/ubuntu/';
 const archive='https://archive.ubuntu.com/ubuntu/';
 const security='https://security.ubuntu.com/ubuntu/';
@@ -31,7 +32,7 @@ export function qualityMirrorText(before){
     const match=/^[ \t]*(\S+)[ \t]+priority:([123])[ \t]*$/u.exec(line);
     assert.ok(match,'Unexpected runner mirror row');return{uri:match[1],priority:match[2]};
   });
-  assert.ok([azure,ec2East,ec2West,archive].includes(entries[0].uri),'Unexpected first mirror');
+  assert.ok([azure,ec2East1,ec2East2,ec2West,archive].includes(entries[0].uri),'Unexpected first mirror');
   assert.deepEqual(entries.map(entry=>entry.priority),['1','2','3']);
   assert.deepEqual(entries.slice(1).map(entry=>entry.uri),[archive,security]);
   return entries[0].uri===archive?before:before.replace(/^([ \t]*)(\S+)([ \t]+priority:1[ \t]*\r?)$/mu,(_row,indent,_uri,suffix)=>indent+archive+suffix);
