@@ -45,11 +45,11 @@ test('short-page grouping never merges across boarding; every authored node is r
  for(const [eventId,first,last] of spans)assert.ok(V100_STORY_EVENTS[eventId].nodes.some(n=>n.sourceLine>=first&&n.sourceLine<=last));
 });
 
-test('hospital transitions follow entry actions and retain the corridor through instructions',()=>{
+test('hospital transitions follow entry actions and retain the corridor through departure',()=>{
  assert.match(node('s07:post',681).text,/防火扉が閉まった/u);
  assert.match(node('s21:post',1800).text,/中へ押し込んだ/u);
  assert.match(node('s22:pre',1805).text,/消毒液の臭いがする廊下/u);
- for(const line of [681,707,709,711])assert.equal(present('s07:post',line).backgroundPath,art['hospital-corridor'].path);
+ for(const line of [681,703,705,707])assert.equal(present('s07:post',line).backgroundPath,art['hospital-corridor'].path);
  assert.equal(present('s21:post',1798).backgroundPath,null);
  assert.equal(present('s21:post',1800).backgroundPath,art['clinical-corridor'].path);
  for(const line of [1805,1821,1823])assert.equal(present('s22:pre',line).backgroundPath,art['clinical-corridor'].path);
@@ -58,7 +58,7 @@ test('hospital transitions follow entry actions and retain the corridor through 
 
 test('post-battle locations retain the ledger and family cut, then follow the outdoor handover',()=>{
  assert.match(node('s08:post',741).text,/廊下に出た/u);
- for(const line of [741,753,773])assert.equal(present('s08:post',line).backgroundPath,art['hospital-corridor'].path);
+ for(const line of [741,753,769])assert.equal(present('s08:post',line).backgroundPath,art['hospital-corridor'].path);
  assert.equal(present('s08:post',753).insertId,'patient-ledger');
  assert.equal(present('s08:pre',716).backgroundPath,null);
  for(const line of [1828,1842])assert.equal(present('s22:post',line).backgroundPath,art['clinical-room'].path);

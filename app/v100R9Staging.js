@@ -17,7 +17,7 @@ const spans = Object.freeze({
   beat(121,'latch',['unit-babayaga']),beat(129,'door-close'),beat(147,'footsteps'),beat(169,'sfx-v070-power-switch'),
  ],
  'v100:event:s01:pre':[beat(210,'footsteps'),beat(240,'latch')],
- 'v100:event:s01:post':[score(253,299,'s01-rescue'),cut(271,271,'s01-nao-rescue'),beat(253,'v100-r9-cargo-door'),beat(271,'fabric',['unit-nao'])],
+ 'v100:event:s01:post':[score(253,303,'s01-rescue'),cut(271,271,'s01-nao-rescue'),beat(253,'v100-r9-cargo-door'),beat(271,'fabric',['unit-nao'])],
  'v100:event:s02:pre':[beat(308,'footsteps')],
  'v100:event:s02:post':[span(345,365,{sceneTag:'evidence',expression:'determined'}),beat(341,'paper')],
  'v100:event:s03:pre':[span(378,416,{expression:'alarm'}),beat(378,'footsteps'),beat(404,'pan')],

@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { access } from "node:fs/promises";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
-import { V100_UNITS } from "../app/v100Registry.js";
+import { V100_STAGE_IDS, V100_UNITS } from "../app/v100Registry.js";
+import { v100StoryPageFor } from "../app/v100StoryPages.js";
+import { v100RewardPresentationFor } from "../app/v100RewardPresentation.js";
 import { V100_AUDIO_MANIFEST, PRODUCTION_AUDIO_SCENE_IDS } from "../app/productionAudio.js";
 import { V100_R5_STORY_CUTS, v100StoryDirectionFor } from "../app/v100StoryDirection.js";
 
@@ -11,23 +13,38 @@ import {
   v100EventPresentationFor,
 } from "../app/v100EventPresentation.js";
 
-test("all recruited allies get readiness guidance at their actual unlock stage, separate from in-world records", () => {
-  const recruits = V100_UNITS.filter(unit => !unit.initial);
-  assert.equal(recruits.length, 12);
-  for (const unit of recruits) {
-    const eventId = `v100:event:s${String(unit.availabilityStageNumber).padStart(2,'0')}:post`;
-    const node = V100_STORY_EVENTS[eventId].nodes.find(n => n.kind === 'system' && n.text.startsWith(unit.displayName));
-    assert.ok(node,unit.id);
-    assert.match(node.text,/「ユニット」でCAPSを使って支度を整え、編成に加えよう。/u);
-    assert.equal(v100EventPresentationFor({eventId,node}).nodeLabel,'仲間の出撃準備');
+test("older post-battle saves at a retired recruitment notice can finish the scene and reach the distinct reward", () => {
+  // The old post-battle cursor could point at either notice after the final exchange.
+  const oldCursors = [[1,24,25], [2,15,16], [4,15,16], [5,18,19], [6,10,10], [7,14,15],
+    [8,15,16], [10,8,9], [12,15,15], [14,24,24], [17,37,37], [20,37,37]];
+  for (const [stage, first, last] of oldCursors) {
+    const eventId = "v100:event:s"+String(stage).padStart(2,"0")+":post";
+    const nodes = V100_STORY_EVENTS[eventId].nodes;
+    assert.ok(nodes.every(node => node.kind !== "system"), eventId);
+    for (let cursor = first; cursor <= last; cursor++) {
+      const page = v100StoryPageFor(eventId, nodes, cursor);
+      assert.equal(page.endIndex, nodes.length - 1);
+      assert.ok(page.node?.text, eventId);
+    }
+    const unit = V100_UNITS.find(unit => !unit.initial && unit.availabilityStageNumber === stage);
+    assert.ok(unit);
+    const result = { won: true, stageId: V100_STAGE_IDS[stage-1], firstClear: true };
+    assert.equal(v100RewardPresentationFor(result), null);
+    const summary = v100RewardPresentationFor({ ...result, finalizedAt: "2026-11-26T00:00:00Z" });
+    assert.deepEqual(summary.unlockedUnitIds, [unit.id]);
+    assert.ok(summary.unlocks.includes(stage === 10 ? "マヨちゃんが参戦（支度費 145 CAPS）" : unit.displayName+"が合流"));
   }
-  const notices = Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes.filter(node => node.kind === 'system' && !node.text.includes('CAPS')));
+});
+
+test("in-world records and the starting party keep their own presentation", () => {
+  const notices = Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes.filter(node => node.kind === "system"));
   const records = notices.filter(node => /SEG-LAB|都市対応実証|RED PANTHER|TAKUYA-Ω/u.test(node.text));
-  assert.equal(records.length,4);
-  for (const node of records) assert.equal(v100EventPresentationFor({node}).nodeLabel,'記録');
+  assert.equal(records.length, 4);
+  for (const node of records) assert.equal(v100EventPresentationFor({node}).nodeLabel, "記録");
   const objectives = notices.filter(node => !records.includes(node));
-  assert.equal(objectives.length,8);
-  for (const node of objectives) assert.equal(v100EventPresentationFor({node}).nodeLabel,'次の目的');
+  assert.equal(objectives.length, 1);
+  assert.match(objectives[0].text, /バールで戦うハチ/u);
+  assert.equal(v100EventPresentationFor({node:objectives[0]}).nodeLabel, "次の目的");
 });
 
 test("Producer prologue moves from daily life through crisis, escape and radio scenes", () => {

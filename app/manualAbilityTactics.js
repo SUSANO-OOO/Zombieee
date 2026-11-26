@@ -2,24 +2,6 @@ import {MANUAL_ABILITY_REGISTRY, canActivateManualAbility, selectManualAbilityTa
 import {V100_UNIT_BY_ID} from './v100Registry.js';
 import {ENEMY_CONTENT} from './content/enemyCatalog.js';
 
-export const MANUAL_ABILITY_TACTICS = Object.freeze({
- brawler:'近くの群れを押し返したいときに。拳波は最初に当たった敵へ大打撃。',
- scout:'後ろへ抜けそうな敵を止めたいときに。足の速い敵を迎え撃とう。',
- ranger:'厄介な射手や手強い敵を早く落としたいときに。射線上の敵も貫く。',
- medic:'傷ついた仲間を倒れる前に手当て。ナオ自身も回復できる。',
- brute:'近くの群れや装甲の厚い敵へ。ひるませて仲間の追撃につなげよう。',
- 'crazy-king':'群れに攻め込む直前に。速さと巻き込みを活かして切り崩そう。',
- kumaverson:'強い一撃や包囲をしのぎたいときに。敵を引きつけて粘る。',
- babayaga:'手強い敵へ仲間の攻撃が集まる前に。弱点を付けて追撃を通そう。',
- gunner:'前方に敵が重なったら。動きと攻撃を鈍らせて押し止めよう。',
- guardian:'仲間もまとめて守りたいときに。近くで盾を構えて被害を抑える。',
- engineer:'足の速い敵が抜けそうなときに。進路へ罠を仕掛けて足止め。',
- zakimiya:'敵がかたまったら。炎の中を通る敵も巻き込もう。',
- tky:'前方へ群がる敵をまとめて押し返したいときに。',
- 'mrs-chiha':'少し離れた敵の集まりへ。連続する爆発を重ねよう。',
- 'miyamoto-musashi':'近接攻撃や予告攻撃が届く直前に。受け流して二刀で反撃。',
- 'mayo-chan':'HPに余裕があり、一気に攻めたいときに。発動中はHPを消耗する。',
-});
 const enemyNames = new Map(ENEMY_CONTENT.flatMap(enemy => [enemy.id,...enemy.aliases].map(id=>[id,enemy.displayName])));
 function nameFor(fighter) {
  const unit = V100_UNIT_BY_ID[MANUAL_ABILITY_REGISTRY[fighter?.kind]?.unitId];
@@ -59,6 +41,6 @@ export function manualAbilityTacticalView({owner, fighters=[], actionSelected=fa
   }
  }
  return Object.freeze({ownerId:owner.id,kind:owner.kind,name:nameFor(owner),abilityName:ability.displayName,
-  summary:ability.summary,tactic:MANUAL_ABILITY_TACTICS[owner.kind],status,available,targetLabel,
+  summary:ability.summary,status,available,targetLabel,
   targetId:target?.targetId??target?.points?.[0]?.targetId??null,remaining});
 }

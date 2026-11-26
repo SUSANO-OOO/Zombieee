@@ -3,7 +3,7 @@ import {MANUAL_ABILITY_REGISTRY} from './manualAbilities.js';
 import {v100PortraitFraming} from './v100PortraitFraming.js';
 import {v100StoryPortraitPath} from './v100StoryPortraitPaths.js';
 
-type Entry = {ownerId:number;kind:string;name:string;abilityName:string;summary:string;tactic:string;status:string;available:boolean;targetLabel:string|null};
+type Entry = {ownerId:number;kind:string;name:string;abilityName:string;summary:string;status:string;available:boolean;targetLabel:string|null};
 function TacticsPortrait({kind}:{kind:string}) {
  const unitId=MANUAL_ABILITY_REGISTRY[kind as keyof typeof MANUAL_ABILITY_REGISTRY]?.unitId;
  const art=unitId&&v100StoryPortraitPath(unitId);
@@ -16,14 +16,14 @@ function TacticsPortrait({kind}:{kind:string}) {
 }
 export function ManualAbilityTactics({entries,campaignPortraits=false,onToggle}:{entries:Entry[];campaignPortraits?:boolean;onToggle?:(open:boolean)=>void}) {
  return <details className={'manual-tactics'+(campaignPortraits?' manual-tactics-fieldguide':'')} onToggle={event=>onToggle?.(event.currentTarget.open)}>
-  <summary>仲間の技を確かめる <span>{entries.length}人</span></summary>
-  <p className="manual-tactics-help">再開したら、仲間の頭上の技ボタンで発動。狙い先は戦況に合わせて変わる。</p>
-  {entries.length===0?<p>戦場に仲間がいません。再開後、カードから呼び出そう。</p>:<div className="manual-tactics-roster">
+  <summary>出撃中の仲間の技 <span>{entries.length}人</span></summary>
+  {entries.length>0 && <p className="manual-tactics-help">戦闘中、仲間の頭上にある技ボタンをタップすると発動します。</p>}
+  {entries.length===0?<p>出撃中の仲間はいません。</p>:<div className="manual-tactics-roster">
    {entries.map(entry=><article key={entry.ownerId} data-tactics-owner={entry.ownerId} data-tactics-kind={entry.kind}>
     {campaignPortraits&&<TacticsPortrait kind={entry.kind} />}
     <header><h3>{entry.name}<span>{entry.abilityName}</span></h3><b className={entry.available?'ready':''}>{entry.status}</b></header>
     {entry.targetLabel&&<p className="manual-tactics-target">{entry.targetLabel}</p>}
-    <p className="manual-tactics-summary">{entry.summary}</p><p className="manual-tactics-use"><strong>使いどき</strong>{entry.tactic}</p>
+    <p className="manual-tactics-summary">{entry.summary}</p>
    </article>)}
   </div>}
  </details>;

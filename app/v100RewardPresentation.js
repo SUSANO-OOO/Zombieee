@@ -7,6 +7,7 @@ export function v100RewardPresentationFor(result) {
   if (!stage) return null;
   const unlocks = result.firstClear ? stage.firstClearPayload.flatMap(id => {
     const unit = V100_UNITS.find(unit => unit.id === id);
+    if (unit?.id === "unit-mayo-chan") return [`${unit.displayName}が参戦（支度費 ${unit.registrationCostCaps} CAPS）`];
     if (unit) return [`${unit.displayName}が合流`];
     const support = V100_SUPPORTS.find(support => support.id === id);
     if (support) return [`${support.displayName}　${support.unlockCostCaps} CAPSで購入可`];

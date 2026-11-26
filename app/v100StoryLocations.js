@@ -12,7 +12,7 @@ export const V100_STORY_LOCATION_BACKDROPS = Object.freeze({
 
 export const V100_STORY_LOCATION_SPANS = Object.freeze([
   ['v100:event:prologue',167,205,'rescue-vehicle'],
-  ['v100:event:s01:post',253,299,'rescue-vehicle'],
+  ['v100:event:s01:post',253,303,'rescue-vehicle'],
   ['v100:event:s02:post',369,369,'rescue-vehicle'],
   ['v100:event:s03:pre',404,404,'rescue-vehicle'],
   ['v100:event:s03:post',447,447,'rescue-vehicle'],

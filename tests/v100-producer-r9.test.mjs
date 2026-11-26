@@ -18,17 +18,17 @@ import {createDefaultV100Save,markV100EventRead,normalizeV100Save,validateV100Sa
 
 const sourcePath='docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md';
 const nodes=Object.values(V100_STORY_EVENTS).flatMap(event=>event.nodes);
-test('R9 round-trips all 1116 narrative source lines exactly once and in order',async()=>{
+test('R9 round-trips all 1098 narrative source lines exactly once and in order',async()=>{
  const source=await readFile(sourcePath),lines=source.toString('utf8').split(/\r?\n/u);
- // Pin the production text, including the revised lab narration.
+ // Pin the production text, including the rescue dialogue and post-battle transitions.
  // Keep an exact source pin and the full text/order round-trip below.
- assert.equal(createHash('sha256').update(source).digest('hex'),'f6bb3b4bfb1d3bec45aa4a9c6a74a3271baec3baa0db323b2d691789370b0aa7');
+ assert.equal(createHash('sha256').update(source).digest('hex'),'1e2102a0d39662a0aafef5ede1cd52ababf04d1ae0267079840886a8b97b05aa');
  assert.equal(V100_STORY_SOURCE_SHA256,createHash('sha256').update(source).digest('hex'));
  const current=nodes.filter(node=>node.sourceDocument==='STORY_SCRIPT_V100_PRODUCER_R9.md');
- assert.equal(current.length,1115);
+ assert.equal(current.length,1097);
  const consumed=current.flatMap(node=>node.sourceLines);
  const expected=lines.flatMap((line,i)=>line.trim()&&!line.startsWith('#')?[i+1]:[]);
- assert.equal(expected.length,1116);assert.deepEqual(consumed,expected);assert.equal(new Set(consumed).size,consumed.length);
+ assert.equal(expected.length,1098);assert.deepEqual(consumed,expected);assert.equal(new Set(consumed).size,consumed.length);
  for(const node of current){
   const original=node.sourceLines.map(line=>lines[line-1].trim()).join('\n');
   const reconstructed=node.kind==='dialogue'?`**${node.speaker}**「${node.text}」`:node.kind==='action'?node.text:

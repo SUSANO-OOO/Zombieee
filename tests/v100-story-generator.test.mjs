@@ -79,8 +79,9 @@ test("Producer rewrite preserves key joins, reveals and ending without markup le
   const allNodes = Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes);
   assert.equal(new Set(allNodes.map(node => node.sourceKey)).size, allNodes.length);
   assert.ok(allNodes.every(node => node.text.length > 0 && !node.text.includes("**")));
-  for (const [stage, name] of [[12, "ザキミヤ"], [14, "TKY"], [17, "Mrs.チハ"], [20, "宮本武蔵"]]) {
-    assert.equal(V100_STORY_EVENTS[`v100:event:s${stage}:post`].nodes.at(-1).text, `${name}が合流した。「ユニット」でCAPSを使って支度を整え、編成に加えよう。`);
+  // The reunions and departures remain in the story; settlement announces who can be prepared.
+  for (const [stage, detail] of [[12, "ザキミヤが写真を胸ポケットへ戻した"], [14, "TKYは礼を言って乗り込んだ"], [17, "チハが乗り込むまで"], [20, "武蔵は二刀を鞘に納め"]]) {
+    assert.ok(V100_STORY_EVENTS["v100:event:s" + stage + ":post"].nodes.some(node => node.text.includes(detail)), detail);
   }
   assert.ok(V100_STORY_EVENTS["v100:event:s23:post"].nodes.some(node => node.text.includes("セガワ")));
   assert.ok(V100_STORY_EVENTS["v100:event:s30:pre"].nodes.some(node => node.kind === "boss-marker" && node.text === "TAKUYA-Ω"));
