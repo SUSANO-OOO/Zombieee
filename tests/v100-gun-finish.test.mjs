@@ -10,6 +10,7 @@ import {V100_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS} from '../app/productionAudio.j
 import {PWA_GUN_FINISH_FILES as files} from '../app/pwaGunFinishFiles.js';
 import {PWA_HACHI_CROWBAR_FILES as crowbarFiles} from '../app/pwaHachiCrowbarFiles.js';
 import {PWA_PISTOL_TAKE_FILES as pistolFiles} from '../app/pwaPistolTakeFiles.js';
+import {PWA_CHIHA_SALVO_FILES as salvoFiles} from '../app/pwaChihaSalvoFiles.js';
 import {withV100GunFinish,selectV100GunFinishPlayback} from '../app/v100GunFinishAudio.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 const ids=['v104-handgun','weapon-rifle-01','weapon-rifle-02','weapon-gunner-01','weapon-gunner-02','weapon-smg-01','weapon-smg-02','weapon-suppressed-pistol'];
@@ -18,6 +19,27 @@ const sha=b=>createHash('sha256').update(b).digest('hex');
 const baseRef='b228ee4a6ae944af4cec62524a4b2dd5b1205946';
 const oldJson=p=>JSON.parse(execFileSync('git',['show',baseRef+':'+p],{maxBuffer:8*1024*1024,encoding:'utf8'}));
 const allPaths=Object.values(files).map(f=>f.path).join(String.fromCharCode(10));
+
+test('Chiha alternates both loaded discharges and keeps the final landing separate from the preceding three',()=>{
+ const paths=Object.values(salvoFiles).map(f=>f.path);
+ const shot='ability-mrs-chiha-salvo-shot',impact='ability-mrs-chiha-salvo-impact',final='ability-mrs-chiha-salvo-final';
+ const selected=selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,paths.join('\n'));
+ const pool=selected.poolById[shot];
+ assert.equal(pool.avoidImmediateRepeat,true);
+ assert.deepEqual(pool.assetIds,['chiha-salvo-launch-a','chiha-salvo-launch-b']);
+ for(const take of pool.assetIds){
+  assert.equal(selected.assetById[take].sources[0].src,salvoFiles[take].path);
+  assert.deepEqual(selected.assetById[take].sources.slice(1),V100_AUDIO_MANIFEST.assetById[shot].sources);
+ }
+ for(const id of [impact,final]){
+  const file=salvoFiles[id.replace('ability-mrs-','')];
+  assert.deepEqual(selected.assetById[id].sources,[{src:file.path,type:'audio/mpeg'},...V100_AUDIO_MANIFEST.assetById[id].sources]);
+ }
+ const partial=selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,salvoFiles['chiha-salvo-launch-a'].path);
+ assert.equal(partial.poolById[shot],undefined);
+ assert.deepEqual(partial.assetById[shot],V100_AUDIO_MANIFEST.assetById[shot]);
+ assert.deepEqual(partial.assetById[final],V100_AUDIO_MANIFEST.assetById[final]);
+});
 
 test('each pistol keeps its cue and falls back until all three distinct recordings are available offline',()=>{
  const installedManifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));

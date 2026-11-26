@@ -6444,6 +6444,50 @@
       "audioChannel": "se",
       "audioId": "suppressed-pistol-03",
       "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-final.mp3",
+      "bytes": 13418,
+      "hash": "sha256-1f4dcb70a2f2d72f6dded6d7cf019c093b5c95241336f97faff6959d435d5e5d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "chiha-salvo-final",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-impact.mp3",
+      "bytes": 5059,
+      "hash": "sha256-826d3121f1ba815865a9858c6ab1e5f0be54f553861f5e7dfeac4954ef2a1229",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "chiha-salvo-impact",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-launch-a.mp3",
+      "bytes": 4223,
+      "hash": "sha256-c96c8d741ef9232e22d2199365bfe824bea1e8192a4b0cab1207dfa424be11e7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "chiha-salvo-launch-a",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-launch-b.mp3",
+      "bytes": 4223,
+      "hash": "sha256-096695ae973801f09747a6181be5918893b6b621b0c7c58797a9940b7b8e27a1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "chiha-salvo-launch-b",
+      "audioType": "audio/mpeg"
     }
   ],
   "retired": [
