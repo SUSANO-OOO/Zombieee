@@ -1019,6 +1019,10 @@
     [
       "g.banner = \"マザー // 増殖室離床\";",
       "g.banner = summonPlan.length > 0 ? \"マザーから感染者が湧き出した！\" : \"マザーの衝撃波！\";"
+    ],
+    [
+      "{isSurvivalBattle ? \"防衛前線を維持\" : `目標：${formatBattleText(hud.objective)}`}",
+      "{isSurvivalBattle ? \"防衛前線を維持\" : hud.missionType === \"escort\" ? formatBattleText(hud.objective) : `目標：${formatBattleText(hud.objective)}`}"
     ]
   ],
   "app/manualAbilities.js": [

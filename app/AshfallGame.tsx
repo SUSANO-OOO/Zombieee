@@ -26296,7 +26296,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div className="battle-objective objective">
               {bayHud && <span className="bay-evacuation-objective" data-bay-evacuation={bayHud.phase}
                 data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>避難 {bayHud.count}/{bayHud.total}</span>}
-              {isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}
+              {isSurvivalBattle ? "防衛前線を維持" : hud.missionType === "escort" ? formatBattleText(hud.objective) : `目標：${formatBattleText(hud.objective)}`}
             </div>
           </div>
         </div>
