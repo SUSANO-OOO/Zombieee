@@ -1045,6 +1045,14 @@
     [
       "            {!bootFailure && phase === \"install-required\" && installCopy && (\n              <>\n                <h2>{installCopy.headline}</h2>\n                <ul>{installCopy.lines.map((line, index) => <li key={line} className={index === 0 ? \"pwa-plan-capacity\" : undefined}>{index === 0 && installPlan ? <><small>{installPlan.pendingCount}件・</small><strong>{formatBytes(installPlan.pendingBytes)}</strong><span>をこの端末へ保存します</span></> : line}</li>)}</ul>\n                {installCopy.warning && <p className=\"pwa-warning\" role=\"alert\">{installCopy.warning}</p>}\n                <p className=\"pwa-hint\">{installCopy.wifiHint}</p>\n                <button type=\"button\" className=\"pwa-primary\" onClick={startInstall}>\n                  ダウンロードを開始\n                </button>\n              </>\n            )}",
       "            {!bootFailure && phase === \"install-required\" && installPlan && installCopy && (\n              <>\n                <h2>{installCopy.headline}</h2>\n                <ul>\n                  <li className=\"pwa-plan-capacity\">\n                    <small>{installCopy.capacityPrefix}{installPlan.pendingCount}件・</small>\n                    <strong>{formatBytes(installPlan.pendingBytes)}</strong>\n                    <span>をこの端末へ保存します</span>\n                  </li>\n                </ul>\n                {installCopy.warning && <p className=\"pwa-warning\" role=\"alert\">{installCopy.warning}</p>}\n                <p className=\"pwa-hint\">{installCopy.wifiHint}</p>\n                <button type=\"button\" className=\"pwa-primary\" onClick={startInstall}>\n                  {installCopy.actionLabel}\n                </button>\n              </>\n            )}"
+    ],
+    [
+      "import {PWA_PAN_GUARD_FILE} from \"./pwaPanGuardFile.js\";\nimport {PWA_GUN_FINISH_FILES} from \"./pwaGunFinishFiles.js\";\nimport {PWA_BOSS_COLLAPSE_FILES} from \"./pwaBossCollapseFiles.js\";\nimport {PWA_BOSS_SKILL_FILES} from \"./pwaBossSkillFiles.js\";\n",
+      "import {PWA_PAN_GUARD_FILE} from \"./pwaPanGuardFile.js\";\nimport {PWA_GUN_FINISH_FILES} from \"./pwaGunFinishFiles.js\";\nimport {PWA_HACHI_CROWBAR_FILES} from \"./pwaHachiCrowbarFiles.js\";\nimport {PWA_BOSS_COLLAPSE_FILES} from \"./pwaBossCollapseFiles.js\";\nimport {PWA_BOSS_SKILL_FILES} from \"./pwaBossSkillFiles.js\";\n"
+    ],
+    [
+      "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: PWA_GUN_FINISH_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n",
+      "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n"
     ]
   ],
   "app/globals.css": [
@@ -1149,6 +1157,10 @@
     [
       "for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley]) {",
       "for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO]) {"
+    ],
+    [
+      "  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset));\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath);\nfor (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {\n  const key = asset.sources.map(source => source.src).join('|');\n",
+      "  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset));\n// The older formats are already inventoried under their original cue IDs.\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)\n  .map(asset => ({ ...asset, sources: asset.sources.slice(0, 1) }));\nfor (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {\n  const key = asset.sources.map(source => source.src).join('|');\n"
     ]
   ]
 }

@@ -251,6 +251,33 @@ async function flushAsyncWork() {
   for (let index = 0; index < 6; index += 1) await new Promise((resolve) => setImmediate(resolve));
 }
 
+test("a heavy defeat still plays the matching recording when the short file is unavailable", async () => {
+  const asset = V100_AUDIO_MANIFEST.assetById["human-male-heavy-death-01"];
+  const short = "/audio/quality-20261125/voices/human-male-heavy-death-01.wav";
+  const legacy = "/audio/v060/sfx/human-male-heavy-death-01";
+  for (const available of [short, legacy + ".mp3", legacy + ".ogg"]) {
+    const sources = [short, legacy + ".mp3", legacy + ".ogg"];
+    const tried = sources.slice(0, sources.indexOf(available) + 1);
+    const network = makeFetcher({ fail: new Set(tried.slice(0, -1)) });
+    const context = new FakeAudioContext(), failures = [];
+    const mixer = createAudioMixer({
+      manifest: { assets: [asset] },
+      contextFactory: () => context,
+      fetcher: network.fetcher,
+      onAssetFailure: failure => failures.push(failure),
+    });
+    try {
+      await mixer.unlock();
+      const voice = await mixer.play(asset.id);
+      assert.ok(voice);
+      assert.deepEqual(network.paths, tried);
+      assert.deepEqual(failures, []);
+    } finally {
+      mixer.dispose();
+    }
+  }
+});
+
 test("foreground combat audio bypasses ordinary gain and overlapping voices release it only after the last end", async () => {
   const context = new FakeAudioContext(), network = makeFetcher();
   const mixer = createAudioMixer({ manifest: createTestManifest(), contextFactory: () => context, fetcher: network.fetcher });

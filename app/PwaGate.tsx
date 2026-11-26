@@ -69,6 +69,7 @@ import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext,PwaBossSkillPaths
 import {PWA_MANUAL_FOLEY_FILES} from "./pwaManualFoleyFiles.js";
 import {PWA_PAN_GUARD_FILE} from "./pwaPanGuardFile.js";
 import {PWA_GUN_FINISH_FILES} from "./pwaGunFinishFiles.js";
+import {PWA_HACHI_CROWBAR_FILES} from "./pwaHachiCrowbarFiles.js";
 import {PWA_BOSS_COLLAPSE_FILES} from "./pwaBossCollapseFiles.js";
 import {PWA_BOSS_SKILL_FILES} from "./pwaBossSkillFiles.js";
 
@@ -939,7 +940,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedGunFinishPaths = verifiedPwaArtworkPaths({
-    artworks: PWA_GUN_FINISH_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedBossSkillPaths = verifiedPwaArtworkPaths({

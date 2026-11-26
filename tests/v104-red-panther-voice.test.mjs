@@ -5,7 +5,9 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {createHash} from 'node:crypto';
 import {createAudioRequestGate,runGuardedAudioRequest} from '../app/audioMixer.js';
-import {V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
+import {PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
+import {PWA_PAN_GUARD_FILE} from '../app/pwaPanGuardFile.js';
+import {v177JointActorKey} from '../app/v177JointActorHistory.js';
 import {playV104FighterVoice,v104MonsterVoiceEvent,v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
 const kinds=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander'];
 const events=['attack','hurt','death'];
@@ -14,8 +16,10 @@ const shortDeathTake = { 'crazy-king': '02', kumaverson: '01', 'red-panther-shie
 function assertRecordedVoiceSource(source, kind, event) {
   const take = event === 'death' && shortDeathTake[kind];
   if (take) {
-    assert.equal(source.src, '/audio/quality-20261125/voices/human-male-heavy-death-' + take + '.wav');
-    assert.equal(source.type, 'audio/wav');
+    const extension = { 'audio/wav': 'wav', 'audio/mpeg': 'mp3', 'audio/ogg': 'ogg' }[source.type];
+    assert.ok(extension);
+    const folder = extension === 'wav' ? '/audio/quality-20261125/voices/' : '/audio/v060/sfx/';
+    assert.equal(source.src, folder + 'human-male-heavy-death-' + take + '.' + extension);
     return;
   }
   assert.match(source.src, /^\/audio\/v060\/sfx\/human-male-(?:heavy|light)-(?:attack|hurt|death)-0[12]\.(?:mp3|ogg)$/);
@@ -68,7 +72,7 @@ test('all formerly spoken human reactions are recorded performances and retain o
   for(const manifest of [GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST]){
    const asset=manifest.assetById[id];assert.equal(asset.category,'humanVoices');
    const take = event === 'death' && shortDeathTake[kind];
-   assert.deepEqual(asset.sources.map(s=>s.type),take?['audio/wav']:['audio/mpeg','audio/ogg']);
+   assert.deepEqual(asset.sources.map(s=>s.type),take?['audio/wav','audio/mpeg','audio/ogg']:['audio/mpeg','audio/ogg']);
    for(const s of asset.sources){assertRecordedVoiceSource(s,kind,event);assert.ok(installed.has(s.src),'current recorded reaction is cached');}
    if (take) {
      for(const ext of ['mp3','ogg'])assert.ok(installed.has('/audio/v060/sfx/human-male-heavy-death-' + take + '.' + ext));
@@ -81,12 +85,13 @@ test('all formerly spoken human reactions are recorded performances and retain o
  for(const kind of named.slice(0,3)){assert.equal(humanVoiceCueForUnit(kind,'deploy'),null);assert.equal(unitAudioCueFor(kind,'voice','deploy'),null);}
  assert.equal(humanVoiceCueForUnit('mayo-chan','deploy'),'voice-mayo-deploy','dog performance is separate from spoken human lines');
 });
-test('generic heavy voice reactions use the matching short recorded performance', () => {
+test('generic heavy voice reactions prefer the matching short recording and retain the installed formats', () => {
   for (const take of ['01','02']) {
     const id = 'human-male-heavy-death-' + take;
     for (const manifest of [GAMEPLAY_PRODUCTION_AUDIO_MANIFEST, V100_AUDIO_MANIFEST]) {
-      const [source] = manifest.assetById[id].sources;
+      const [source, ...fallback] = manifest.assetById[id].sources;
       assert.equal(source.src, '/audio/quality-20261125/voices/' + id + '.wav');
+      assert.deepEqual(fallback.map(item => item.src), ['/audio/v060/sfx/' + id + '.mp3', '/audio/v060/sfx/' + id + '.ogg']);
       const data = fs.readFileSync('public' + source.src);
       assert.equal(data.toString('ascii', 0, 4), 'RIFF');
       assert.equal(data.readUInt16LE(22), 1);
@@ -94,24 +99,63 @@ test('generic heavy voice reactions use the matching short recorded performance'
     }
   }
 });
-test('Red Panther hurt cues alternate recordings from the same voice family at the original intensity', () => {
+test('the game served under the Pages base still picks the short defeat recordings and the matching fallbacks', () => {
+  const prefix = source => source.replaceAll('/audio/', '/Zombieee/audio/');
+  const moduleSource = fs.readFileSync('app/v104CombatAudio.js', 'utf8');
+  // The Pages build prefixes absolute audio paths in the emitted JavaScript.
+  const compiled = ts.transpileModule(prefix(moduleSource), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+  }).outputText;
+  const imports = { './pwaPanGuardFile.js': {PWA_PAN_GUARD_FILE}, './v177JointActorHistory.js': {v177JointActorKey} };
+  const exports = {};
+  vm.runInNewContext(compiled, { exports, require(id) {
+    assert.ok(Object.hasOwn(imports, id), id);
+    return imports[id];
+  }});
+  const scopedAssets = PRODUCTION_AUDIO_MANIFEST.assets.map(asset => ({
+    ...asset,
+    sources: asset.sources.map(source => ({ ...source, src: prefix(source.src) })),
+  }));
+  const manifest = exports.withV104CombatAudio({ assets: scopedAssets });
+  const takes = [
+    ['human-male-heavy-death-01', '01'],
+    ['human-male-heavy-death-02', '02'],
+    ...Object.entries(shortDeathTake).map(([kind, take]) => ['voice-' + kind + '-death', take]),
+    ['voice-red-panther-shield-death-alternate', '01'],
+    ['voice-red-panther-commander-death-alternate', '02'],
+  ];
+  for (const [id, take] of takes) {
+    const actual = manifest.assets.find(asset => asset.id === id).sources;
+    const name = 'human-male-heavy-death-' + take;
+    assert.deepEqual(plain(actual.map(source => source.src)), [
+      '/Zombieee/audio/quality-20261125/voices/' + name + '.wav',
+      '/Zombieee/audio/v060/sfx/' + name + '.mp3',
+      '/Zombieee/audio/v060/sfx/' + name + '.ogg',
+    ], id);
+  }
+});
+test('Red Panther combat cues alternate recordings from the same voice family at the original intensity', () => {
   const installed = new Set(INSTALL_AUDIO_ASSETS.flatMap(asset => asset.sources.map(source => source.src)));
-  for (const kind of kinds) {
-    const voice = v104SupplementalEnemyVoice(enemyVoiceCue(kind, 'hurt'));
+  for (const kind of kinds) for (const event of events) {
+    const voice = v104SupplementalEnemyVoice(enemyVoiceCue(kind, event));
     for (const manifest of [GAMEPLAY_PRODUCTION_AUDIO_MANIFEST, V100_AUDIO_MANIFEST]) {
       const pool = manifest.poolById[voice.cueId];
       const [first, second] = pool.assetIds.map(id => manifest.assetById[id]);
       assert.equal(pool.strategy, 'round-robin');
+      assert.equal(pool.assetIds.length, 2);
       assert.equal(first.id, voice.asset.id);
+      assert.deepEqual(first.sources, voice.asset.sources);
       assert.equal(pool.cooldownMs, voice.asset.cooldownMs);
       assert.equal(pool.priority, voice.asset.priority);
       assert.equal(pool.maxInstances, voice.asset.maxInstances);
       assert.equal(second.gain, first.gain);
-      for (const codec of ['mp3', 'ogg']) {
-        const takes = [first, second].map(asset => asset.sources.find(source => source.src.endsWith('.' + codec)).src);
-        assert.ok(takes.every(src => installed.has(src)));
-        assert.equal(takes[0].replace(/0[12]\.\w+$/, ''), takes[1].replace(/0[12]\.\w+$/, ''));
-        assert.notEqual(takes[0], takes[1]);
+      assert.deepEqual(second.sources.map(s => s.type), first.sources.map(s => s.type));
+      for (const [index, source] of first.sources.entries()) {
+        const take = /0([12])(?=\.\w+$)/.exec(source.src);
+        assert.ok(take);
+        const alternate = second.sources[index].src;
+        assert.equal(alternate, source.src.replace(/0[12](?=\.\w+$)/, take[1] === '1' ? '02' : '01'));
+        assert.ok(installed.has(source.src) && installed.has(alternate));
       }
     }
   }
@@ -122,7 +166,7 @@ test('the actual game keeps the weapon request unchanged and adds one independen
   player.play(cueId,640,{ownerId:91,priority:17,volume:.3,playbackRate:.66,durationSeconds:.05,maxInstances:3,dedupeKey:'contact:91'});
   await flush();assert.equal(player.requests.length,2);assert.equal(player.requests[0].cueId,cueId);
   assert.deepEqual(plain(player.requests[0].options),{pan:0,priority:17,volume:.3,playbackRate:.66,maxInstances:3,durationSeconds:.05,dedupeKey:'contact:91'});
-  const expected = `voice-${kind}-${event}${event==='hurt'?'-takes':''}`;
+  const expected = `voice-${kind}-${event}-takes`;
   assert.equal(player.requests[1].cueId,expected);
   assert.deepEqual(plain(player.requests[1].options),{pan:0,instanceKey:'rp-voice:91',maxInstances:1,dedupeKey:'contact:91:voice'});
   assert.deepEqual(plain(player.stops),event==='attack'?[]:[{key:'rp-voice:91',options:{fadeMs:20}}]);

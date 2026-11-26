@@ -106,7 +106,12 @@ test('first battle calls are audible candidates, cooldowns are per actor, and ar
   const voice = assets.find(asset => asset.id === `voice-${kind}-${event}`);
   const take = event === 'death' && shortDefeatTakes[kind];
   if (take) {
-   assert.deepEqual(voice.sources,[{src:'/audio/quality-20261125/voices/human-male-heavy-death-'+take+'.wav',type:'audio/wav'}]);
+   const recorded='/audio/v060/sfx/human-male-heavy-death-'+take;
+   assert.deepEqual(voice.sources,[
+    {src:'/audio/quality-20261125/voices/human-male-heavy-death-'+take+'.wav',type:'audio/wav'},
+    {src:recorded+'.mp3',type:'audio/mpeg'},
+    {src:recorded+'.ogg',type:'audio/ogg'},
+   ]);
   } else {
    assert.ok(voice.sources.every(source=>source.src.includes(event==='deploy'?'/v104/':'/v060/sfx/human-')));
   }

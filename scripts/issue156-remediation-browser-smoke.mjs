@@ -196,8 +196,25 @@ async function runCase(engine, viewport, safeAreaMode) {
           throw new Error("event presentation DOM is incomplete");
         }
         const image = new Image();
+        const loaded = new Promise((resolve, reject) => {
+          image.addEventListener("load", resolve, { once: true });
+          image.addEventListener("error", () => {
+            reject(new Error(`Cannot load portrait ${portraitKind}: ${portraitProfile.path}`));
+          }, { once: true });
+        });
         image.src = portraitProfile.path;
-        await image.decode();
+        await loaded;
+        try {
+          const bitmap = await createImageBitmap(image);
+          const width = bitmap.width;
+          const height = bitmap.height;
+          bitmap.close();
+          if (width !== source.sourceWidth || height !== source.sourceHeight) {
+            throw new Error(`Unexpected decoded size ${width}x${height}`);
+          }
+        } catch (error) {
+          throw new Error(`Cannot decode portrait ${portraitKind}: ${portraitProfile.path}: ${String(error)}`, { cause: error });
+        }
         portrait.dataset.portrait = portraitKind;
         portrait.classList.toggle('guide', portraitKind === 'guide');
         portrait.classList.toggle('radio', portraitKind === 'radio');

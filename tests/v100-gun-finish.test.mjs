@@ -8,6 +8,7 @@ import ts from 'typescript';
 import {createAudioManifest} from '../app/audioManifest.js';
 import {V100_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS} from '../app/productionAudio.js';
 import {PWA_GUN_FINISH_FILES as files} from '../app/pwaGunFinishFiles.js';
+import {PWA_HACHI_CROWBAR_FILES as crowbarFiles} from '../app/pwaHachiCrowbarFiles.js';
 import {withV100GunFinish,selectV100GunFinishPlayback} from '../app/v100GunFinishAudio.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 const ids=['v104-handgun','weapon-rifle-01','weapon-rifle-02','weapon-gunner-01','weapon-gunner-02','weapon-smg-01','weapon-smg-02','weapon-suppressed-pistol'];
@@ -53,6 +54,38 @@ test('saved hashes and manifest ownership gate new gun files; cached bytes alone
  assert.deepEqual(new Set(verifiedPwaArtworkPaths({...policy,installedManifest:null,browserPlayAccepted:true}).split(String.fromCharCode(10))),new Set(Object.values(files).map(f=>f.path)));
 });
 
+test('Hachi gets two stored crowbar takes while knife attacks and older packs keep their own sounds', () => {
+ const pack=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));
+ const descriptors=Object.values(crowbarFiles);
+ const policy={artworks:crowbarFiles,storedHashes:new Set(descriptors.map(file=>file.hash)),gameBlocked:false};
+ const allowed=verifiedPwaArtworkPaths({...policy,installedManifest:pack});
+ assert.equal(selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,allowed).poolById['weapon-crowbar'].assetIds.length,2);
+ for (const installedManifest of [oldJson('public/asset-manifest.json'), {...pack,assets:pack.assets.filter(file=>file.path!==descriptors[0].path)}]) {
+  const verified=verifiedPwaArtworkPaths({...policy,installedManifest});
+  assert.deepEqual(selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,verified),V100_AUDIO_MANIFEST);
+ }
+ const selected=selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,allowed);
+ const original=V100_AUDIO_MANIFEST.poolById['weapon-crowbar'];
+ const knife=selected.aliasById['enemy-red-panther-knife-attack'];
+ const newPool=selected.poolById['weapon-crowbar'];
+ assert.deepEqual(newPool.assetIds,Object.keys(crowbarFiles));
+ assert.notEqual(knife.targetId,newPool.id);
+ assert.deepEqual({...knife,targetId:original.id},V100_AUDIO_MANIFEST.aliasById[knife.id]);
+ assert.deepEqual({...selected.poolById[knife.targetId],id:original.id},original);
+ assert.deepEqual({...newPool,assetIds:original.assetIds},original);
+ for (const [index,id] of newPool.assetIds.entries()) {
+  const file=crowbarFiles[id],take=selected.assetById[id],previous=V100_AUDIO_MANIFEST.assetById[original.assetIds[index]];
+  const row=pack.assets.find(asset=>asset.path===file.path);
+  assert.equal(row.hash,file.hash);
+  assert.equal(row.bundlePath,undefined);
+  assert.equal('sha256-'+sha(fs.readFileSync('public'+file.path)),file.hash);
+  assert.deepEqual(take.sources,[{src:file.path,type:'audio/mpeg'},...previous.sources]);
+  assert.deepEqual(selected.assetById[previous.id],previous);
+  const decoded=measures(pcm('public'+file.path));
+  assert.ok(decoded.onset<.06&&decoded.peak>.20&&decoded.peak<.95&&decoded.clipped===0,id);
+ }
+});
+
 test('the old 411-file audio pack stays intact before the gun takes and later foley',()=>{
  const old=oldJson('public/pwa-bundles/audio-v1.json'),index=JSON.parse(fs.readFileSync('public/pwa-bundles/audio-v1.json','utf8'));
  assert.equal(Object.keys(old.assets).length,411);assert.equal(INSTALL_AUDIO_ASSETS.length,424);assert.equal(Object.keys(index.assets).length,422);
@@ -82,7 +115,9 @@ test('saved gun metadata remains a leaf and does not bring playback code into th
 test('the built install metadata stays outside the audio runtime chunk',()=>{
  const root=new URL('../dist/server/ssr/assets/',import.meta.url);
  const chunks=fs.readdirSync(root).filter(name=>name.endsWith('.js')).map(name=>({name,source:fs.readFileSync(new URL(name,root),'utf8')}));
- const metadata=chunks.filter(chunk=>chunk.source.includes('//#region app/pwaGunFinishFiles.js'));
- assert.ok(metadata.length>0,'Built saved-file metadata must be present');
- for(const chunk of metadata){assert.equal(chunk.source.includes('//#region app/productionAudio.js'),false,'Install metadata cannot be bundled with productionAudio: '+chunk.name);assert.equal(chunk.source.includes('//#region app/audioMixer.js'),false,'Install metadata cannot eagerly import the mixer: '+chunk.name);}
+ for (const leaf of ['pwaGunFinishFiles','pwaHachiCrowbarFiles']) {
+  const metadata=chunks.filter(chunk=>chunk.source.includes('//#region app/'+leaf+'.js'));
+  assert.ok(metadata.length>0,'Built saved-file metadata must be present: '+leaf);
+  for(const chunk of metadata){assert.equal(chunk.source.includes('//#region app/productionAudio.js'),false,'Install metadata cannot be bundled with productionAudio: '+chunk.name);assert.equal(chunk.source.includes('//#region app/audioMixer.js'),false,'Install metadata cannot eagerly import the mixer: '+chunk.name);}
+ }
 });
