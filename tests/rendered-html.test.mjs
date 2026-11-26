@@ -598,7 +598,7 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
   assert.match(game, /g\.banner = phaseBannerForBattle\(g\.definition, nextPhase\)/);
   assert.match(game, /deployQueue: UnitKind\[\]/);
   assert.match(game, /g\.deployQueue\.length >= 3/);
-  assert.match(game, /出撃待機の上限 \/\/ 3体/);
+  assert.match(game, /出撃待ちの3枠は満員/);
   assert.match(game, /g\.deployQueue\.shift\(\)/);
   assert.match(game, /summonedCount: number/);
   assert.match(game, /同時出撃 \{hud\.summonedCount\}\/7/);
