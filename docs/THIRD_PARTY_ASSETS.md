@@ -541,6 +541,10 @@ HaelDBの「Male Grunt/Yelling sounds」のうち、既存の重い退場声と�
 
 HaelDBによる「Male Grunt/Yelling sounds」（CC0 1.0）の `3yell3.wav` と `3yell4.wav` を使用。無音部分を切り、両端と音量を整えた。再生速度と音程は原音のまま。原音・配布音声の照合値と加工内容は [素材記録](../assets/source/quality-20261127/recorded-heavy-hurt/provenance.json) に収録。
 
+### ナオの被弾と退場（2026-11-27）
+
+cicifyre の「Female RPG Voice Starter Pack」（CC0 1.0）から、ナオ用に Type 2 のダメージ演技を3本選んだ。短い2本を負傷時、長く息を吐く1本を倒れたときに使う。声の高さと速さを保ち、前後の無音と音量を整えた。スマホに保存するMP3は合計21,865バイト。[原音と加工の記録](../assets/source/quality-20261127/nao-reactions/provenance.json)
+
 ### 指揮官とババヤガの拳銃（2026-11-27）
 
 The Free Firearm Sound Library（Ben Jaszczak、Brian Nelson、Kevin Heras、Matthew Nanney）の同じ録音に収められた別の2発と、Kenneyの金属音を使用。いずれもCC0 1.0。指揮官の拳銃には発砲後の響きを残し、ババヤガの消音拳銃は短い破裂音と金具の動きが聞こえるように加工した。[原音・配布音声の記録](../assets/source/quality-20261127/pistol-takes/provenance.json)

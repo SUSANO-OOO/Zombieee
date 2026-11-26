@@ -6367,6 +6367,83 @@
       "audioChannel": "voice",
       "audioId": "install-quality-20261127-voices-human-male-heavy-hurt-04",
       "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/nao-death.mp3",
+      "bytes": 8821,
+      "hash": "sha256-13ea55a4254e94e54492eab95e1928213918b6a785f6dfb0e17fb4a5ab884b81",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-nao-death",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/nao-hurt-01.mp3",
+      "bytes": 6313,
+      "hash": "sha256-4c02001471a6b8e50e9cc698f1b3f60d16fb21a2a01e50e1d412a7a67ea8f0b9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-nao-hurt-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/nao-hurt-02.mp3",
+      "bytes": 6731,
+      "hash": "sha256-f92af407338746c355e3be6dc1f7f4ef6dc8f929300accdc3017893b92dbf192",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-nao-hurt-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/firearms/handgun-02.mp3",
+      "bytes": 7985,
+      "hash": "sha256-3a3c1f8e65d27830ff78d5e293b07a6c0a2aa5e77c63cce32836ceff56b4ebd4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "handgun-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/firearms/handgun-03.mp3",
+      "bytes": 7985,
+      "hash": "sha256-af4b42969873a487a836bb71740ed062d019255bc3a94bec31d74acd422d2880",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "handgun-03",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/firearms/suppressed-pistol-02.mp3",
+      "bytes": 7985,
+      "hash": "sha256-7ae31da1be45e8aa720b01691e997fc32dd2025d0b35fd98221594ea509c1d9b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "suppressed-pistol-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/firearms/suppressed-pistol-03.mp3",
+      "bytes": 7985,
+      "hash": "sha256-cb4d7496c0ae17f7f6640dbadc4e1481b3a887f7df3baa0897fb8d2669d0d306",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "suppressed-pistol-03",
+      "audioType": "audio/mpeg"
     }
   ],
   "retired": [

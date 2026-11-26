@@ -185,11 +185,9 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   const activeV099Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v099/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  // Current candidate inventory: the prior262 assets /462 sources are retained;
-  // twelve audited RED PANTHER utterances add twelve MP3/OGG pairs.
-  // The dedicated SMG pool adds two recorded assets; prior legacy sources remain.
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 279);
-  assert.equal(manifestPaths.length, 496);
+  // Nao adds three distinct physical recordings to the prior inventory.
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 282);
+  assert.equal(manifestPaths.length, 499);
   assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.assets.find(asset=>asset.id==='v104-handgun').sources.map(s=>s.src),
     ['/audio/v104/combat/handgun.mp3','/audio/v104/combat/handgun.ogg']);
   assert.equal(
@@ -225,6 +223,8 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     "/audio/quality-20261125/voices/human-male-heavy-death-02.wav",
   ]);
   const approvedPanGuardSource = "/audio/quality-20261124/manual/pan-guard-contact.mp3";
+  const naoSources = new Map(["nao-hurt-01", "nao-hurt-02", "nao-death"].map(name =>
+    ["voice-" + name, "/audio/quality-20261127/voices/" + name + ".mp3"]));
   const newHurtFiles = new Set(["03", "04"].flatMap(take => [
     "/audio/quality-20261126/voices/human-male-light-hurt-" + take + ".mp3",
     "/audio/quality-20261127/voices/human-male-heavy-hurt-" + take + ".mp3",
@@ -248,7 +248,9 @@ test("every referenced source is repository-local, nonempty, and has a complete 
   for (const asset of [...PRODUCTION_AUDIO_MANIFEST.assets, ...V100_AUDIO_MANIFEST.assets]) {
     const wavCue = asset.sources[0]?.type === "audio/wav";
     const panGuardCue = asset.id === "ability-kumaverson-pan-guard-contact";
-    const singleMpegCue = panGuardCue || asset.sources[0]?.src.startsWith("/audio/v099/");
+    const naoCue = naoSources.has(asset.id);
+    if (naoCue) assert.equal(asset.sources[0].src, naoSources.get(asset.id));
+    const singleMpegCue = naoCue || panGuardCue || asset.sources[0]?.src.startsWith("/audio/v099/");
     if (panGuardCue) assert.equal(asset.sources[0]?.src, approvedPanGuardSource);
     const shortDeathCue = approvedShortDeathSources.has(asset.sources[0]?.src);
     const newHurtCue = newHurtFiles.has(asset.sources[0]?.src);
@@ -271,7 +273,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.ok(approvedSource(source.src) || newHurtFiles.has(source.src), source.src);
+      assert.ok(approvedSource(source.src) || newHurtFiles.has(source.src) || naoSources.get(asset.id) === source.src, source.src);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);
@@ -465,7 +467,7 @@ test("production manifest keeps every mixer category and valid two-sample variat
     [...new Set(PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.category))].sort(),
     [...AUDIO_CATEGORIES].sort(),
   );
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.pools.length, 43);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.pools.length, 44);
   for (const pool of PRODUCTION_AUDIO_MANIFEST.pools) {
     assert.equal(pool.assetIds.length, 2, pool.id);
     assert.equal(new Set(pool.assetIds).size, 2, pool.id);
@@ -558,8 +560,15 @@ test("authored story scenes never bind existing human battle-voice cues", () => 
   ));
   assert.equal(v070Assets.some(({ category }) => category === "humanVoices"), false);
   const battleVoiceAssets = PRODUCTION_AUDIO_MANIFEST.assets.filter(({ category }) => category === "humanVoices");
-  assert.equal(battleVoiceAssets.length, 46); // prior34 plus twelve distinct new RP utterances
+  assert.equal(battleVoiceAssets.length, 49);
   for (const asset of battleVoiceAssets) {
+    if (asset.id.startsWith("voice-nao-")) {
+      assert.match(asset.id, /^voice-nao-(?:hurt-0[12]|death)$/);
+      assert.deepEqual(asset.sources.map(source => source.src), [
+        "/audio/quality-20261127/voices/" + asset.id.slice("voice-".length) + ".mp3",
+      ]);
+      continue;
+    }
     assert.match(
       asset.id,
       /^(?:human-(?:female|male-heavy|male-light)-(?:attack|hurt|death)-0[12]|voice-(?:crazy-king|kumaverson|babayaga)-(?:deploy|attack|hurt|death)|voice-mayo-(?:deploy|attack|hurt|retreat)|voice-red-panther-(?:knife|shield|smg|commander)-(?:attack|hurt|death))$/,
@@ -743,7 +752,7 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
     brute: "human-male-heavy",
     brawler: "human-male-heavy",
     gunner: "human-female",
-    medic: "human-male-light",
+    medic: "human-female",
     "crazy-king": "voice-crazy-king",
     kumaverson: "voice-kumaverson",
     babayaga: "voice-babayaga",
@@ -766,7 +775,8 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
   }
   for (const [kind, expectedVoicePrefix] of Object.entries(expectedVoicePrefixes)) {
     for (const event of ["attack", "hurt", "death"]) {
-      const voiceCue = kind === "mayo-chan" && event === "death"
+      const voiceCue = kind === "medic" && event !== "attack" ? "voice-nao-" + event
+        : kind === "mayo-chan" && event === "death"
         ? "voice-mayo-retreat"
         : `${expectedVoicePrefix}-${event}`;
       assert.equal(humanVoiceCueForUnit(kind, event), voiceCue);
@@ -1000,7 +1010,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 322); // prior319 plus two recorded SMG takes and their pool
+  assert.equal(allCueIds.length, 326);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

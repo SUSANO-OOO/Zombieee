@@ -49,7 +49,7 @@ import {
 } from "../app/visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
-import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
+import { INSTALL_AUDIO_ASSETS, NAO_REACTION_PATHS } from "../app/productionAudio.js";
 import { V104_SHORT_HEAVY_DEATH_PATHS } from "../app/v104CombatAudio.js";
 import { recordedHurtFiles } from "../app/v100RecordedHurtTakes.js";
 import { V100_CREDITS_SONG } from "../app/v100StaffRoll.js";
@@ -371,7 +371,7 @@ function recordAudio(source, audioId, audioChannel, bundleIndex) {
     } : {}),
   });
 }
-const directVoicePaths = new Set([...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles]);
+const directVoicePaths = new Set([...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles, ...NAO_REACTION_PATHS]);
 for (const asset of INSTALL_AUDIO_ASSETS) {
   const source = selectPreferredAudioSource(asset.sources);
   if (source) {

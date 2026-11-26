@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, audio and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,527);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,534);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54574347);
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54628152);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -61,6 +61,13 @@ test('every bundled audio range still contains its exact encoded content after t
   '/audio/quality-20261126/voices/human-male-light-hurt-04.mp3',
   '/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3',
   '/audio/quality-20261127/voices/human-male-heavy-hurt-04.mp3',
+  '/audio/quality-20261127/voices/nao-death.mp3',
+  '/audio/quality-20261127/voices/nao-hurt-01.mp3',
+  '/audio/quality-20261127/voices/nao-hurt-02.mp3',
+  '/audio/quality-20261127/firearms/handgun-02.mp3',
+  '/audio/quality-20261127/firearms/handgun-03.mp3',
+  '/audio/quality-20261127/firearms/suppressed-pistol-02.mp3',
+  '/audio/quality-20261127/firearms/suppressed-pistol-03.mp3',
  ]);
  assert.deepEqual(ordered(directAudio(candidate)),ordered([...directAudio(baseline),...alternateFiles]));
 });
@@ -81,7 +88,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,528);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,535);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -119,8 +126,15 @@ test('late effects and recordings append without moving or replacing older files
     '/audio/quality-20261126/foley/hachi-crowbar-02.mp3',
     '/audio/quality-20261126/voices/human-male-light-hurt-03.mp3',
     '/audio/quality-20261126/voices/human-male-light-hurt-04.mp3',
+    '/audio/quality-20261127/firearms/handgun-02.mp3',
+    '/audio/quality-20261127/firearms/handgun-03.mp3',
+    '/audio/quality-20261127/firearms/suppressed-pistol-02.mp3',
+    '/audio/quality-20261127/firearms/suppressed-pistol-03.mp3',
     '/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3',
     '/audio/quality-20261127/voices/human-male-heavy-hurt-04.mp3',
+    '/audio/quality-20261127/voices/nao-death.mp3',
+    '/audio/quality-20261127/voices/nao-hurt-01.mp3',
+    '/audio/quality-20261127/voices/nao-hurt-02.mp3',
     '/audio/v060/sfx/enemy-runner-hurt-02.ogg',
     '/audio/v060/sfx/enemy-turned-hurt-01.ogg',
     '/audio/v060/sfx/enemy-turned-hurt-02.ogg',
