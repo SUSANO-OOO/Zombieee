@@ -5626,6 +5626,39 @@
       "audioType": "audio/mpeg"
     },
     {
+      "path": "/audio/quality-20261127/voices/nao-death.mp3",
+      "bytes": 8821,
+      "hash": "sha256-13ea55a4254e94e54492eab95e1928213918b6a785f6dfb0e17fb4a5ab884b81",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-nao-death",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/nao-hurt-01.mp3",
+      "bytes": 6313,
+      "hash": "sha256-4c02001471a6b8e50e9cc698f1b3f60d16fb21a2a01e50e1d412a7a67ea8f0b9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-nao-hurt-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/nao-hurt-02.mp3",
+      "bytes": 6731,
+      "hash": "sha256-f92af407338746c355e3be6dc1f7f4ef6dc8f929300accdc3017893b92dbf192",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-nao-hurt-02",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/v060/music/battle-stage1.mp3",
       "bytes": 925037,
       "hash": "sha256-71613b42c69632a6b6bb8db7a1bd8d92144eb217b147ebc0699e10f11f3514c9",

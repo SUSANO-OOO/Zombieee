@@ -1405,6 +1405,26 @@
     [
       "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...lightHurtInstallAssets]) {\n",
       "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...recordedHurtInstallAssets]) {\n"
+    ],
+    [
+      ")));\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n",
+      ")));\n\nconst naoReactions = [\"nao-hurt-01\", \"nao-hurt-02\", \"nao-death\"].map(name => ({\n  ...sfxAsset(\"voice-\" + name, \"humanVoices\", {\n    gain: 0.8, priority: name === \"nao-death\" ? 86 : 66, cooldownMs: 260, maxInstances: 3,\n  }),\n  sources: [{ src: \"/audio/quality-20261127/voices/\" + name + \".mp3\", type: \"audio/mpeg\" }],\n}));\nexport const NAO_REACTION_PATHS = Object.freeze(naoReactions.map(asset => asset.sources[0].src));\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n"
+    ],
+    [
+      "  ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),\n  ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),\n];\n\n",
+      "  ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),\n  ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),\n  ...naoReactions,\n];\n\n"
+    ],
+    [
+      "  ...humanVoicePools,\n  ...enemyVoicePools,\n];\nconst aliases = [\n",
+      "  ...humanVoicePools,\n  ...enemyVoicePools,\n  variationPool(\"voice-nao-hurt\", \"humanVoices\", { priority: 66, cooldownMs: 260, maxInstances: 3 }),\n];\nconst aliases = [\n"
+    ],
+    [
+      "  brawler: \"male-heavy\",\n  gunner: \"female\",\n  medic: \"male-light\",\n  \"crazy-king\": \"male-heavy\",\n  kumaverson: \"male-heavy\",\n",
+      "  brawler: \"male-heavy\",\n  gunner: \"female\",\n  medic: \"female\",\n  \"crazy-king\": \"male-heavy\",\n  kumaverson: \"male-heavy\",\n"
+    ],
+    [
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n  if (contractCue) return contractCue;\n",
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  if (kind === \"medic\" && (event === \"hurt\" || event === \"death\")) return \"voice-nao-\" + event;\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n  if (contractCue) return contractCue;\n"
     ]
   ]
 }

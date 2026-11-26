@@ -426,6 +426,14 @@ const humanVoicePools = HUMAN_VOICE_PROFILES.flatMap((profile) => HUMAN_VOICE_EV
   { priority: event === "death" ? 86 : 66, cooldownMs: event === "attack" ? 180 : 260, maxInstances: 3 },
 )));
 
+const naoReactions = ["nao-hurt-01", "nao-hurt-02", "nao-death"].map(name => ({
+  ...sfxAsset("voice-" + name, "humanVoices", {
+    gain: 0.8, priority: name === "nao-death" ? 86 : 66, cooldownMs: 260, maxInstances: 3,
+  }),
+  sources: [{ src: "/audio/quality-20261127/voices/" + name + ".mp3", type: "audio/mpeg" }],
+}));
+export const NAO_REACTION_PATHS = Object.freeze(naoReactions.map(asset => asset.sources[0].src));
+
 const enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(
   `enemy-${kind}-${event}`,
   "monsters",
@@ -480,6 +488,7 @@ const assets = [
   ...V090_PLAYABLE_AUDIO_CUES.map(v090PlayableAsset),
   ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),
   ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),
+  ...naoReactions,
 ];
 
 const pools = [
@@ -491,6 +500,7 @@ const pools = [
   }),
   ...humanVoicePools,
   ...enemyVoicePools,
+  variationPool("voice-nao-hurt", "humanVoices", { priority: 66, cooldownMs: 260, maxInstances: 3 }),
 ];
 const aliases = [
   {
@@ -952,7 +962,7 @@ const UNIT_VOICE_PROFILES = Object.freeze({
   brute: "male-heavy",
   brawler: "male-heavy",
   gunner: "female",
-  medic: "male-light",
+  medic: "female",
   "crazy-king": "male-heavy",
   kumaverson: "male-heavy",
   babayaga: "male-light",
@@ -1092,6 +1102,7 @@ export function weaponCueForUnit(kind) {
 }
 
 export function humanVoiceCueForUnit(kind, event) {
+  if (kind === "medic" && (event === "hurt" || event === "death")) return "voice-nao-" + event;
   const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];
   if (contractCue) return contractCue;
   // Deployment must never borrow an attack or hurt performance. Units without

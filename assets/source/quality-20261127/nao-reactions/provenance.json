@@ -1,0 +1,50 @@
+{
+  "source": "Female RPG Voice Starter Pack",
+  "creator": "cicifyre",
+  "sourcePage": "https://opengameart.org/content/female-rpg-voice-starter-pack",
+  "archive": "https://opengameart.org/sites/default/files/RPG%20Voice%20Starter%20Pack.zip",
+  "archiveSha256": "6ad46457e66c25e1318f2d45251afc549df22c3cab05b553dd6717ca2a1c7d04",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "permissions": ["commercial use", "editing", "redistribution"],
+  "castingReference": "docs/PRODUCER_DECISIONS_0.7.0.md, Nao. New selection for the development candidate; player audition pending.",
+  "runtimeFiles": 3,
+  "logicalBytes": 21865,
+  "distinctBytes": 21865,
+  "direction": "Nao uses three distinct wordless Type 2 damage performances by the same performer. The two brief reactions alternate on injury. The sustained reaction accompanies collapse. Preserve original pitch and speed.",
+  "performances": [
+    {
+      "archiveMember": "RPG Voice Starter Pack/Type 2/damaged2.wav",
+      "master": "damaged2.wav",
+      "masterSha256": "c9c583634a9ef13deeb5b7f7cd18f188e901e8fda7dc6e43d017a4b84274ad5c",
+      "reference": "public/audio/v060/sfx/human-female-hurt-01.mp3",
+      "filter": "atrim=start=0.00000:end=0.32834,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=0.31034:d=0.018,volume=2.306691",
+      "runtime": "/audio/quality-20261127/voices/nao-hurt-01.mp3",
+      "runtimeSha256": "4c02001471a6b8e50e9cc698f1b3f60d16fb21a2a01e50e1d412a7a67ea8f0b9",
+      "bytes": 6313,
+      "durationSeconds": 0.328
+    },
+    {
+      "archiveMember": "RPG Voice Starter Pack/Type 2/damaged3.wav",
+      "master": "damaged3.wav",
+      "masterSha256": "b7f92af3fb5234fbeaa862c715af14f39c10012b0f4d29d153aec86505a33168",
+      "reference": "public/audio/v060/sfx/human-female-hurt-02.mp3",
+      "filter": "atrim=start=0.00000:end=0.36500,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=0.34700:d=0.018,volume=2.183043",
+      "runtime": "/audio/quality-20261127/voices/nao-hurt-02.mp3",
+      "runtimeSha256": "f92af407338746c355e3be6dc1f7f4ef6dc8f929300accdc3017893b92dbf192",
+      "bytes": 6731,
+      "durationSeconds": 0.365
+    },
+    {
+      "archiveMember": "RPG Voice Starter Pack/Type 2/damaged1.wav",
+      "master": "damaged1.wav",
+      "masterSha256": "c3228b867728aeecc0ef37e0fe0ec7fca660822b8df2e4a2630774fb7336bf7c",
+      "reference": "public/audio/v060/sfx/human-female-death-01.mp3",
+      "filter": "atrim=start=0.00000:end=0.48500,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=0.46700:d=0.018,volume=2.539417",
+      "runtime": "/audio/quality-20261127/voices/nao-death.mp3",
+      "runtimeSha256": "13ea55a4254e94e54492eab95e1928213918b6a785f6dfb0e17fb4a5ab884b81",
+      "bytes": 8821,
+      "durationSeconds": 0.485
+    }
+  ]
+}
