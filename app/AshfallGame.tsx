@@ -25197,7 +25197,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破・防護解除`
                 : g.definition.missionConfig.v100StageNumber === 30
-                ? `${defeatedBossName}撃破 — 残敵を掃討`
+                ? `${defeatedBossName}撃破！`
                 : g.definition.missionConfig.v100StageNumber === 3
                 ? `${defeatedBossName}撃破 — 残存感染体を掃討`
                 : fighter.kind === "takuya"
@@ -25845,7 +25845,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     : railHud ? railHud.phaseLabel
     : centralSealHud ? centralSealHud.phaseLabel
     : rescueControlHud ? rescueControlHud.phaseLabel
-    : isFinalDefense && gameRef.current.bossDefeated ? "残敵を掃討"
+    : isFinalDefense && gameRef.current.bossDefeated ? "最終防衛"
     : defenseObjective ? phaseBannerForBattle(gameRef.current.definition, hud.phase) : hud.missionType === "escort"
     ? gameRef.current.definition.missionConfig.convoyInterception === true
       ? hud.phase === 1 ? "追跡" : hud.phase === 2 ? "包囲" : "確保"

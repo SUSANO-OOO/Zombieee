@@ -15,6 +15,7 @@ import { archiveExtractionReadout, hasArchiveExtraction } from "./v100ArchiveExt
 import { clinicalRescueReadout, hasClinicalRescue } from "./v100ClinicalRescue.js";
 import { floodgateReadout, hasEstuaryFloodgate } from "./v100EstuaryFloodgate.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
+import { unresolvedEnemy } from "./stationSpatialMechanics.js";
 import { hasV100LureControl, v100ArmoryKeyStatus, v100CorporateControlLabel,
   V100_ARMORY_OBJECTIVE, V100_ARMORY_STATUS_LABELS, V100_LURE_CONTROL_OBJECTIVE } from "./v100CorporateControl.js";
 
@@ -150,6 +151,17 @@ export function phaseBannerForBattle(definition, phase) {
   return definition.phaseSchedule.find((entry) => entry.phase === phase)?.label ?? definition.objective;
 }
 
+function finalDefenseObjective(definition, state) {
+  if (!state.bossDefeated) return definition.objective;
+  if (state.baseHp <= 0) return "装甲車が大破";
+  if (state.over && state.won) return "西新防衛成功！";
+  if (state.eventIndex < definition.timeline.length || state.enemySpawn?.pending?.length) {
+    return "増援が来る！　装甲車を守れ";
+  }
+  const remaining = state.fighters?.filter(unresolvedEnemy).length;
+  return remaining ? `装甲車を守れ！　残り${remaining}体` : "装甲車を守れ！";
+}
+
 export function objectiveForBattle(definition, state) {
   if (definition.missionConfig?.armoryKey) {
     const status = v100ArmoryKeyStatus(definition, state);
@@ -176,7 +188,8 @@ export function objectiveForBattle(definition, state) {
       : "警備部隊を迎撃（最終ウェーブで防護解除）";
   }
   if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
-  if ([3, 30].includes(definition.missionConfig?.v100StageNumber)) {
+  if (definition.missionConfig?.v100StageNumber === 30) return finalDefenseObjective(definition, state);
+  if (definition.missionConfig?.v100StageNumber === 3) {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
   }
   if (hasEstuaryFloodgate(definition.missionType, definition.missionConfig)) {

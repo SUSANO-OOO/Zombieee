@@ -11,7 +11,15 @@ test('the final boss objective follows remaining reinforcements, not an intact o
   bossDefeated:true,bossDefeatPending:false,wavesResolved:false};
  assert.ok(s.barricadeHp>0);
  assert.equal(objectiveForBattle(d,{...s,bossDefeated:false}),d.objective);
- assert.equal(objectiveForBattle(d,s),'残存感染体を掃討');
+ assert.equal(objectiveForBattle(d,s),'装甲車を守れ！');
+ const fighters=[{side:'zombie',hp:5},{side:'human',hp:9},{side:'zombie',hp:0}];
+ const field={...s,fighters,eventIndex:d.timeline.length,enemySpawn:{pending:[]}};
+ assert.equal(objectiveForBattle(d,field),'装甲車を守れ！　残り1体');
+ assert.equal(objectiveForBattle(d,{...field,eventIndex:field.eventIndex-1}),'増援が来る！　装甲車を守れ');
+ assert.equal(objectiveForBattle(d,{...field,enemySpawn:{pending:[{}]}}),'増援が来る！　装甲車を守れ');
+ assert.equal(objectiveForBattle(d,{...field,fighters:[]}),'装甲車を守れ！');
+ assert.equal(objectiveForBattle(d,{...field,over:true,won:true,fighters:[]}),'西新防衛成功！');
+ assert.equal(objectiveForBattle(d,{...field,baseHp:0}),'装甲車が大破');
  assert.equal(battleOutcomeFor(d,s),null);
  assert.equal(battleOutcomeFor(d,{...s,wavesResolved:true}),'won');
  assert.equal(battleOutcomeFor(d,{...s,wavesResolved:true,bossDefeatPending:true}),null);

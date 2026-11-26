@@ -1067,6 +1067,14 @@
     [
       "              <button type=\"button\" className=\"floodgate-action\" onClick={closeEstuaryGate}\n                disabled={floodgateHud.phase !== \"ready\" || paused || Boolean(battleSaveBoundaryRef.current)}>防潮門を閉める</button>}\n            {(floodgateHud.phase === \"closing\" || floodgateHud.phase === \"sealed\") &&",
       "              <button type=\"button\" className=\"floodgate-action\" onClick={closeEstuaryGate}\n                disabled={floodgateHud.phase !== \"ready\" || paused || Boolean(battleSaveBoundaryRef.current)}>\n                {floodgateHud.phase === \"blocked\" ? \"ガイレン撃破後に操作可\" : \"防潮門を閉める\"}\n              </button>}\n            {(floodgateHud.phase === \"closing\" || floodgateHud.phase === \"sealed\") &&"
+    ],
+    [
+      "                ? `${defeatedBossName}撃破 — 残敵を掃討`\n",
+      "                ? `${defeatedBossName}撃破！`\n"
+    ],
+    [
+      "    : isFinalDefense && gameRef.current.bossDefeated ? \"残敵を掃討\"\n",
+      "    : isFinalDefense && gameRef.current.bossDefeated ? \"最終防衛\"\n"
     ]
   ],
   "app/manualAbilities.js": [
