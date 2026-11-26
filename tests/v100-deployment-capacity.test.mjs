@@ -49,6 +49,17 @@ test("the actual deployment callback reserves the seventh slot once and rejects 
   assert.equal(f.game.energy,energy);assert.equal(f.game.deployCooldowns.scout,0);
   assert.equal(JSON.stringify(f.game.deployQueue),before);
   assert.equal(f.cues.at(-1)[1],"deploy:scout:formation-full");
+  assert.equal(f.game.banner,"出撃枠はすべて使用中（7/7）");
+});
+
+test("a full dispatch queue can drain while combat slots are still free", () => {
+  const f=fixture(1,["scout","scout","scout"]);
+  assert.equal(f.deployHuman("scout"),false);
+  assert.equal(f.game.energy,150);
+  assert.equal(f.game.banner,"出撃待ちの3枠は満員");
+  f.game.deployQueue.shift();
+  assert.equal(f.deployHuman("scout"),true);
+  assert.equal(f.game.banner,"ハチ、出撃待ち（3番目）");
 });
 
 test("actual spawn refuses an eighth live instance and permits replacement after a death", () => {

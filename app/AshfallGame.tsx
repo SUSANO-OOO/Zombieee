@@ -17047,12 +17047,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const capacity = humanDeploymentCapacityForGame(g);
     if (!capacity.canReserve) {
       playUiOperationCue("reject", `deploy:${kind}:formation-full`);
-      g.banner = `同時出撃の上限 // ${capacity.limit}体`; g.bannerTime = .9;
+      g.banner = `出撃枠はすべて使用中（${capacity.limit}/${capacity.limit}）`; g.bannerTime = .9;
       return false;
     }
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playUiOperationCue("reject", `deploy:${kind}:unavailable`);
-      if (g.deployQueue.length >= 3) { g.banner = "出撃待機の上限 // 3体"; g.bannerTime = .9; }
+      if (g.deployQueue.length >= 3) { g.banner = "出撃待ちの3枠は満員"; g.bannerTime = .9; }
       return false;
     }
     g.energy -= card.cost;
@@ -17063,7 +17063,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const deployedKinds = deploymentHistory.get(g) ?? new Set<UnitKind>();
     deployedKinds.add(kind);
     deploymentHistory.set(g, deployedKinds);
-    g.banner = `${card.name} // 出撃待機 ${g.deployQueue.length}/3`;
+    g.banner = `${card.name}、出撃待ち（${g.deployQueue.length}番目）`;
     g.bannerTime = .7;
     playUiOperationCue("deploy", `deploy:${kind}:queue`);
     return true;
@@ -17193,7 +17193,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playUiOperationCue("reject", `crawler-barrage:${result.reason}`); return false; }
     g.supportGauge = result.supportGauge;
     g.crawlerAbility = result.runtime as CrawlerRuntime;
-    g.banner = v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).onFoot ? "援護射撃を開始" : "装甲車両火器を展開"; g.bannerTime = 1.1; playCue("crawler-request");
+    g.banner = `${v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).barrageLabel}を開始！`; g.bannerTime = 1.1; playCue("crawler-request");
     emitBattleBark(g, "crawler-barrage", "guide", "crawler-barrage");
     return true;
   }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
@@ -25866,7 +25866,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const battleStageLabel = compactBattleStageName(selectedOperationView.displayName);
   const basePresentation = v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber);
   const vehicleDisplayLabel = externalSessionActive ? basePresentation.label : PUBLIC_CRAWLER_LABEL;
-  const vehicleBarrageControlLabel = externalSessionActive ? basePresentation.onFoot ? basePresentation.barrageLabel : `${vehicleDisplayLabel}一斉砲撃` : "装甲車両一斉掃射";
+  const vehicleBarrageControlLabel = externalSessionActive ? basePresentation.barrageLabel : "装甲車両一斉掃射";
   const selectedStageBossKind = selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.boss?.enemyKind ?? null
     : CAMPAIGN_STAGE_BY_ID[selectedStageId]?.boss?.enemyKind ?? null;
@@ -25908,8 +25908,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       : hud.supportGauge < airstrikeCost
         ? `支援ゲージ不足 ${hud.supportGauge}/${airstrikeCost}`
         : null);
-  const crawlerBlockReason = commonBattleActionBlockReason
-    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : hud.supportGauge < barrageCost ? `支援ゲージ不足 ${hud.supportGauge}/${barrageCost}` : null);
+  const barragePhaseLabel = hud.crawlerPhase === "cooldown" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%`
+    : hud.crawlerPhase === "deploying" ? "射撃準備中"
+    : hud.crawlerPhase === "firing" ? "射撃中"
+    : hud.crawlerPhase === "recovering" ? "射撃終了" : null;
+  const crawlerBlockReason = commonBattleActionBlockReason ?? barragePhaseLabel
+    ?? (hud.supportGauge < barrageCost ? `支援ゲージ不足 ${hud.supportGauge}/${barrageCost}` : null);
+  const barrageStatus = commonBattleActionBlockReason ?? barragePhaseLabel
+    ?? (hud.supportGauge < barrageCost ? `支援 ${hud.supportGauge}/${barrageCost}` : `支援 ${barrageCost}`);
   const selectedSupplyCompactDetail = (!selectedSupplyDefinition ? "出撃装備で選択" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
@@ -26213,15 +26219,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (externalSessionActive ? v100StoryPortraitPath(combatKindToCampaignUnitId(card.kind)) : null)
                   ?? (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
+                const slotsFull = externalSessionActive && hud.summonedCount + hud.deployQueue >= V100_FORMATION_MAX_SLOTS;
+                const queueFull = hud.deployQueue >= 3;
                 const cardBlockReason = commonBattleActionBlockReason
-                  ?? ((externalSessionActive && hud.summonedCount + hud.deployQueue >= V100_FORMATION_MAX_SLOTS) || hud.deployQueue >= 3
-                    ? "同時出撃の上限"
+                  ?? (slotsFull ? "同時出撃の上限" : queueFull ? "出撃待ちの上限"
                     : cooldown > 0
                       ? `再準備 ${cooldown}秒`
                       : hud.energy < card.cost
                         ? "指揮不足"
                         : null);
-                 const cardState = commonBattleActionBlockReason ? "blocked" : cardBlockReason === "同時出撃の上限" ? "full" : cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : "blocked") : "ready";
+                 const cardState = commonBattleActionBlockReason ? "blocked" : slotsFull || queueFull ? "full" : cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : "blocked") : "ready";
                  const missingCommandPoints = Math.max(0, Math.ceil(card.cost - hud.energy));
                  const commandWaitSeconds = Math.ceil(commandDeploymentWait({ command: hud.energy, cost: card.cost, cooldown, baseRate: hud.commandBaseRate, recovery: hud.commandRecovery }));
                  const deploymentWaitCopy = `出撃まで約${commandWaitSeconds}秒`;
@@ -26230,7 +26237,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  const cardReadinessLabel = cardState === "ready" ? hasDeployed ? "再出撃可" : "出撃可" : "出撃不可";
                  const cardReadinessDetail = cardState === "cooldown" ? `あと約${commandWaitSeconds}秒`
                    : cardState === "insufficient" ? `指揮 あと${missingCommandPoints}`
-                     : cardState === "full" ? "出撃枠待ち" : cardBlockCopy;
+                     : cardState === "full" ? (slotsFull ? `出撃枠 ${V100_FORMATION_MAX_SLOTS}/${V100_FORMATION_MAX_SLOTS}` : "出撃待ち 3/3") : cardBlockCopy;
                  const cardAccessibleDetail = externalSessionActive && (cardState === "cooldown" || cardState === "insufficient")
                    ? `${deploymentWaitCopy}${missingCommandPoints > 0 ? ` / 指揮があと${missingCommandPoints}必要` : ""}`
                    : cardBlockCopy;
@@ -26289,8 +26296,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-cooldown={Math.ceil(airstrikeCooldown)} data-state={airstrikeCooldown > 0 ? "cooldown" : hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={Boolean(airstrikeBlockReason)} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${airstrikeCost}支援ゲージ`}>
                  <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>{externalSessionActive ? <span className="v100-support-status">{airstrikeCooldown > 0 ? `再使用 ${Math.ceil(airstrikeCooldown)}秒` : hud.airstrikePhase !== "idle" ? "飛来・着弾" : `支援 ${airstrikeCost}`}</span> : <><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></>}</small><em>必要 {airstrikeCost}</em>
                </button>
-              <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={Boolean(crawlerBlockReason)} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? vehicleBarrageControlLabel : `${vehicleBarrageControlLabel} 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                 <span className="support-key">G</span><b>{externalSessionActive ? basePresentation.barrageLabel : hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{externalSessionActive ? <span className="v100-support-status">{hud.crawlerPhase !== "ready" ? `装填 ${Math.round(hud.crawlerCharge*100)}%` : `支援 ${barrageCost}`}</span> : <><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></>}</small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : basePresentation.onFoot ? "援護" : "車両"}</em>
+              <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={Boolean(crawlerBlockReason)} onClick={triggerCrawlerBarrage} aria-label={crawlerBlockReason ? `${vehicleBarrageControlLabel} ${crawlerBlockReason}` : vehicleBarrageControlLabel}>
+                 <span className="support-key">G</span><b>{externalSessionActive ? basePresentation.barrageLabel : hud.crawlerPhase === "ready" ? "車両一斉砲撃" : barragePhaseLabel}</b><small>{externalSessionActive ? <span className="v100-support-status">{barrageStatus}</span> : <><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></>}</small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : basePresentation.onFoot ? "援護" : "車両"}</em>
                </button>
             </div>
             <div className="battle-objective objective">
