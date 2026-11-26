@@ -23,7 +23,7 @@ test('R9 round-trips all 1098 narrative source lines exactly once and in order',
  const source=await readFile(sourcePath),lines=source.toString('utf8').split(/\r?\n/u);
  // Pin the production text, including the rescue dialogue and post-battle transitions.
  // Keep an exact source pin and the full text/order round-trip below.
- assert.equal(createHash('sha256').update(source).digest('hex'),'449fe007cf2e079ef39380049e465ef359cc1c153e9d3b66ac9c4d7f942ef744');
+ assert.equal(createHash('sha256').update(source).digest('hex'),'7650067fbcc6bee8254fcae563ab31f5cfb11deb1e03d9826b1a3fc2ce107bf8');
  assert.equal(V100_STORY_SOURCE_SHA256,createHash('sha256').update(source).digest('hex'));
  const current=nodes.filter(node=>node.sourceDocument==='STORY_SCRIPT_V100_PRODUCER_R9.md');
  assert.equal(current.length,1097);
@@ -78,6 +78,14 @@ test('TKY introduces Hachishiki with the pink blade used by the unit card',()=>{
  assert.match(blade.text,/ピンク/u);
  assert.ok(entrance.some(node=>node.speaker==='TKY'&&node.text.includes('ビームソード八式')));
  assert.match(UNIT_CONTENT_BY_ID.tky.desc,/ピンクの光刃/u);
+});
+
+test('the diagram accompanies the couplers and the ledger appears when Ikura finds the family',()=>{
+ const insertAt=line=>nodes.find(node=>node.sourceLine===line).insertId??null;
+ assert.deepEqual([1132,1134,1136,1138,1140,1150].map(insertAt),
+  [null,null,'train-couplers','train-couplers',null,null]);
+ assert.deepEqual([1519,1523,1527,1529,1533].map(insertAt),
+  [null,'family-ledger','family-ledger',null,null]);
 });
 
 test('each historical R9 scene remains on its source action through explicit versioned model revisions',async()=>{
