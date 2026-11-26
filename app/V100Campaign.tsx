@@ -1405,7 +1405,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
               <CrewPortrait unitId={activeUnit.id} label={activeUnit.displayName} />
               <div aria-label={activeUnit.displayName + "の役割・手動アビリティ"}>
                 <h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3>
-                <strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={index + "-" + part}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong>
+                <strong className="v100-briefing-role-description">{activePresentation.description}</strong>
                 {activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}
               </div>
             </div> : <div className="v100-briefing-empty"><strong>仲間を選んで配置</strong><span>空き枠をタップ</span></div>}
@@ -1459,7 +1459,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
         </div>
       </div>
       <div className="v100-formation-workspace">
-        <div className="v100-roster-heading"><h3>{activeSlot + 1}枠目に入れる仲間</h3><span>手動アビリティと必要指揮で選ぶ</span><button type="button" className="v100-picker-close" onClick={() => setPickerOpen(false)}>編成に戻る</button></div>
+        <div className="v100-roster-heading"><h3>{activeSlot + 1}枠目に入れる仲間</h3><button type="button" className="v100-picker-close" onClick={() => setPickerOpen(false)}>編成に戻る</button></div>
         <div className="v100-formation-columns"><div className="v100-roster-grid">{ownedUnits.map((unit) => {
           const art = formationCardForUnit(unit.id);
           const info = v100UnitPresentation(save, unit.id);
@@ -1598,8 +1598,8 @@ function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, o
     {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
     <div className="v100-data-scroll" tabIndex={0} aria-label={sections.find(section => section.id === view)?.label}>
       <section className="v100-data-panel" hidden={view !== "save"} aria-label="進行の保存">
-        <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>クリア済みステージ</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
-        <p>この端末のブラウザにセーブしている。別の場所にも残すなら「セーブを書き出す」を押そう。</p>
+        <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>クリア済みステージ</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保存済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
+        <p>セーブ先はこの端末のブラウザです。書き出したファイルから進行を復元できます。</p>
         <button type="button" onClick={() => void onNewGameBackup()}>「初めから」の直前のセーブを書き出す</button>
       </section>
       <section className="v100-data-panel" hidden={view !== "offline"} aria-label="オフライン用データ"><div data-v100-pwa-storage /></section>
