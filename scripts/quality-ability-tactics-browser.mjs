@@ -47,11 +47,22 @@ try{for(const [index,kinds] of (before?groups.slice(0,1):groups).entries()){
   const actor=page.locator('[data-tactics-owner="'+ownerId+'"]');await actor.scrollIntoViewIfNeeded();row.afterUse=await actor.innerText();assert.match(row.afterUse,/あと\d+秒|発動中/);assert.ok(!row.afterUse.includes('再開後に使える'));
   await page.screenshot({path:out+'/'+index+'-after-use.png'});
   if(index===0){
-   await page.getByRole('button',{name:'戦闘を再開',exact:true}).click();await page.locator('.support-btn.airstrike').click();
+   await page.getByRole('button',{name:'戦闘を再開',exact:true}).click();
+   const skillButton = page.locator('.manual-ability-ready.available[data-ability-kind="scout"]');
+   await skillButton.waitFor({state:'visible'});
+   const skillCenter = await skillButton.evaluate(button => {
+     const rect = button.getBoundingClientRect();
+     return {x:rect.left + rect.width / 2, y:rect.top + rect.height / 2};
+   });
+   await page.locator('.support-btn.airstrike').click();
+   await page.locator('canvas.targeting').waitFor();
+   assert.equal(await page.evaluate(({x,y}) => document.elementFromPoint(x,y)?.matches('canvas.battlefield'), skillCenter), true,
+     'Aiming must accept the touch where the skill button was');
    await page.getByRole('button',{name:'一時停止',exact:true}).click();await page.locator('.manual-tactics > summary').click();
    const scout=page.locator('[data-tactics-kind="scout"]');await scout.scrollIntoViewIfNeeded();row.supportSelected=await scout.innerText();assert.ok(row.supportSelected.includes('先に支援の狙いを取り消す'));assert.equal(await page.locator('.manual-tactics .ready').count(),0);
    await page.screenshot({path:out+'/support-selected.png'});
    await page.getByRole('button',{name:'戦闘を再開',exact:true}).click();await page.locator('.support-btn.airstrike').click();
+   await skillButton.waitFor({state:'visible'});
    await page.getByRole('button',{name:'一時停止',exact:true}).click();await page.locator('.manual-tactics > summary').click();
    await scout.scrollIntoViewIfNeeded();row.supportCancelled=await scout.innerText();assert.ok(row.supportCancelled.includes('再開後に使える'));await page.screenshot({path:out+'/support-cancelled.png'});
   }
