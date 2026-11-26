@@ -86,6 +86,10 @@ test("Knife death gap and cord hole use original RGB while eight nondeath cells 
   const previous=JSON.parse(old(metadata)),current=JSON.parse(await disk(metadata));
   assert.deepEqual(current.frames,previous.frames);assert.equal(current.commonScale,previous.commonScale);
   assert.equal(current.groundAnchorPixels,previous.groundAnchorPixels);
+  const scratch = await fs.realpath(destination);
+  assert.equal(path.dirname(scratch), await fs.realpath(path.join(root, "output")));
+  assert.match(path.basename(scratch), /^ground-knife-test-[a-zA-Z0-9]{6}$/);
+  await fs.rm(scratch, { recursive: true });
 });
 
 test("the published source-bound repairs retain their exact historical delta and current matte bindings",async()=>{
