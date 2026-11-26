@@ -526,6 +526,23 @@ for (const engine of engines) {
         const fixture = normalizeV100Save({ ...(won ? pending.save : { ...early, lastResult: value }), flowState: { phase: 'result', eventId: null, stageId, stageNumber: 3, destination: 'result', nodeIndex: 0, firstClear: won, finalized: false } });
         await runCase(browser, engine, viewport, 'result-' + (won ? 'win' : 'lose'), fixture, async (page, row, reload) => {
           await page.locator('.v100-result-panel').waitFor();
+          if (viewport.width === 844 && viewport.height === 340) {
+            await page.setViewportSize({ width: 568, height: 320 });
+            const footer = page.locator('.v100-result-footer');
+            for (const action of await footer.locator('summary, .v100-result-actions button').all()) {
+              await within(action, 44);
+            }
+            const report = footer.locator('.v100-battle-report');
+            await report.locator('summary').tap();
+            const sheet = report.locator(':scope > div');
+            await within(sheet);
+            await within(sheet.locator('thead'));
+            await sheet.evaluate(el => { el.scrollTop = el.scrollHeight; });
+            await within(sheet.locator('tbody tr').last());
+            await sheet.evaluate(el => { el.scrollTop = 0; });
+            await report.locator('summary').tap();
+            await page.setViewportSize(viewport);
+          }
           row.initialResultReadout = await page.locator('.v100-result-scroll').evaluate((scroll, won) => {
             const paper = scroll.getBoundingClientRect();
             const headline = won
