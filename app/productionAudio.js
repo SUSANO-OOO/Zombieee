@@ -825,7 +825,12 @@ for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets,
     installAudioBySource.set(key, Object.freeze({ ...asset, id: `install-${pathId}` }));
   }
 }
-export const INSTALL_AUDIO_ASSETS = Object.freeze([...installAudioBySource.values()]);
+// Existing installations keep the same inventory order when Nao's three
+// individual files are added after the previous download set.
+export const INSTALL_AUDIO_ASSETS = Object.freeze([
+  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),
+  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),
+]);
 
 export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
   TITLE: "title",

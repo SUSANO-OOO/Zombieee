@@ -1425,6 +1425,10 @@
     [
       "\nexport function humanVoiceCueForUnit(kind, event) {\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n  if (contractCue) return contractCue;\n",
       "\nexport function humanVoiceCueForUnit(kind, event) {\n  if (kind === \"medic\" && (event === \"hurt\" || event === \"death\")) return \"voice-nao-\" + event;\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n  if (contractCue) return contractCue;\n"
+    ],
+    [
+      "  }\n}\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([...installAudioBySource.values()]);\n\nexport const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({\n",
+      "  }\n}\n// Existing installations keep the same inventory order when Nao's three\n// individual files are added after the previous download set.\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([\n  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n]);\n\nexport const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({\n"
     ]
   ]
 }
