@@ -20,7 +20,7 @@ const sourceHashes=async()=>Object.fromEntries(await Promise.all(sources.map(asy
 const report={engine,scope:'Prepared phone UI saves, native inputs and durable purchase/equip/vehicle transactions. Includes blocked/locked/cap states. No earned progression, subjective audio or physical-phone acceptance.',build:await productionBuildIdentity(),sourceHashes:await sourceHashes(),cases:[],errors:[]};
 await writeFile(path.join(out,'harness.mjs'),await readFile(new URL(import.meta.url)));
 const noticeOnly=process.env.QUALITY_SUPPLY_TITLE_NOTICE_ONLY==='1';
-report.selection=noticeOnly?'registration-failure notice layout only':'support transactions, title entry and notice layout';
+report.selection=noticeOnly?'title access after registration failure':'support transactions and title access';
 const settings={bgmEnabled:false,sfxEnabled:true,reducedMotion:true};
 const funded=normalizeV100Save({...createDefaultV100Save({settings}),caps:2000,campaignStarted:true,
   supportPurchaseUnlockedIds:V100_SUPPORTS.map(s=>s.id),ownedSupportIds:[],equippedSupportId:null,
@@ -70,8 +70,12 @@ async function run(id,viewport,seed,work,{registrationFailure=false}={}){
     await silenceBrowserOutput(page);
     await page.goto(base.href,{waitUntil:'domcontentloaded'});
     if(registrationFailure){
-      await page.getByRole('heading',{name:'スマホに保存する準備ができませんでした',exact:true}).waitFor();
-      await page.getByRole('button',{name:'保存せずに試す',exact:true}).click();await page.locator('.pwa-notice').waitFor();
+      const gate=page.getByRole('dialog',{name:'ゲームデータの準備',exact:true});
+      await gate.getByRole('heading',{name:'スマホに保存する準備ができませんでした',exact:true}).waitFor();
+      const choice=gate.getByRole('button',{name:'保存せずに試す',exact:true});
+      await choice.scrollIntoViewIfNeeded();
+      row.onlineChoice=await bounds(choice,44);
+      await shot(page,id,'warning');await choice.tap();
     }else await dismissInstallOffer(page,{timeout:25000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
     await finishV100TitleIntro(page);row.title=await titleGeometry(page);await shot(page,id,'title');
     await work(page,row);row.status='passed';
@@ -126,19 +130,19 @@ try{
   for(const viewport of [{width:844,height:340},{width:740,height:360}]){
     await run(viewport.width+'x'+viewport.height+'-notice',viewport,funded,async(page,row)=>{
       await page.evaluate(()=>document.fonts.ready);
-      const notice=page.locator('.pwa-notice');await notice.waitFor();row.notice=await bounds(notice);
-      row.warning=await notice.innerText();assert.match(row.warning,/オフライン用の設定に失敗しました/u);
+      const repeatedWarning=page.locator('.pwa-notice').filter({hasText:'オフライン用の設定に失敗しました'});
+      assert.equal(await repeatedWarning.count(),0);
       const overlap=(a,b)=>Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>.5&&Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)>.5;
-      for(const button of await page.locator('.v100-start-screen button:visible').all())assert.equal(overlap(await bounds(button,44),row.notice),false,'Notice must not cover a title control');
-      const heading=page.locator('.v100-start-heading h1');row.heading=await bounds(heading);assert.equal(overlap(row.heading,row.notice),false,'Notice must not cover the wordmark');
+      const heading=page.locator('.v100-start-heading h1');row.heading=await bounds(heading);
       assert.equal(await heading.evaluate(n=>n.scrollWidth<=n.clientWidth+1&&n.scrollHeight<=n.clientHeight+1),true,'Wordmark must fit');
       const titleMenu=await page.locator('.v100-start-menu').boundingBox();assert.equal(overlap(row.heading,titleMenu),false,'Wordmark must not enter the menu');
       row.glyphs=await heading.evaluate(n=>{const range=document.createRange();range.selectNodeContents(n);const r=range.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};});
-      assert.equal(overlap(row.glyphs,titleMenu),false);assert.equal(overlap(row.glyphs,row.notice),false);
-      const close=notice.getByRole('button',{name:'閉じる',exact:true});await bounds(close,44);assert.equal(await close.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true);
-      const beforeDismiss=await page.evaluate(key=>localStorage.getItem(key),V100_PRIMARY_STORAGE_KEY);
-      await shot(page,row.id,'warning');await close.click();await notice.waitFor({state:'hidden'});row.afterDismiss=await titleGeometry(page);
-      assert.equal(await page.evaluate(key=>localStorage.getItem(key),V100_PRIMARY_STORAGE_KEY),beforeDismiss,'Closing an install notice must not change the save');await shot(page,row.id,'dismissed');
+      assert.equal(overlap(row.glyphs,titleMenu),false);
+      const before=await save(page);
+      await page.getByRole('button',{name:'クレジット',exact:true}).tap();
+      const credits=page.getByRole('dialog',{name:'権利・クレジット',exact:true});await credits.waitFor();
+      await credits.getByRole('button',{name:'閉じる',exact:true}).tap();await credits.waitFor({state:'hidden'});
+      assert.equal(await repeatedWarning.count(),0);assert.deepEqual(await save(page),before);
     },{registrationFailure:true});
   }
   assert.deepEqual(report.errors,[]);report.afterBuild=await productionBuildIdentity();assert.equal(report.afterBuild.combinedSha256,report.build.combinedSha256);assert.deepEqual(await sourceHashes(),report.sourceHashes);report.status='passed';
