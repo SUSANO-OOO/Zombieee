@@ -661,7 +661,7 @@ export function V100Campaign() {
       image.decoding = "async";
       image.fetchPriority = "low";
       image.src = art;
-      void image.decode().catch(() => {});
+      if (typeof image.decode === "function") void image.decode().catch(() => {});
     }
   }, [upcomingParty]);
   const modeScoreResult = surface !== "modes" ? null : save.survival.view === "result"
