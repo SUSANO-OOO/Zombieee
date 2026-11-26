@@ -1734,7 +1734,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
       {won && <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span><b>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</b><small className="v100-result-pending-reward">受取予定 +{rewardCaps + bonusStar2 + bonusStar3} CAPS</small></span></div>}
       <dl className="v100-result-records" id={resultDetailsId} ref={resultDetailsRef} tabIndex={-1}>
         <div><dt>{escortResult && basePresentation.label === "装甲車両" ? "装甲車の耐久" : basePresentation.healthLabel}</dt><dd>{hasVehicleIntegrity ? `${vehicleHp} / ${maxHp}（${Math.floor(hpPercent)}%）` : "記録なし"}</dd></div>
-        {objectiveDetail && <div><dt>作戦目標</dt><dd>{objectiveDetail}</dd></div>}
+        <div><dt>作戦目標</dt><dd>{objectiveDetail ?? (resultStage ? v100MissionObjectiveFor(resultStage.id) : "記録なし")}</dd></div>
       </dl>
       {!won && <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
           <strong>{escortResult?.progress ?? defenseResult?.progress ?? deviceResult?.progress ?? (boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし")}</strong>
