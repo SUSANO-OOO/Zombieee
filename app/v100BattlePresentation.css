@@ -143,6 +143,20 @@
  }
  .v100-shell .game-frame .battle-banner { padding: 2px 4px; line-height: 1.25; }
  .v100-shell .game-frame .barrier-health { top: calc(86px + var(--app-viewport-safe-top)); }
+
+ /* Keep the battlefield visible when the boss health bar replaces the radio text. */
+ .v100-shell .game-frame[data-battle-hud-layout="mobile"] .top-hud:has(.v100-boss-center) {
+  height: var(--battle-hud-top-height);
+  min-height: var(--battle-hud-top-height);
+  grid-template-columns: var(--battle-hud-top-columns);
+  grid-template-rows: minmax(0, 1fr);
+ }
+ .v100-shell .game-frame[data-battle-hud-layout="mobile"] .top-hud:has(.v100-boss-center) > .battle-message-stack {
+  grid-column: 2; grid-row: 1; height: auto; align-self: center;
+ }
+ .v100-shell .game-frame[data-battle-hud-layout="mobile"] .top-hud:has(.v100-boss-center) > .battle-controls-zone {
+  grid-column: 3;
+ }
 }
 
 /* Paused tactical inspection stays outside the live battlefield and its hit boxes. */
