@@ -2,8 +2,8 @@ import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
 import {V100_BOSS_ATTACK_ART} from './v100BossAttackArt.js';
 import {BOSS_ANOMALY_TUNING} from './bossAnomalies.js';
 
-// Simulation ticks clone fighters. The stable battle, generation and fighter
-// id own the visual choice, so a late decode cannot replace a running effect.
+// Simulation ticks clone fighters. Keep the art stable for this strike and
+// sample the available sheets again when the boss activates its next attack.
 const releaseChoices=new WeakMap();
 export function bossAttackReleaseSource(objects,kind,world,ownerId){
  const fallback={art:null,image:objects?.['v100-ground-impact']};
@@ -11,16 +11,18 @@ export function bossAttackReleaseSource(objects,kind,world,ownerId){
  const rawGeneration=world.battlePresentation?.generation,generation=Number.isFinite(rawGeneration)?rawGeneration:0;
  let state=releaseChoices.get(world);
  if(!state||state.generation!==generation){state={generation,choices:new Map()};releaseChoices.set(world,state);}
- const liveIds=new Set(world.fighters.filter(f=>f.hp>0).map(f=>f.id));
- for(const [key,choice]of state.choices)if(!liveIds.has(choice.ownerId))state.choices.delete(key);
- if(!liveIds.has(ownerId))return fallback;
+ const liveFighters=new Map(world.fighters.filter(f=>f.hp>0).map(f=>[f.id,f]));
+ for(const [key,choice]of state.choices)if(!liveFighters.has(choice.ownerId))state.choices.delete(key);
+ const owner=liveFighters.get(ownerId);
+ if(!owner)return fallback;
  const key=JSON.stringify([ownerId,kind]);
- if(!state.choices.has(key)){
+ const choice=state.choices.get(key);
+ if(!choice||choice.attackSequence!==owner.attackSequence){
   const art=V100_BOSS_ATTACK_ART[kind],image=art&&objects?.[art.id];
   const valid=art&&image?.complete&&Number.isFinite(image.naturalWidth)&&Number.isFinite(image.naturalHeight)
    &&image.naturalWidth>0&&image.naturalHeight>0&&image.naturalWidth%art.columns===0
    &&image.naturalHeight%art.rows===0&&image.naturalWidth/art.columns===image.naturalHeight/art.rows;
-  state.choices.set(key,{ownerId,source:valid?{art,image}:fallback});
+  state.choices.set(key,{ownerId,attackSequence:owner.attackSequence,source:valid?{art,image}:fallback});
  }
  return state.choices.get(key).source;
 }
