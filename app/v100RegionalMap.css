@@ -304,6 +304,7 @@
 #v100-campaign .v100-star-criteria > span,
 #v100-campaign .v100-result-threshold-labels > span { display: flex; align-items: center; gap: 5px; }
 #v100-campaign .v100-result-panel.win { animation: v100-result-earned 460ms cubic-bezier(.2,.8,.2,1) both; }
+#v100-campaign[data-v100-phase="result"][aria-busy="true"] [data-v100-notice-kind="save-unverified"] { display: none; }
 #v100-campaign .v100-result-highlight .v100-stage-stars { gap: 5px; }
 #v100-campaign .v100-result-highlight .v100-stage-stars svg { width: 36px; height: 36px; }
 #v100-campaign .v100-result-highlight .v100-stage-stars svg.pending path { fill: #26362f; }
