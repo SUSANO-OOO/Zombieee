@@ -45,3 +45,13 @@ test('destroyed player base and reached destination do not imply a destroyed mis
  const text=v100EscortResultText({...result(id,v100BattleReportFor(input)),vehicleHp:0});
  assert.equal(text.outcome,null);assert.equal('advice' in text,false);assert.equal(text.progress,'証拠搬送車は対岸に到着');
 });
+
+test('a destroyed escort that reached the destination explains the loss after arrival',()=>{
+ for(const [id,vehicle] of Object.entries(V100_MISSION_VEHICLES)){
+  const input=raw(id);
+  input.missionRuntime={progress:1,integrity:0,maxIntegrity:500,failed:true,completed:false};
+  const text=v100EscortResultText(result(id,v100BattleReportFor(input)));
+  assert.equal(text.outcome,`${vehicle.destinationLabel ?? '出口'}に着いたあと、${vehicle.targetLabel}が破壊された。`);
+  assert.equal(text.progress,vehicle.count===3?'冷蔵車3台が封鎖地点に到着':'護送距離 100%');
+ }
+});

@@ -5,7 +5,7 @@ import { v100MissionBriefingFor } from "../app/v100MissionBriefing.js";
 import { objectiveForBattle, battleOutcomeFor } from "../app/battleDefinitions.js";
 import { createStationMissionRuntime } from "../app/stationStageMechanics.js";
 import { advanceEstuaryFloodgate, beginEstuaryFloodgateClosure, drawEstuaryFloodgate,
-  floodgateClosureProgress, floodgateIngressDisposition, FLOODGATE_CLOSE_SECONDS,
+  floodgateClosureProgress, floodgateIngressDisposition, floodgateReadout, FLOODGATE_CLOSE_SECONDS,
   hasEstuaryFloodgate, V100_FLOODGATE_STAGE } from "../app/v100EstuaryFloodgate.js";
 
 const definition = v100BattleDefinitionFor(V100_FLOODGATE_STAGE);
@@ -20,6 +20,8 @@ test("campaign Stage 20 ends at the floodgate, with the real Gairen defeat and r
   assert.equal(definition.bossEnemyKind, "gairen");
   assert.equal(v100MissionBriefingFor(definition.stageId).target, "防潮門");
   const locked = initial();
+  assert.equal(floodgateReadout(locked, false).label, "開放中");
+  assert.equal(floodgateReadout(locked, true).label, "閉鎖可");
   assert.equal(beginEstuaryFloodgateClosure(locked, false), locked);
   assert.strictEqual(advanceEstuaryFloodgate(locked, 20, false), locked);
   assert.match(objectiveForBattle(definition, { stageMission: locked, bossDefeated: true }), /閉鎖盤/);

@@ -82,11 +82,11 @@ test("attack and healing credit use actual roster measurements and preserve join
   const merits = v100BattleMeritsFor(value);
   assert.deepEqual(merits.map(m => m.id), ["damage", "healing"]);
   assert.deepEqual(merits[0].unitIds, [a, b]);
-  assert.equal(merits[0].detail, "100 ダメージずつ");
+  assert.equal(merits[0].detail, "各100ダメージ");
   assert.deepEqual(merits[1].unitIds, [b, c]);
-  assert.equal(merits[1].detail, "44 HP回復ずつ（自分への回復も含む）");
+  assert.equal(merits[1].detail, "各44HP（自己回復を含む）");
   const many = v100BattleMeritsFor(current({ battleReport: report([row(a, 25), row(b, 25), row(c, 25)]) }));
-  assert.equal(many[0].title, "攻撃を支えた 3人");
+  assert.equal(many[0].title, "与ダメージ同率1位　3人");
   assert.deepEqual(many[0].unitIds, [a, b, c]);
 });
 

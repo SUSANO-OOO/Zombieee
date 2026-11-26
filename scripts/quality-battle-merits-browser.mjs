@@ -46,14 +46,14 @@ function prepared({ stage = 1, deaths = 2, time = 70, previous = {}, missing = f
   return normalizeV100Save(save);
 }
 const scenarios = [
-  { id: "earned-s01", seed: () => structuredClone(fixture.save), expected: ["damage", "healing"], labels: ["攻撃を支えた ババヤガ", "回復で支えた クマバーソン"], amounts: ["2,226 ダメージ", "46 HP回復（自分への回復も含む）"], allSizes: true, video: true, collect: true, earned: true },
+  { id: "earned-s01", seed: () => structuredClone(fixture.save), expected: ["damage", "healing"], labels: ["与ダメージ1位　ババヤガ", "回復量1位　クマバーソン"], amounts: ["2,226ダメージ", "46HP（自己回復を含む）"], allSizes: true, video: true, collect: true, earned: true },
   { id: "one-star-no-down", seed: () => prepared({ deaths: 0 }), expected: ["no-down", "faster-clear", "damage", "healing"], labels: ["戦闘不能なし", "前回より速く突破"], allSizes: true, video: true },
   { id: "fewer-downs", seed: () => prepared(), expected: ["fewer-downs", "faster-clear", "damage", "healing"], labels: ["戦闘不能を減らした", "前回4回 → 今回2回"] },
   { id: "slower-clear", seed: () => prepared({ time: 120 }), expected: ["fewer-downs", "damage", "healing"] },
   { id: "previous-other-stage", seed: () => prepared({ previous: { stageId: V100_STAGE_IDS[1] } }), expected: ["damage", "healing"] },
   { id: "missing-legacy-metrics", seed: () => prepared({ missing: true }), expected: [] },
   { id: "defeat-no-merits", seed: () => prepared({ won: false, deaths: 0 }), expected: [] },
-  { id: "joint-contributors", seed: () => prepared({ previous: null, ties: true }), expected: ["damage", "healing"], labels: ["攻撃を支えた 3人", "回復で支えた 3人"] },
+  { id: "joint-contributors", seed: () => prepared({ previous: null, ties: true }), expected: ["damage", "healing"], labels: ["与ダメージ同率1位　3人", "回復量同率1位　3人"] },
   { id: "s22-objective", seed: () => prepared({ stage: 22, previous: null, deaths: 0 }), expected: ["no-down", "damage", "healing"], labels: ["戦闘不能なし", "収容室43室の開放完了"] },
   { id: "s30-no-repeat-comparison", seed: () => prepared({ stage: 30, deaths: 0, previous: { stageId: V100_STAGE_IDS[28] } }), expected: ["no-down", "damage", "healing"] },
 ].filter(s => !baseline || s.earned);

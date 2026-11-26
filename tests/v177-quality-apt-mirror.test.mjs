@@ -6,17 +6,18 @@ import {assertQualityMirrorHost,qualityMirrorText} from '../scripts/v177-quality
 
 const azure='http://azure.archive.ubuntu.com/ubuntu/';
 const archive='https://archive.ubuntu.com/ubuntu/';
-const ec2East='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/';
+const ec2East1='http://us-east-1.ec2.archive.ubuntu.com/ubuntu/';
+const ec2East2='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/';
 const ec2West='http://us-west-2.ec2.archive.ubuntu.com/ubuntu/';
 const fixture='# runner mirror priorities\n# '+azure+'\n'+azure+'\tpriority:1\n'+archive+'\tpriority:2\nhttps://security.ubuntu.com/ubuntu/\tpriority:3\n';
 test('only an observed Ubuntu runner first URI changes; priorities, comments, security and line endings stay exact',()=>{
-  for(const uri of [azure,ec2East,ec2West]) for(const before of [fixture.replace(azure+'\tpriority:1',uri+'\tpriority:1'),fixture.replace(azure+'\tpriority:1',uri+'\tpriority:1').replaceAll('\n','\r\n')]){
+  for(const uri of [azure,ec2East1,ec2East2,ec2West]) for(const before of [fixture.replace(azure+'\tpriority:1',uri+'\tpriority:1'),fixture.replace(azure+'\tpriority:1',uri+'\tpriority:1').replaceAll('\n','\r\n')]){
     const after=qualityMirrorText(before);assert.equal(after,before.replace(uri+'\tpriority:1',archive+'\tpriority:1'));
     assert.equal(qualityMirrorText(after),after,'already-selected official archive is idempotent');
   }
 });
 test('unknown mirror configurations fail before any privileged operation',()=>{
-  for(const bad of [fixture.replace(azure+'\tpriority:1','http://us-east-2.ec2.archive.ubuntu.com.invalid/ubuntu/\tpriority:1'),fixture.replace(azure+'\tpriority:1','http://us-east-1.ec2.archive.ubuntu.com/ubuntu/\tpriority:1'),fixture.replace(azure+'\tpriority:1','https://unknown.invalid/ubuntu/\tpriority:1'),fixture.replace('priority:1','priority:9'),
+  for(const bad of [fixture.replace(azure+'\tpriority:1','http://us-east-2.ec2.archive.ubuntu.com.invalid/ubuntu/\tpriority:1'),fixture.replace(azure+'\tpriority:1','http://us-west-1.ec2.archive.ubuntu.com/ubuntu/\tpriority:1'),fixture.replace(azure+'\tpriority:1','https://unknown.invalid/ubuntu/\tpriority:1'),fixture.replace('priority:1','priority:9'),
     fixture.replace('priority:2','priority:1'),fixture.replace('https://security.ubuntu.com/ubuntu/','http://other.invalid/'),
     fixture+'https://extra.invalid/\tpriority:4\n',fixture.split('\n').slice(0,-2).join('\n')])
     assert.throws(()=>qualityMirrorText(bad));

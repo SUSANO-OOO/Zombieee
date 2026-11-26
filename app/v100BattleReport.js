@@ -151,6 +151,10 @@ export function v100EscortResultText(result) {
     return { outcome: "遮断機が閉じ、搬送車が取り残された。",
       progress: "遮断機まで到達" };
   }
+  if (destroyed && escort.progress >= 1) {
+    return { outcome: `${vehicle.destinationLabel ?? "出口"}に着いたあと、${vehicle.targetLabel}が破壊された。`,
+      progress: vehicle.count === 3 ? "冷蔵車3台が封鎖地点に到着" : "護送距離 100%" };
+  }
   return {
     outcome: destroyed ? `${vehicle.targetLabel}が破壊された。` : null,
     progress: escort.progress >= 1 ? `${vehicle.targetLabel}は${vehicle.destinationLabel ?? "目的地"}に到着`
@@ -261,14 +265,15 @@ export function v100BattleMeritsFor(result, previousResult = null) {
       detail: `前回${Math.round(previous.elapsedSeconds)}秒 → 今回${Math.round(result.elapsedSeconds)}秒` });
   }
   const report = normalizeV100BattleReport(result.battleReport);
-  for (const [metric, id, title, suffix] of [["damage", "damage", "攻撃を支えた", "ダメージ"], ["healing", "healing", "回復で支えた", "HP回復"]]) {
+  for (const [metric, title, suffix] of [["damage", "与ダメージ", "ダメージ"], ["healing", "回復量", "HP"]]) {
     const rows = report?.units ?? [];
     const most = Math.max(0, ...rows.map(unit => unit[metric]));
     if (most < 1) continue;
     const leaders = rows.filter(unit => unit[metric] === most);
     const names = leaders.map(unit => V100_UNITS.find(candidate => candidate.id === unit.unitId).displayName);
-    merits.push({ id, title: `${title} ${names.length <= 2 ? names.join("・") : `${names.length}人`}`,
-      detail: `${Math.round(most).toLocaleString("ja-JP")} ${suffix}${names.length > 1 ? "ずつ" : ""}${metric === "healing" ? "（自分への回復も含む）" : ""}`,
+    const tied = names.length > 1;
+    merits.push({ id: metric, title: `${title}${tied ? "同率1位" : "1位"}　${names.length <= 2 ? names.join("・") : `${names.length}人`}`,
+      detail: `${tied ? "各" : ""}${Math.round(most).toLocaleString("ja-JP")}${suffix}${metric === "healing" ? "（自己回復を含む）" : ""}`,
       unitIds: leaders.map(unit => unit.unitId) });
   }
   return merits;
