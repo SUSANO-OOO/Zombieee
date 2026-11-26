@@ -1053,6 +1053,10 @@
     [
       "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: PWA_GUN_FINISH_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n",
       "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n"
+    ],
+    [
+      "配信データに接続できませんでした。通信環境を確認してください。",
+      "通信を確認して「再試行」を押してください。"
     ]
   ],
   "app/globals.css": [

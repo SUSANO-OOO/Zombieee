@@ -18,7 +18,7 @@ let failure;
 try {
   const shipped = await (await fetch(new URL("asset-manifest.json", base))).json();
   const expectedCapacityBytes = planInstall(shipped).pendingBytes;
-  const metadataCases = process.env.PWA_FIRST_INSTALL_CASE === "commit-only" ? [] : ["network", "html", "pending", "standalone-network"];
+  const metadataCases = process.env.PWA_FIRST_INSTALL_CASE === "commit-only" ? [] : ["network", "html", "pending", "standalone-network", "standalone-html"];
   for (const mode of metadataCases) {
     const context = await browser.newContext({
       viewport: { width: 844, height: 340 }, hasTouch: true, isMobile: true,
@@ -35,7 +35,7 @@ try {
           const url = new URL(typeof args[0] === "string" ? args[0] : args[0].url, location.href);
           if (url.pathname.endsWith("/asset-manifest.json")) {
             if (window.__pwaMetadataMode.endsWith("network")) return Promise.reject(new TypeError("simulated metadata network failure"));
-            if (window.__pwaMetadataMode === "html") return Promise.resolve(new Response("<html>Sign in</html>", { headers: { "content-type": "text/html" } }));
+            if (window.__pwaMetadataMode.endsWith("html")) return Promise.resolve(new Response("<html>Sign in</html>", { headers: { "content-type": "text/html" } }));
             if (window.__pwaMetadataMode === "pending") return new Promise(() => {});
           }
           return fetchOriginal(...args);
@@ -48,14 +48,14 @@ try {
       await page.goto(base, { waitUntil: "domcontentloaded", timeout: remaining() });
       const standalone = mode.startsWith("standalone");
       const retry = page.getByRole("button", { name: standalone ? "再試行" : "容量を再確認", exact: true });
-      if (standalone) await page.getByText("配信データに接続できませんでした。通信環境を確認してください。", { exact: true }).waitFor({ timeout: remaining() });
+      if (standalone) await page.getByRole("alert").filter({ hasText: "通信を確認して「再試行」を押してください。" }).waitFor({ timeout: remaining() });
       await retry.waitFor({ state: "visible", timeout: remaining() });
       assert.equal(await page.locator(".v100-shell").count(), 0, "first install must not silently enter browser play");
       assert.equal(await page.getByText("ダウンロードする容量を確認しています…", { exact: true }).count(), 0);
       const errorDetails = page.locator(".pwa-gate details").filter({ has: page.getByText("エラーの詳細", { exact: true }) });
       await errorDetails.locator("summary").click();
       const detail = await errorDetails.innerText();
-      assert.match(detail, mode === "html" ? /Webページ/ : mode === "pending" ? /10秒/ : /simulated metadata network failure/);
+      assert.match(detail, mode.endsWith("html") ? /Webページ/ : mode === "pending" ? /10秒/ : /simulated metadata network failure/);
       if (!standalone) {
         const steps = await page.locator(".pwa-install-steps li").allInnerTexts();
         assert.equal(steps.length, 3);
