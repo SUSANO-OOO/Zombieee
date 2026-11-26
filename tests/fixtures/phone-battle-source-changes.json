@@ -927,6 +927,18 @@
     [
       "      controller.abort();\n    };\n  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);\n\n  const retryAssets = useCallback(() => {\n",
       "      controller.abort();\n    };\n  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, departureCrewKind, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, incendiaryDrumEquipped, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);\n\n  const retryAssets = useCallback(() => {\n"
+    ],
+    [
+      "import { v100BossCounterplayHint, v100BossCounterplayTapObstacles, V100_BOSS_COUNTERPLAY_FALLBACK } from \"./v100BossCounterplay.js\";",
+      "import { v100BossWarningText, v100BossCounterplayTapObstacles } from \"./v100BossCounterplay.js\";"
+    ],
+    [
+      "function bossTelegraphDisplayLabel(telegraph: { bossId?: string; kind: string; displayName: string; counterplay: string }, compact: boolean, v100 = false, actionHint?: string) {\n  if (v100) return `${telegraph.displayName}！ ${actionHint ?? V100_BOSS_COUNTERPLAY_FALLBACK}`;",
+      "function bossTelegraphDisplayLabel(telegraph: { bossId?: string; kind: string; displayName: string; counterplay: string }, compact: boolean) {"
+    ],
+    [
+      "            const hint = v100BossCounterplayHint({ boss: fighter, telegraph, readyAbilities: readyAbilityFighters,\n              fighters: g.fighters, laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });\n            if (!hint) continue;\n            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, compactBattleViewport(), true, hint);",
+      "            bossTelegraphWarning = v100BossWarningText({ boss: fighter, telegraph, fighters: g.fighters,\n              laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });"
     ]
   ],
   "app/manualAbilities.js": [

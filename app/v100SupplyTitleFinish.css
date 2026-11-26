@@ -165,7 +165,6 @@ html[data-pwa-ui-materials="ready"] #v100-campaign { --v100-ui-materials: url('/
   background-image:linear-gradient(115deg,#e9dec5e6,#d3c3a6e0),var(--v100-ui-materials);
   background-size:100% 100%,300% 200%; background-position:center,100% 0;
 }
-#v100-campaign .v100-command-map .v100-map-detail-content > .v100-map-tactical-hint { margin:4px 0 9px; padding:6px 8px; border-left:3px solid #8d4d33; background:#b5b28a55; color:#28402d; font-size:13px; line-height:1.45; }
 #v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus {
   background-image:linear-gradient(100deg,#eadfc6e6,#f0e6cde0),var(--v100-ui-materials);
   background-size:100% 100%,300% 200%; background-position:center,100% 0;

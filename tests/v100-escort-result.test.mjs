@@ -43,5 +43,5 @@ test('destroyed player base and reached destination do not imply a destroyed mis
  const id='stage-coastal-link-bridge',input=raw(id);
  input.missionRuntime={progress:1,integrity:280,maxIntegrity:500,failed:true,completed:false};
  const text=v100EscortResultText({...result(id,v100BattleReportFor(input)),vehicleHp:0});
- assert.equal(text.outcome,null);assert.equal(text.advice,null);assert.equal(text.progress,'証拠搬送車は対岸に到着');
+ assert.equal(text.outcome,null);assert.equal('advice' in text,false);assert.equal(text.progress,'証拠搬送車は対岸に到着');
 });

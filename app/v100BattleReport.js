@@ -47,48 +47,48 @@ function normalizeArchiveExtraction(value) {
 export function v100DeviceResultText(result) {
   const archive = normalizeArchiveExtraction(result?.battleReport?.archiveExtraction);
   if (result?.won === false && archive && archive.stageId === result.stageId) {
-    const detail = !archive.stopped ? "味方を端末まで進め、遠隔消去を止める"
-      : archive.delivered < ARCHIVE_BOX_COUNT ? "紙台帳を運ぶ仲間を援護する" : "搬出後も車両を守る";
+    const detail = !archive.stopped ? "遠隔消去を止められなかった。"
+      : "遠隔消去は停止した。";
     return { progress: `紙台帳 ${archive.delivered}/${ARCHIVE_BOX_COUNT} 箱を搬出`, detail };
   }
   const bayEvacuation = normalizeBayEvacuation(result?.battleReport?.bayEvacuation);
   if (result?.won === false && bayEvacuation && bayEvacuation.stageId === result.stageId) {
     const count = bayEvacuation.evacuatedCount;
     return { progress: `避難者 ${count}/${V100_BAY_REFUGEE_COUNT} 人`,
-      detail: count === V100_BAY_REFUGEE_COUNT ? "避難路を守り、残る敵を倒す" : "回廊を塞ぐ敵を倒して、避難を進める" };
+      detail: count === V100_BAY_REFUGEE_COUNT ? "全員が非常口に到着した。" : `非常口に着いていない人があと${V100_BAY_REFUGEE_COUNT - count}人` };
   }
   const device = normalizeDeviceProgress(result?.battleReport?.deviceProgress);
   if (result?.won !== false || !device || device.stageId !== result.stageId) return null;
   if (device.stageId === V100_RAIL_EVACUATION_STAGE) {
-    if (device.evacuated) return { progress: "民間車両 退避完了", detail: "退避後はオオグチと残る敵を倒す" };
+    if (device.evacuated) return { progress: "民間車両 退避完了", detail: "連結器はすべて解除済み" };
     const count = device.powerActivated;
     return {
       progress: `連結器 ${count}/3 解除`,
-      detail: count === 3 ? "民間車両が離れるまで車両を守る" : "仲間を次の赤いレバーへ送り、周囲の敵を倒す",
+      detail: count === 3 ? "民間車両の退避前に戦闘終了" : "民間車両はまだ連結されたまま",
     };
   }
   if (device.stageId === V100_SUPPLY_VALVE_STAGE) {
     return device.powerActivated === 1
-      ? { progress: "供給管 復旧済み", detail: "待機室を守り、MOTHERを倒す" }
-      : { progress: "供給管 未復旧", detail: "供給弁まで仲間を送り、周囲の敵を倒す" };
+      ? { progress: "供給管 復旧済み", detail: "待機室への供給が再開した。" }
+      : { progress: "供給管 未復旧", detail: "" };
   }
   if (device.stageId === V100_CENTRAL_SEAL_STAGE) {
     const total = V100_CENTRAL_SEAL.powerCount;
     return { progress: `ゲート ${device.powerActivated}/${total} 閉鎖`,
-      detail: device.powerActivated === total ? "流入停止後、残る感染者を倒す"
-        : "次の閉鎖盤へ仲間を送り、周囲の敵を倒す" };
+      detail: device.powerActivated === total ? "地下道への流入は止まった。"
+        : `開いたままのゲートがあと${total - device.powerActivated}基` };
   }
   if (device.stageId === V100_RESCUE_CONTROL_STAGE) {
     const total = V100_RESCUE_CONTROL.powerCount;
     return { progress: `救難回線 ${device.powerActivated}/${total} 復旧`,
-      detail: device.powerActivated === total ? "回線を復旧したら、残る敵から制御区を守る"
-        : "仲間を次の制御盤へ送り、周囲の敵を倒す" };
+      detail: device.powerActivated === total ? "救難回線はすべて復旧した。"
+        : `未復旧の回線があと${total - device.powerActivated}か所` };
   }
   const profile = V100_NODE_PROFILES[device.stageId];
   const total = V100_STAGE_BY_ID[device.stageId].objectiveId.includes("four") ? 4 : 3;
   return {
     progress: `${profile.label} ${device.powerActivated}/${total}基を${profile.verb}`,
-    detail: device.powerActivated === total ? "装置の操作後も、敵の掃討と全員帰還が必要" : `残り${total - device.powerActivated}基の${profile.label}を${profile.verb}`,
+    detail: device.powerActivated === total ? "" : `残り${total - device.powerActivated}基`,
   };
 }
 
@@ -115,8 +115,8 @@ export function v100DefenseResultText(result) {
     if (result.won !== false) return null;
     const waiting = CLINICAL_RESCUE_COUNT - defense.rescuedCount;
     return { progress: `救出 ${defense.rescuedCount}/${CLINICAL_RESCUE_COUNT}人`,
-      detail: !defense.disposalStopped ? "制御盤で処分を止めよう"
-        : waiting > 0 ? `残る${waiting}人の救出路を守ろう` : "全員救出後も車両を守ろう" };
+      detail: !defense.disposalStopped ? "処分を止められなかった。"
+        : waiting > 0 ? `救出を待つ人があと${waiting}人` : "全員の救出が完了した。" };
   }
   if (result.won !== false) return null;
   const profile = V100_DEFENSE_OBJECTIVES[defense.stageId];
@@ -149,14 +149,12 @@ export function v100EscortResultText(result) {
   const destroyed = escort.failed && escort.integrity === 0;
   if (escort.gateTimedOut) {
     return { outcome: "遮断機が閉じ、搬送車が取り残された。",
-      progress: "遮断機まで到達", advice: "搬送車の周囲と前方に味方をそろえてから、遮断機を開けよう。" };
+      progress: "遮断機まで到達" };
   }
   return {
-    outcome: destroyed ? `${vehicle.targetLabel}が破壊された。${vehicle.count === 3 ? "確保" : "護送"}は失敗だ。` : null,
+    outcome: destroyed ? `${vehicle.targetLabel}が破壊された。` : null,
     progress: escort.progress >= 1 ? `${vehicle.targetLabel}は${vehicle.destinationLabel ?? "目的地"}に到着`
       : `${vehicle.count === 3 ? "冷蔵車列の確保" : "護送"} ${Math.floor(escort.progress * 100)}%まで到達`,
-    advice: destroyed ? vehicle.count === 3 ? "車列を守る味方に加え、攻撃役も早めに出して周囲の敵を倒そう。"
-      : `${vehicle.targetLabel}のそばに仲間を残し、近づく敵を射撃で倒そう。` : null,
   };
 }
 

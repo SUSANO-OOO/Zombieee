@@ -65,12 +65,13 @@ test("title recall cannot resume an automatic finale or an active side-mode batt
 test("map briefings describe the authored task rather than number words in objective IDs", () => {
   const expected = new Map([
     [2, "全員が戻るまで、救援車と区役所の玄関を守る"],
-    [3, "大型変異感染者TAKUYAを撃破"],
+    [3, "TAKUYAを撃破"],
     [5, "改札喰いを倒し、感染核を破壊"],
     [7, "患者と薬を病院に運び込むまで、搬入口を守る"],
     [14, "レバーを3つ引いて民間車両を逃がし、オオグチを倒す"],
     [16, "三基のゲートを閉じ、感染者の流入を止める"],
     [19, "証拠搬送車を護衛し、遮断機を開けて対岸へ"],
+    [25, "医療物資を守り、変異した社長を止める"],
     [26, "冷蔵車3台を封鎖地点に追い込んで確保する"],
     [28, "国内の散布装置4基を現地で1基ずつ止める"],
     [29, "国外起動回線を止め、続いて感染源原株を破壊"],

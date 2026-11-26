@@ -30,10 +30,9 @@ try {
       else {await page.getByRole('button',{name:'作戦と戦い方',exact:true}).click();details=page.getByRole('dialog',{name:'作戦と戦い方',exact:true});await details.getByRole('button',{name:'作戦',exact:true}).click();}
       const text=await details.innerText();
       if(before)assert.match(text,/射撃と回復/u);
-      else if(stage===1){assert.match(text,/鉄鍋仁王立ち/u);assert.match(text,/自分のHP/u);assert.doesNotMatch(text,/射撃と回復で/u);}
-      else assert.doesNotMatch(text,/回復支援で持ちこたえる|射撃と回復で/u);
+      else {assert.equal(await details.locator('.v100-briefing-advice').count(),0);assert.match(text,/敵の動き/u);}
       if(!before)assert.doesNotMatch(text,/逃がそう|後ろに射撃役を置いて/u);
-      const hint=details.locator('p').filter({hasText:/鉄鍋仁王立ち|大技の予告|クロメの照準|前衛が敵|前衛と射撃役|射撃と回復/u}).first();
+      const hint=before ? details.locator('p').filter({hasText:/射撃と回復/u}).first() : details.locator('.v100-briefing-plan section > strong').first();
       await hint.scrollIntoViewIfNeeded();
       const visibility=await hint.evaluate(el=>{
         const r=el.getBoundingClientRect(),panel=(el.closest('.v100-briefing-page')??el.closest('details').querySelector(':scope > div')).getBoundingClientRect();

@@ -21,8 +21,8 @@ export function v100MissionThreatsFor(stageId) {
   const pack = new Set(v100BattleDefinitionFor(stageId)?.timeline.flatMap(wave => wave.units) ?? []);
   const protectedSite = v100BasePresentationFor(stage.number).label;
   const purposes = {
-    charge: "突進してくる。敵が構えたら、前衛の防御技を使おう。",
-    contamination: "地面を汚染する。近づかれる前に射撃で倒そう。",
+    charge: "正面から突進してくる。",
+    contamination: "地面を汚染する。",
     backline: "後ろにいる仲間を狙う。",
     "crawler-priority": `${protectedSite}を狙う。`,
     ranged: "離れた場所から攻撃してくる。",

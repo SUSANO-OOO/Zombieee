@@ -195,7 +195,7 @@ try{
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__.getBossFoundationProof('kurome').lastCounterplay?.input==='battlefield-pointer');
     row.evadePointerEvents=await page.evaluate(at=>window.__BOSS_POINTER_EVENTS__.filter(e=>e.at>=at),evadeArmed.at);
     if(!before){
-     await page.waitForFunction(()=>document.querySelector('.v100-boss-telegraph-warning')?.textContent.includes('照準線を外れた')||window.__BOSS_HINT_PAINTS__.at(-1)?.text.includes('照準線を外れた'));
+     await page.waitForFunction(()=>document.querySelector('.v100-boss-telegraph-warning')?.textContent.includes('射線外')||window.__BOSS_HINT_PAINTS__.at(-1)?.text.includes('射線外'));
      await observe('evade-clear',evadeArmed.at);
     }
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__.getBossFoundationProof('kurome').stationPhase==='recovery');
@@ -209,8 +209,8 @@ try{
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.some(f=>f.kind==='kumaverson'&&f.hp>0&&f.combatReady&&!f.gateEntering));
     const owner=await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.kind==='kumaverson'&&f.hp>0&&f.combatReady));
     const defense=await arm(owner.id);
-    if(!before)await page.waitForFunction(()=>document.querySelector('.v100-boss-telegraph-warning')?.textContent.includes('クマバーソン')||window.__BOSS_HINT_PAINTS__.at(-1)?.text.includes('クマバーソン'));
-    await observe('defense-ready',defense.at);
+    const readyWarning=await observe('defense-ready',defense.at);
+    if(!before)assert.equal(readyWarning.text,readyWarning.proof.telegraph.displayName);
     const marker=page.locator('.manual-ability-ready[data-fighter-id="'+owner.id+'"]');
     assert.equal(await nativeBattleTap(page,marker),true);
     await page.waitForFunction(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.some(f=>f.id===id&&f.manualAbility?.activationId>0),owner.id);

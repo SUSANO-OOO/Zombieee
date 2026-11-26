@@ -50,7 +50,7 @@ test('the clinical result preserves the people at the vehicle through save and r
  const loaded=deserializeV100Save(serializeV100Save(save));
  assert.equal(loaded.ok,true);
  assert.deepEqual(loaded.save.lastResult.battleReport.defenseProgress,raw.defenseProgress);
- assert.deepEqual(v100DefenseResultText(loaded.save.lastResult),{progress:'救出 17/43人',detail:'残る26人の救出路を守ろう'});
+ assert.deepEqual(v100DefenseResultText(loaded.save.lastResult),{progress:'救出 17/43人',detail:'救出を待つ人があと26人'});
  const broken={...raw.defenseProgress,disposalStopped:false};
  assert.equal(normalizeV100BattleReport({...value.battleReport,defenseProgress:broken}).defenseProgress,undefined);
  const completed={...raw.defenseProgress,rescuedCount:43};
