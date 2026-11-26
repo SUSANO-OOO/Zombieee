@@ -212,9 +212,13 @@ export async function readV100BrowserSave(host = globalThis) {
 export async function persistV100BrowserSave(nextSave, host = globalThis, { expectedRevision = null, ownerId = null } = {}) {
   const incoming = parsedSave(JSON.stringify(nextSave));
   if (!incoming) return result(false, null, "invalid-save");
-  const outcome = await transaction(host, (values, saves, gifts) => {
+  const write = (confirmPreviousAttempt = false) => transaction(host, (values, saves, gifts) => {
     const state = currentState(values);
     if (!state.ok) return state;
+    // A native timeout can arrive after the result was committed. Recognize
+    // only the identical save; a different writer still owns its newer state.
+    if (confirmPreviousAttempt && incoming.revision === state.save.revision
+      && serializeV100Save(incoming) === serializeV100Save(state.save)) return result(true, state.save);
     if (expectedRevision !== state.save.revision) return result(false, state.save, "stale-writer");
     if (incoming.revision <= state.save.revision) return result(false, state.save, "revision-not-advanced");
     if (popupHeldByOther(values.gift, ownerId)) return result(false, state.save, "popup-owned-by-another-tab");
@@ -223,6 +227,11 @@ export async function persistV100BrowserSave(nextSave, host = globalThis, { expe
     putSave(saves, values, carried.save, values.current.legacyVerified);
     return result(true, carried.save, "", { changed: true });
   });
+  let outcome = await write();
+  if (!outcome.ok && incoming.flowState?.phase === "result"
+    && ["storage-timeout", "transaction-aborted", "AbortError"].includes(outcome.reason)) {
+    outcome = await write(true);
+  }
   return mirrorAndNotify(outcome, host);
 }
 

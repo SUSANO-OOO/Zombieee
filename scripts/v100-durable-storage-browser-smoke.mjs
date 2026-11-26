@@ -71,6 +71,67 @@ try {
   for (const [engine, launcher] of [["chromium", chromium], ["webkit", webkit]]) {
     const browser = await launcher.launch({ headless: true });
     try {
+      await withCase(browser, engine, "battle-result-write-interrupted", async page => page.evaluate(async () => {
+        const api = window.V100StorageFixture, check = window.fixtureAssert;
+        const original = (await api.readV100BrowserSave()).save;
+        const stageId = original.availableStageIds[0];
+        const victory = { resultId: "first-win", battleRunId: "first-win", stageId, stageNumber: 1, won: true,
+          objectiveComplete: true, bossDefeated: false, vehicleHp: 100, vehicleMaxHp: 100, stars: 3 };
+        const pending = api.applyV100SaveMutation(original, draft => ({ ...draft, campaignStarted: true,
+          playerName: "保存確認", pendingResult: victory, eventCursor: null,
+          flowState: { phase: "result", stageId, stageNumber: 1, destination: "result", firstClear: true },
+        })).save;
+        const write = () => api.persistV100BrowserSave(pending, globalThis, { expectedRevision: original.revision });
+        const originalPut = IDBObjectStore.prototype.put;
+        let attempts = 0, aborts = 2;
+        IDBObjectStore.prototype.put = function(value, key) {
+          const request = originalPut.call(this, value, key);
+          if (this.name === "saves" && key === "current") {
+            attempts++;
+            if (aborts > 0) { aborts--; this.transaction.abort(); }
+          }
+          return request;
+        };
+        try {
+          const failed = await write();
+          check(!failed.ok && attempts === 2, "persistent failure must stop after one retry");
+          const held = (await api.readV100BrowserSave()).save;
+          check(held.revision === original.revision && !held.pendingResult, "an aborted result changed the save");
+          aborts = 1;
+          const saved = await write();
+          check(saved.ok && attempts === 4, "a transient interruption lost the victory");
+          const replay = await write();
+          check(!replay.ok && replay.reason === "stale-writer" && attempts === 4, "duplicate result was written");
+          const reopened = (await api.readV100BrowserSave()).save;
+          check(reopened.pendingResult?.battleRunId === victory.battleRunId && reopened.revision === pending.revision,
+            "durable result does not match the win");
+          check(reopened.caps === original.caps && reopened.receipts.length === original.receipts.length,
+            "saving the result awarded a reward before collection");
+          // Commit an updated, still-pending result, then suppress just its
+          // completion notification. The original database write succeeds.
+          const next = api.applyV100SaveMutation(reopened, draft => ({ ...draft,
+            settings: { ...draft.settings, bgmEnabled: !draft.settings.bgmEnabled },
+          })).save;
+          const originalTransaction = IDBDatabase.prototype.transaction;
+          let notificationLost = false;
+          IDBDatabase.prototype.transaction = function(...args) {
+            const tx = originalTransaction.apply(this, args);
+            if (!notificationLost && tx.mode === "readwrite" && tx.objectStoreNames.contains("saves")) {
+              notificationLost = true;
+              Object.defineProperty(tx, "oncomplete", { set() {} });
+            }
+            return tx;
+          };
+          try {
+            const acknowledged = await api.persistV100BrowserSave(next, globalThis, { expectedRevision: reopened.revision });
+            check(notificationLost && acknowledged.ok && !acknowledged.changed && attempts === 5,
+              "an already committed result must be recognized without another write");
+            const final = (await api.readV100BrowserSave()).save;
+            check(api.serializeV100Save(final) === api.serializeV100Save(next), "the confirmed checkpoint differs");
+          } finally { IDBDatabase.prototype.transaction = originalTransaction; }
+          return { interruptedWrites: 3, attempts, notificationLost, persistedWins: 1, caps: reopened.caps };
+        } finally { IDBObjectStore.prototype.put = originalPut; }
+      }));
       await withCase(browser, engine, "concurrent-writers-and-origin-unavailable-reload", async (page, context, fixture) => {
         const original = await page.evaluate(async () => (await window.V100StorageFixture.readV100BrowserSave()).save);
         const second = await context.newPage(); await boot(second, fixture.url);
