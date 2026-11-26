@@ -22,15 +22,16 @@ function visible(changes,safety){
  const values={blocking:false,registrationFailed:true,phase:'update-available',updateCopy:{},updateDismissed:false,installPlan:{},repairDismissed:false,...changes,activation:evaluateActivationSafety(safety)};
  return guards.filter(guard=>vm.runInNewContext(guard,values)).length;
 }
-test('pending registration, repair and update notices wait through active play and saving',()=>{
- assert.equal(guards.length,3);
+test('repair and update notices wait through active play and saving',()=>{
+ assert.equal(guards.length,2);
  const unsafe=[...['event','battle','result','survival','unknown'].map(screen=>({screen})),
   ...['battleActive','resultSaving','saveMutationPending','downloadActive'].map(key=>({screen:'map',[key]:true}))];
  for(const phase of ['update-available','repair-required'])for(const safety of unsafe)assert.equal(visible({phase},safety),0,JSON.stringify({phase,safety}));
 });
 test('pending notices return on every safe screen and still honor explicit dismissal and blocking gates',()=>{
  for(const screen of SAFE_ACTIVATION_SCREENS){
-  for(const phase of ['update-available','repair-required'])assert.equal(visible({phase},{screen}),2,phase+' on '+screen);
+  for(const phase of ['update-available','repair-required'])assert.equal(visible({phase},{screen}),1,phase+' on '+screen);
+  assert.equal(visible({phase:'unsupported',registrationFailed:true,registrationFailureAcknowledged:true},{screen}),0,'the player already chose browser play');
   assert.equal(visible({blocking:true},{screen}),0);
   assert.equal(visible({registrationFailed:false,updateDismissed:true},{screen}),0);
   assert.equal(visible({phase:'repair-required',registrationFailed:false,repairDismissed:true},{screen}),0);

@@ -1219,12 +1219,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
       {/* Keep pending notices until a safe screen, without covering active play. */}
       <div className="pwa-notice-stack">
-      {!blocking && registrationFailed && activation.safe && (
-        <aside className="pwa-notice" onClickCapture={onPwaControlClick} role="status">
-          <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
-          <button type="button" data-ui-sound="cancel" onClick={() => setRegistrationFailed(false)}>閉じる</button>
-        </aside>
-      )}
       {!blocking && phase === "repair-required" && installPlan && activation.safe && !repairDismissed && (
         <aside className="pwa-notice pwa-repair" onClickCapture={onPwaControlClick} role="status">
           <p>保存済みデータのうち{installPlan.pendingCount}件・{formatBytes(installPlan.pendingBytes)}が不足しています</p>
