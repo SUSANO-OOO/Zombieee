@@ -20318,13 +20318,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 }else addParticles(g, target.x, target.y - 30, "#b9e5f2", appliedCount === 0 ? 15 : 8);
                 appliedCount += 1;
               }
+              if (g.definition.missionConfig.v100StageNumber) {
+                const aim = firstHit ?? { x: event.target.x, y: event.target.y - 30 };
+                queueV100ManualMuzzle(g, { owner, target: aim, precisionEnd: lastHit ?? aim });
+              } else if (appliedCount === 0) {
+                continue;
+              }
+              playManualAbilityTimelineCue(owner, "shot", owner.x, "precision-shot", {
+                priority: 86, cooldownMs: 100, maxInstances: 1,
+              });
               if (appliedCount > 0) {
-                if (firstHit && lastHit) queueV100ManualMuzzle(g, { owner, target: firstHit, precisionEnd: lastHit });
                 g.flashOverlay = Math.max(g.flashOverlay, .08);
-                playManualAbilityTimelineCue(owner, "shot", owner.x, "precision-shot", {
-                  priority: 86, cooldownMs: 100, maxInstances: 1,
-                });
-                playManualAbilityTimelineCue(owner, "impact", event.target.x, "precision-impact", {
+                playManualAbilityTimelineCue(owner, "impact", firstHit?.x ?? event.target.x, "precision-impact", {
                   priority: 86, cooldownMs: 90, maxInstances: 2,
                 });
               }

@@ -1,9 +1,39 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {readFile} from 'node:fs/promises';
+import {runInNewContext} from 'node:vm';
+import ts from 'typescript';
+import {MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
 import {queueV100ManualMuzzle,queueV100ManualFirearmImpact,drawV100ManualMuzzles,getV100ManualMuzzleSnapshot,clearV100ManualFirearmVfx} from '../app/v100ManualFirearmVfx.js';
 import {getV100SkillContactSnapshot,clearV100ContactQueue} from '../app/v100CombatVfx.js';
 
 const fixture=()=>({world:{time:5,definition:{missionConfig:{v100StageNumber:5}}},owner:{id:1,kind:'ranger',side:'human',hp:80,x:300,manualAbility:{activationId:2}},target:{id:7,side:'zombie',hp:38,x:550,y:250}});
+test('a committed precision shot fires once when its locked target falls during windup', async () => {
+  const source = await readFile(new URL('../app/AshfallGame.tsx', import.meta.url), 'utf8');
+  const tree = ts.createSourceFile('AshfallGame.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  function findRelease(node) {
+    if (ts.isIfStatement(node) && node.expression.getText(tree) === 'event.kind === "ranger"') return node;
+    return ts.forEachChild(node, findRelease);
+  }
+  const release = findRelease(tree);
+  assert.ok(release);
+  const code = ts.transpile('for (const event of events) {' + release.getText(tree) + '}', { target: ts.ScriptTarget.ES2022 });
+  const {world: g, owner, target} = fixture();
+  const aim = {targetId: target.id, x: target.x, y: target.y};
+  const events = [{kind: owner.kind, target: aim}];
+  const cues = [];
+  g.fighters = [owner];
+  g.flashOverlay = 0;
+  runInNewContext(code, {events, g, owner, MANUAL_ABILITY_REGISTRY, queueV100ManualMuzzle,
+    playManualAbilityTimelineCue: (_actor, cue, x) => cues.push({cue, x}),
+  });
+  assert.deepEqual(cues, [{cue: 'shot', x: owner.x}]);
+  const muzzles = getV100ManualMuzzleSnapshot(g);
+  assert.equal(muzzles.length, 1);
+  assert.deepEqual([muzzles[0].tx, muzzles[0].ty], [aim.x, aim.y - 30]);
+  assert.deepEqual(getV100SkillContactSnapshot(g), []);
+  assert.equal(g.flashOverlay, 0);
+});
 test('manual firearm contact follows applied damage without changing actors or retaining mutable actor references',()=>{
  const f=fixture(),before=JSON.stringify(f);
  assert.equal(queueV100ManualFirearmImpact(f.world,{...f,hpBefore:130}),true);
