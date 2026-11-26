@@ -17,7 +17,7 @@ test('R9 page coverage retains every original node and explicitly accounts for c
   counted.push(event.eventId);
  }
  assert.equal(plan.events.reduce((n,e)=>n+e.nodeCount,0)+plan.credits.nodes,plan.totalSourceNodes);
- assert.equal(plan.totalSourceNodes,1126);assert.equal(plan.credits.nodes,11);assert.equal(plan.finalizers.length,31);
+ assert.equal(plan.totalSourceNodes,1108);assert.equal(plan.credits.nodes,11);assert.equal(plan.finalizers.length,31);
  assert.deepEqual([...counted,...plan.finalizers,plan.credits.eventId].sort(),Object.keys(V100_STORY_EVENTS).sort());
 });
 

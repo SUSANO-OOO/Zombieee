@@ -132,8 +132,7 @@ export function v100EventPresentationFor({ eventId, phase, node = null, nodeInde
     nodeIndex: Math.max(0, Math.floor(Number(nodeIndex) || 0)),
     nodeKind: node?.kind ?? "action",
     nodeLabel: node?.kind === "system"
-      ? node.text?.includes("「ユニット」でCAPSを使って支度を整え") ? "仲間の出撃準備"
-        : ["r9:809", "r9:846", "r9:2107", "r9:2234"].includes(node.sourceKey) ? "記録" : "次の目的"
+      ? (["r9:809", "r9:846", "r9:2107", "r9:2234"].includes(node.sourceKey) ? "記録" : "次の目的")
       : EVENT_KIND_LABELS[node?.kind ?? "action"] ?? "場面",
     portraitOwner: node?.portraitOwner ?? null,
     portraitSide: node?.portraitOwner ? portraitSide : "none",

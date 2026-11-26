@@ -160,8 +160,6 @@
 .manual-tactics header > b { padding:3px 6px; background:#363831; color:#ccc5b6; font:700 11px/1.4 sans-serif; }
 .manual-tactics header > b.ready { background:#314b3b; color:#d4efc3; }
 .manual-tactics .manual-tactics-target { color:#f4cb7d; font-weight:700; }
-.manual-tactics .manual-tactics-use { padding-top:7px; border-top:1px solid #4e4b40; color:#d6d5ca; }
-.manual-tactics-use strong { display:block; color:#bda881; font-size:11px; }
 @media(max-width:600px) { .manual-tactics-roster { grid-template-columns:1fr; } }
 
 .pause-panel:has(.manual-tactics[open]) { scroll-padding-top:58px; }

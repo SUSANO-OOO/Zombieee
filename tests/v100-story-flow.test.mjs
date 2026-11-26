@@ -53,10 +53,12 @@ test("name and recruitment introductions are present before their release gates"
     assert.ok(v100StoryEventView(id, "試遊指揮官").nodes.some((node) => node.text.includes("試遊指揮官")), `${id} must render the name`);
   }
   assert.equal(V100_STORY_EVENTS["v100:event:credits"].nodes.some((node) => node.kind === "dialogue"), false);
-  for (const [stage, name] of [[1, "ナオ"], [2, "ミズチ"], [4, "モンキー"], [5, "クレイジーキング"], [6, "レイダー"], [7, "タタラ"], [8, "ガンテツ"], [10, "マヨちゃん"]]) {
+  for (const [stage, name] of [[1, "ナオ"], [2, "ミズチ"], [4, "モンキー"], [5, "クレイジーキング"], [6, "レイダー"], [7, "タタラ"], [8, "ガンテツ"]]) {
     const id = `v100:event:s${String(stage).padStart(2, "0")}:post`;
     assert.ok(V100_STORY_EVENTS[id].nodes.some((node) => node.text.includes(name) || node.speaker === name), `${name} must be introduced before the Stage ${stage} registration offer`);
   }
+  assert.ok(V100_STORY_EVENTS["v100:event:prologue"].nodes.some(node => node.text.includes("戦闘犬のマヨ")));
+  assert.ok(V100_STORY_EVENTS["v100:event:s10:post"].nodes.some(node => node.text.includes("マヨのハーネス")));
   for(const [speaker,portraitOwner] of [['パイセン','unit-paisen'],['クマバーソン','unit-kumaverson'],['ババヤガ','unit-babayaga']]) {
     assert.ok(V100_STORY_EVENTS['v100:event:prologue'].nodes.some(node=>node.speaker===speaker&&node.portraitOwner===portraitOwner));
   }

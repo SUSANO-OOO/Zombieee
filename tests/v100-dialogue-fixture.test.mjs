@@ -25,5 +25,5 @@ test("every current R9 node has a valid, source-bound presentation checkpoint", 
       checked++;
     }
   }
-  assert.equal(checked, 1126);
+  assert.equal(checked, 1108);
 });

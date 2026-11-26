@@ -1,16 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,selectManualAbilityTarget,canActivateManualAbility} from '../app/manualAbilities.js';
-import {MANUAL_ABILITY_TACTICS,manualAbilityTacticalView} from '../app/manualAbilityTactics.js';
+import {manualAbilityTacticalView} from '../app/manualAbilityTactics.js';
 const actor=kind=>({id:1,kind,side:'human',hp:40,maxHp:80,x:300,y:280,lane:1,combatReady:true,stunned:0,manualAbility:createManualAbilityRuntime(kind)});
 const enemy=(id,kind,x=380)=>({id,kind,side:'zombie',hp:180,maxHp:180,x,y:280,lane:1,combatReady:true,speed:20});
 
 test('all16 tactical entries use the production selection without changing battle or runtime',()=>{
- assert.deepEqual(Object.keys(MANUAL_ABILITY_TACTICS).sort(),Object.keys(MANUAL_ABILITY_REGISTRY).sort());
+ assert.equal(Object.keys(MANUAL_ABILITY_REGISTRY).length,16);
  for(const kind of Object.keys(MANUAL_ABILITY_REGISTRY)){
   const owner=actor(kind),fighters=[owner,enemy(2,'walker',360),enemy(3,'spitter',400)],original=structuredClone({owner,fighters});
   const view=manualAbilityTacticalView({owner,fighters}),target=selectManualAbilityTarget({owner,fighters});
-  assert.ok(view.tactic&&view.summary&&view.name&&view.abilityName,kind);assert.equal(view.available,canActivateManualAbility({fighter:owner,fighters}));
+  assert.equal(view.summary,MANUAL_ABILITY_REGISTRY[kind].summary);assert.ok(view.name&&view.abilityName,kind);assert.equal(view.available,canActivateManualAbility({fighter:owner,fighters}));
   assert.ok(view.available,kind);assert.equal(view.status,'再開後に使える');assert.ok(view.targetLabel,kind);
   assert.equal(view.targetId,target.targetId??target.points?.[0]?.targetId??null);assert.deepEqual({owner,fighters},original,kind);
  }

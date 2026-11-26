@@ -54,7 +54,7 @@
 }
 .v100-phone-pause .manual-tactics > summary { box-sizing:border-box; min-height:44px; padding:6px 10px; font-size:14px; line-height:1.35; }
 .v100-phone-pause .manual-tactics > summary > span,
-.v100-phone-pause .manual-tactics :is(p,header > b,h3 > span,.manual-tactics-use strong) { font-size:13px; line-height:1.5; letter-spacing:normal; }
+.v100-phone-pause .manual-tactics :is(p,header > b,h3 > span) { font-size:13px; line-height:1.5; letter-spacing:normal; }
 .v100-phone-pause .manual-tactics article {
   border:1px solid #a1946d; border-left:3px solid #815f34; color:#263529;
   background-color:#e8d8ae;
@@ -63,8 +63,7 @@
 }
 .v100-phone-pause .manual-tactics h3 { color:#21392b; font-size:15px; }
 .v100-phone-pause .manual-tactics h3 > span { color:#655637; }
-.v100-phone-pause .manual-tactics :is(.manual-tactics-target,.manual-tactics-use strong) { color:#69502b; }
-.v100-phone-pause .manual-tactics .manual-tactics-use { color:#283d30; border-top-color:#94845b; }
+.v100-phone-pause .manual-tactics .manual-tactics-target { color:#69502b; }
 .v100-phone-pause .pause-panel:has(.manual-tactics[open]) { scroll-padding-top:60px; }
 .v100-phone-pause .pause-panel:has(.manual-tactics[open]) .pause-actions { background:#14271d; padding-bottom:4px; }
 .v100-phone-pause .pause-volume {
@@ -126,8 +125,6 @@
 #v100-campaign .v100-phone-pause .manual-tactics-fieldguide header > b.ready { border-color:#3d6141; color:#f3f0c9; background:#345638; }
 #v100-campaign .v100-phone-pause .manual-tactics-fieldguide article > p { grid-column:2; margin:0; font-size:14px; line-height:1.5; }
 #v100-campaign .v100-phone-pause .manual-tactics-fieldguide .manual-tactics-target { padding:4px 7px; border-left:3px solid #b17c3c; color:#594421; background:#bd9e5f24; }
-#v100-campaign .v100-phone-pause .manual-tactics-fieldguide .manual-tactics-use { grid-column:1/-1; padding-top:4px; border-top:1px solid #9b8c626b; }
-#v100-campaign .v100-phone-pause .manual-tactics-fieldguide .manual-tactics-use strong { display:inline; margin-right:8px; color:#655437; font-size:12px; }
 @media (max-width:700px) {
  #v100-campaign .v100-phone-pause .manual-tactics-fieldguide article { grid-template-columns:94px minmax(0,1fr); gap:5px 9px; }
 }
