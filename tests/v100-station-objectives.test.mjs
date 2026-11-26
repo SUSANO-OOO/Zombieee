@@ -151,7 +151,7 @@ test("the actual escort renderer uses decoded story vehicles while retaining the
 test("the cold convoy is intercepted and secured instead of described as escaping", () => {
   const definition=v100BattleDefinitionFor(V100_STAGES[25].id),config=definition.missionConfig;
   const runtime=createStationMissionRuntime(definition.missionType,config);
-  assert.match(definition.objective,/3台.*封鎖地点.*停止・確保/);
+  assert.match(definition.objective,/3台.*封鎖地点.*追い込んで確保/);
   assert.match(stationMissionObjective({...runtime,completed:true},config),/3台.*停止.*確保/);
   assert.match(stationMissionObjective({...runtime,failed:true},config),/確保に失敗/);
   assert.doesNotMatch(definition.phaseSchedule.map(phase=>phase.label).join(" "),/護送|出口/);

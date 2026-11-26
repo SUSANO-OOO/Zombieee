@@ -66,7 +66,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     {tab === "overview" && <>
       <div className="v100-mode-catalog">
         <button type="button" className="v100-mode-entry v100-mode-outbreak" onClick={() => setTab("outbreak")}><span className="v100-mode-entry-copy"><strong>異常発生</strong><span>撃破済みのボスと再戦</span><small>ボスを倒すとCAPSを獲得。初回クリアでは装備も手に入ります。</small><b>{bosses.length ? `${bosses.length}体と再戦可能` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
-        <button type="button" className="v100-mode-entry v100-mode-survival" onClick={() => setTab("survival")}><span className="v100-mode-entry-copy"><strong>サバイバル</strong><span>強化を選び、押し寄せる敵を迎撃</span><small>5波ごとにボス戦・報酬・中間セーブ。</small><b>{bosses.length ? `最高制圧 第${save.survival.highestCompletedWave}波` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
+        <button type="button" className="v100-mode-entry v100-mode-survival" onClick={() => setTab("survival")}><span className="v100-mode-entry-copy"><strong>サバイバル</strong><span>強化を選び、押し寄せる敵を迎撃</span><small>5波ごとにボス戦・報酬・中間セーブ。</small><b>{bosses.length ? (save.survival.highestCompletedWave > 0 ? `最高記録：第${save.survival.highestCompletedWave}波クリア` : "クリア記録なし") : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
       </div>
       <nav className="v100-mode-record-links" aria-label="プレイ記録"><button type="button" onClick={() => setTab("compendium")}>ボス図鑑</button><button type="button" onClick={() => setTab("records")}>戦績</button></nav>
     </>}
@@ -140,7 +140,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
   <div className="v100-records-modes">
     <section className="v100-records-outbreak" aria-label="異常発生の記録"><h3>異常発生</h3><dl><div><dt>再制圧済み</dt><dd>{bosses.filter(boss => (save.outbreak.clearCounts[boss.id] ?? 0) > 0).length}<small>体</small></dd></div></dl></section>
     <section className="v100-records-survival" aria-label="サバイバルの記録"><h3>サバイバル</h3><dl>
-      <div><dt>最高制圧</dt><dd>{save.survival.highestCompletedWave}<small>波</small></dd></div>
+      <div><dt>最高記録</dt><dd>{save.survival.highestCompletedWave}<small>波</small></dd></div>
       <div><dt>最高到達</dt><dd>{save.survival.highestReachedWave}<small>波</small></dd></div>
       <div><dt>プレイ回数</dt><dd>{save.survival.totalRuns}<small>回</small></dd></div>
     </dl></section>

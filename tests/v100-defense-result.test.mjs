@@ -29,7 +29,7 @@ test('all four defense clocks retain measured progress through result and reload
   assert.equal(Math.ceil(raw.defenseProgress.durationSeconds-raw.defenseProgress.elapsedSeconds),live.remaining);
   assert.equal(text.detail,`防衛完了まであと${live.remaining}秒`);
   if(live.recordCount)assert.equal(text.progress,`収容室 ${live.openedRecords}/${live.recordCount}室を開放`);
-  else assert.equal(text.progress,`${live.label}を69秒維持`);
+  else assert.equal(text.progress,"防衛時間 69秒");
  }
 });
 
@@ -39,7 +39,7 @@ test('S22 shows the actual 34 of 43 rooms and 19 seconds remaining, excluding pr
  const early=measured(id,2);assert.equal(early.defenseProgress.elapsedSeconds,0);
  assert.equal(v100DefenseResultText(result(early)).progress,'収容室 0/43室を開放');
  const late=measured(id,200);assert.equal(late.defenseProgress.elapsedSeconds,late.defenseProgress.durationSeconds);
- assert.deepEqual(v100DefenseResultText(result(late)),{progress:'収容室 43/43室を開放',detail:'防衛時間は経過・作戦目標は未達'});
+ assert.deepEqual(v100DefenseResultText(result(late)),{progress:'収容室 43/43室を開放',detail:'最後まで守ったが、作戦目標が残った。'});
 });
 
 test('the clinical result preserves the people at the vehicle through save and reload',()=>{

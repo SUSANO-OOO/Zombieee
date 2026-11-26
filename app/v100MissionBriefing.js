@@ -20,7 +20,14 @@ export function v100MissionThreatsFor(stageId) {
   if (!stage) return [];
   const pack = new Set(v100BattleDefinitionFor(stageId)?.timeline.flatMap(wave => wave.units) ?? []);
   const protectedSite = v100BasePresentationFor(stage.number).label;
-  const purposes = { charge: "突進して前線を抜ける。予告に守備の手動アビリティを合わせる", contamination: "汚染する範囲を残す。射撃で近づく前に倒す", backline: "後衛を狙う", "crawler-priority": `${protectedSite}を狙う`, ranged: "離れた位置から攻撃", "support-object": "支援物を狙う" };
+  const purposes = {
+    charge: "突進してくる。敵が構えたら、前衛の防御技を使おう。",
+    contamination: "地面を汚染する。近づかれる前に射撃で倒そう。",
+    backline: "後ろにいる仲間を狙う。",
+    "crawler-priority": `${protectedSite}を狙う。`,
+    ranged: "離れた場所から攻撃してくる。",
+    "support-object": "こちらの支援物資を狙う。",
+  };
   return Object.keys(purposes).flatMap(profile => ENEMY_CONTENT
     .filter(enemy => pack.has(enemy.id) && enemy.aiProfile === profile)
     .map(enemy => ({ id: enemy.id, name: stage.number < 27 ? enemy.displayName.replace("RED PANTHER", "赤レンズ部隊") : enemy.displayName, purpose: purposes[profile] }))).slice(0, 4);
@@ -69,7 +76,7 @@ export function v100MissionBriefingFor(stageId) {
   const node = V100_NODE_PROFILES[stageId];
   if (node) return { mode: "sequence", count: stage.objectiveId.includes("four") ? 4 : 3, label: node.label, verb: node.verb };
   const vehicle = V100_MISSION_VEHICLES[stageId];
-  if (vehicle) return { mode: "escort", origin: vehicle.count === 3 ? "冷蔵車3台" : vehicle.targetLabel, target: vehicle.destinationLabel ?? "目的地", verb: vehicle.count === 3 ? "追込み・確保" : "護送" };
+  if (vehicle) return { mode: "escort", origin: vehicle.count === 3 ? "冷蔵車3台" : vehicle.targetLabel, target: vehicle.destinationLabel ?? "目的地", verb: vehicle.count === 3 ? "追い込んで確保する" : "護送" };
   if (stage.number === 24) return { mode: "advance", origin: "中央制御盤", target: "フタゴ", verb: "制御を止めて二体を撃破" };
   if (stage.number === 25) return { mode: "hold", origin: "医療物資", target: "変異ムガリアン社長", verb: "医療物資を守って撃破" };
   if (stage.number === 29) return { mode: "dual-target", targets: ["国外起動回線", "感染源原株"], verb: "両方を破壊" };

@@ -8,6 +8,7 @@ import { v100EquipmentSnapshot } from "./v100Equipment.js";
 import { applyV100UnitLevelProgression, v100UnitLevelFor } from "./v100Progression.js";
 import { V100_UNIT_BY_ID, v100BossForStage, v100LevelCost, v100UnitStatAtLevel } from "./v100Registry.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
+import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 
 // Short selection advice describes the existing manual ability, not a new AI order.
 const ABILITY_SELECTION_ADVICE = Object.freeze({
@@ -105,19 +106,23 @@ export function v100TacticalHintFor(stage) {
   if (!stage) return "前衛が敵を引き受け、後ろから射撃で援護しよう。";
   if (Number(stage.number) === 1) return "クマバーソンが敵を引き受け、ババヤガが射撃で援護。「鉄鍋仁王立ち」を使うと、クマバーソンは自分のHPを少しずつ回復できる。敵が増えたら前衛を追加で出撃させよう。";
   if (Number(stage.number) === 2) return "射撃役を早めに出そう。車両に迫る前に、集まった敵を航空支援で狙おう。着弾まで少しかかる。";
-  if (Number(stage.number) === 3) return "前衛を射撃と回復で支えよう。大剣の予告にはクマバーソンの「鉄鍋仁王立ち」。増援が集まったら車両砲撃で迎え撃とう。";
+  if (Number(stage.number) === 3) return "TAKUYAが大剣を振り上げたら、クマバーソンの「鉄鍋仁王立ち」を使おう。増援が集まったら車両砲撃で迎え撃とう。";
   if (Number(stage.number) === 5) return "床がオレンジに光ったら突進が来る。クマバーソンの「鉄鍋仁王立ち」で前線を守ろう。";
   if (Number(stage.number) === 11) return "前衛を出撃させて供給弁の周りを確保。仲間が弁のそばにいると復旧が進む。復旧したらMOTHERを倒そう。";
-  if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いたユニットをタップで回避。";
-  if (stage.missionType === "boss") return "大技の予告を見逃さず、守備役の手動アビリティを敵の攻撃に合わせて使おう。";
-  if (stage.missionType === "escort") return "前衛と足止め役で、護衛対象へ近づく敵を止める。";
+  if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメに狙われた仲間をタップすると、射線から逃がせる。";
+  if (stage.missionType === "boss") return "ボスが大技の構えに入ったら、攻撃が来る前に防御技を使おう。";
+  if (stage.missionType === "escort") {
+    const vehicle = V100_MISSION_VEHICLES[stage.id];
+    if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点に追い込もう。車列に近づく敵は射撃で倒そう。";
+    return `${vehicle?.targetLabel ?? "車両"}から仲間を離さず、近づく敵を前衛で食い止めよう。`;
+  }
   if (stage.missionType === "timed-defense") return "前衛と射撃役を揃え、防衛地点へ迫る敵を迎え撃とう。敵が増えたら前衛を追加で出撃させよう。";
   if (Number(stage.number) >= 21) return "盾持ちには重装兵、射撃兵には遊撃兵。手動アビリティで敵を足止め。";
   return "前衛が敵を引き受け、後ろから射撃で援護しよう。敵が増えたら前衛を追加で出撃させよう。";
 }
 
 export function v100SupportPurposeFor(supportId) {
-  if (supportId === "support-healing") return "味方を回復し、前線を維持。";
-  if (supportId === "support-incendiary-drum") return "炎上する範囲で敵を継続して攻撃。";
-  return "普通のドラム缶。遮蔽物として敵の進路を妨げる。";
+  if (supportId === "support-healing") return "傷ついた仲間のHPを回復する。";
+  if (supportId === "support-incendiary-drum") return "爆発したあとも炎が残り、近くの敵を焼く。";
+  return "ドラム缶を置いて敵の進路をふさぐ。";
 }

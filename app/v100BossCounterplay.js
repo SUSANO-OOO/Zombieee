@@ -36,7 +36,7 @@ export function v100BossCounterplayHint({ boss, telegraph, readyAbilities = [], 
     // Keep that immutability from freezing any live combat-owned arrays.
     const plan = kuromeEmergencyEvadePlan({ runtime: structuredClone(boss.stationAbility), target,
       tap: target ? { x: target.x, y: target.y - 30 } : null, laneCenters });
-    if (!plan.ok) return '次の出撃は照準の発射後に';
+    if (!plan.ok) return 'クロメが撃ち終わったら、次の仲間を出そう';
     if (boss.stationAbility.phase === 'locked' && Number.isFinite(beamOrigin?.x) && Number.isFinite(beamOrigin?.y)) {
       const beam = resolveKuromeBeam({ boss, runtime: { ...boss.stationAbility, phase: 'firing',
         originX: beamOrigin.x, originY: beamOrigin.y },
@@ -60,7 +60,7 @@ export function v100BossCounterplayHint({ boss, telegraph, readyAbilities = [], 
     return 'タタラの技で阻止を狙おう';
   }
   if (enoughTime('medic')) return 'ナオの技で傷ついた仲間を回復';
-  if (boss.kind === 'mother' && ready.some(row => areaKinds.has(row.kind))) return '増える敵へ範囲技を残しておこう';
+  if (boss.kind === 'mother' && ready.some(row => areaKinds.has(row.kind))) return '敵が増えたら範囲攻撃でまとめて倒そう';
   if (ready.some(row => attackKinds.has(row.kind))) {
     return boss.kind === 'gairen' ? '外殻が開いたら攻撃技で反撃' : '大技が終わったら攻撃技で反撃';
   }

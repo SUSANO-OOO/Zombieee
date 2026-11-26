@@ -62,7 +62,7 @@ test('healing needs an available native target; ready attack skills produce timi
  assert.match(hint(boss,[medic],[{id:1,kind:'medic',available:true}]),/ナオ.*回復/u);
  const gunner=ally('babayaga');
  assert.match(hint(boss,[gunner],[{id:1,kind:'babayaga',available:true}]),/外殻が開いたら/u);
- assert.match(hint(warning('mother'),[ally('zakimiya')],[{id:1,kind:'zakimiya',available:true}]),/増える敵.*範囲技/u);
+ assert.match(hint(warning('mother'),[ally('zakimiya')],[{id:1,kind:'zakimiya',available:true}]),/敵が増えたら範囲攻撃/u);
 });
 test('Gairen interruption advice requires Tatara to cover that boss before the warning ends',()=>{
  const boss=warning('gairen'),tatara=ally('brute'),guard=ally('guardian',{id:2});

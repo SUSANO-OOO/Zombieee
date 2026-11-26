@@ -124,8 +124,8 @@ export function v100DefenseResultText(result) {
   const opened = Math.min(profile.recordCount ?? 0, Math.floor(defense.elapsedSeconds / defense.durationSeconds * (profile.recordCount ?? 0) + 1e-9));
   return {
     progress: profile.recordCount ? `収容室 ${opened}/${profile.recordCount}室を開放`
-      : `${profile.label}を${Math.floor(defense.elapsedSeconds)}秒維持`,
-    detail: remaining > 0 ? `防衛完了まであと${remaining}秒` : "防衛時間は経過・作戦目標は未達",
+      : `防衛時間 ${Math.floor(defense.elapsedSeconds)}秒`,
+    detail: remaining > 0 ? `防衛完了まであと${remaining}秒` : "最後まで守ったが、作戦目標が残った。",
   };
 }
 
@@ -149,14 +149,14 @@ export function v100EscortResultText(result) {
   const destroyed = escort.failed && escort.integrity === 0;
   if (escort.gateTimedOut) {
     return { outcome: "遮断機が閉じ、搬送車が取り残された。",
-      progress: "遮断機まで到着", advice: "搬送車の周囲と前方に味方をそろえてから、遮断機を開けよう。" };
+      progress: "遮断機まで到達", advice: "搬送車の周囲と前方に味方をそろえてから、遮断機を開けよう。" };
   }
   return {
     outcome: destroyed ? `${vehicle.targetLabel}が破壊された。${vehicle.count === 3 ? "確保" : "護送"}は失敗だ。` : null,
     progress: escort.progress >= 1 ? `${vehicle.targetLabel}は${vehicle.destinationLabel ?? "目的地"}に到着`
       : `${vehicle.count === 3 ? "冷蔵車列の確保" : "護送"} ${Math.floor(escort.progress * 100)}%まで到達`,
     advice: destroyed ? vehicle.count === 3 ? "車列を守る味方に加え、攻撃役も早めに出して周囲の敵を倒そう。"
-      : "護送役だけに任せず、攻撃役も早めに出して車を守ろう。" : null,
+      : `${vehicle.targetLabel}のそばに仲間を残し、近づく敵を射撃で倒そう。` : null,
   };
 }
 

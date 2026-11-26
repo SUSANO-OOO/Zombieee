@@ -15,7 +15,7 @@ const fixture = () => {
 test("the first boss briefing names the current guard move and the response to reinforcements", () => {
   const firstBoss = V100_STAGES.find(stage => stage.number === 3);
   const advice = v100TacticalHintFor(firstBoss);
-  assert.match(advice, /大剣の予告に.+鉄鍋仁王立ち/);
+  assert.match(advice, /TAKUYAが大剣を振り上げたら.+鉄鍋仁王立ち/);
   assert.match(advice, /増援が集まったら車両砲撃/);
 });
 

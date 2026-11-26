@@ -168,16 +168,16 @@ function formatReason(reason: string | undefined) {
     "stage-locked": "ひとつ前の作戦をクリアすると、ここへ進める。",
     "read-replay-required": "初回クリアの報酬は、続きの会話を読んでから受け取れる。「次の場面へ」進もう。",
     "unread-post-story": "まだ読んでいない会話があります。物語の続きへ進もう。",
-    "objective-incomplete": "まだ目標が残っている。画面の目標を確認。",
+    "objective-incomplete": "作戦目標がまだ残っている。戦闘画面で目標を確認しよう。",
     "vehicle-destroyed": "車両が破壊された。これ以上は出撃できない。",
     "formation-full": "同時に出撃できるのは7体まで。枠が空くまで待とう。",
-    "unit-not-owned": "この仲間は支度待ち。ユニット画面で出撃の支度を整えよう。",
+    "unit-not-owned": "この仲間はまだ編成に加えられない。「ユニット」で出撃の条件を確認しよう。",
     "insufficient-battle-resource": "指揮が足りない。回復するまで少し待とう。",
     "not-unlocked": "この装備はまだ買えない。先の作戦をクリアして解放しよう。",
     "insufficient-caps": "CAPSが足りない。作戦のクリア報酬で補充できる。",
-    "support-not-owned": "使う支援をまだ持っていない。支援画面で手に入れよう。",
-    "upgrade-cap": "これ以上は強化できない。最大まで強化済みだ。",
-    "level-cap": "今の育成上限に到達。先の作戦をクリアすると、さらに育てられる。",
+    "support-not-owned": "この支援物資は持っていない。「支援」で入手しよう。",
+    "upgrade-cap": "すでに最大まで強化している。",
+    "level-cap": "今はこれ以上レベルを上げられない。",
     "invalid-level-target": "育成するレベルを選び直そう。",
     "stale-level": "レベルが変わっている。いまの表示を確認してから、もう一度選ぼう。",
     "unknown-unit": "仲間の情報を読み込めなかった。前の画面に戻って選び直そう。",
@@ -272,8 +272,8 @@ const ENEMY_PACK_LABELS: Record<string, string> = {
 function missionLabelFor(stage: (typeof V100_STAGES)[number] | undefined) {
   if (stage?.number === 16) return "地下道のゲート閉鎖";
   if (stage?.number === 17) return "避難路確保";
-  if (stage?.number === 26) return "車列停止・確保";
-  if (stage?.number === 28) return "散布装置停止";
+  if (stage?.number === 26) return "車列の確保";
+  if (stage?.number === 28) return "散布装置の停止";
   return OPERATION_LABELS[stage?.missionType ?? ""] ?? "キャンペーンステージ";
 }
 
@@ -1726,7 +1726,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
       </header>
       {won && <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span><b>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</b><small className="v100-result-pending-reward">受取予定 +{rewardCaps + bonusStar2 + bonusStar3} CAPS</small></span></div>}
       <dl className="v100-result-records" id={resultDetailsId} ref={resultDetailsRef} tabIndex={-1}>
-        <div><dt>{basePresentation.healthLabel}</dt><dd>{hasVehicleIntegrity ? `${vehicleHp} / ${maxHp}（${Math.floor(hpPercent)}%）` : "記録なし"}</dd></div>
+        <div><dt>{escortResult && basePresentation.label === "装甲車両" ? "装甲車の耐久" : basePresentation.healthLabel}</dt><dd>{hasVehicleIntegrity ? `${vehicleHp} / ${maxHp}（${Math.floor(hpPercent)}%）` : "記録なし"}</dd></div>
         <div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : report?.bayEvacuation?.evacuatedCount === 12 ? "十二人全員が避難" : "達成" : "未達"}</dd></div>
       </dl>
       {!won && <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
