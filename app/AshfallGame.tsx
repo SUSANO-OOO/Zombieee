@@ -662,6 +662,7 @@ import { V100_STATION_POSE_KINDS, v100StationAbilityPose, v100GateEaterAuthoredS
 import { v100SupportManualPose, V100_SUPPORT_MANUAL_STABLE_POSE } from "./v100SupportManualPose.js";
 import { v100AdvancedManualPose, V100_ADVANCED_MANUAL_POSE_STABLE } from "./v100AdvancedManualPose.js";
 import { v100ScoutApproachStep } from "./v100ScoutApproach.js";
+import { drawV100ScoutApproachDust } from "./v100ManualImpactVfx.js";
 import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, drawV100DeployedWireTrap, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
 import {drawV100MedicalArea,drawV100MedicalRecipients} from "./v100MedicalFieldVfx.js";
 import {drawV100GuardActivations} from "./v100GuardActivationVfx.js";
@@ -9438,6 +9439,7 @@ function drawWorld(
     if (f.combatReady && f.kind !== "kurome"
       && !(f.kind === "gate-eater" && g.definition.missionConfig.v100StageNumber)) drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);
+    if (f.kind === "scout" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);
     drawSpriteFighter(ctx, f, sprites, { world: g, v100StageObjects: stageObjects, allowDiagnosticFallback,
       smoothMinification: Boolean(g.definition.missionConfig.v100StageNumber),
       v100AuthoredPresentation: Boolean(g.definition.missionConfig.v100StageNumber),
@@ -20281,7 +20283,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               ));
               if (!target) continue;
               const direction = Math.sign(target.x - owner.x) || 1;
-              const from = { x: owner.x, y: owner.y };
+              const from = event.target.dashOrigin ?? { x: owner.x, y: owner.y };
               owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);
               owner.y = target.y;
               owner.lane = target.lane;
