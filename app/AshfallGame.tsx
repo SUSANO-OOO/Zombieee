@@ -26119,7 +26119,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div><span>防潮門</span><b>{floodgateHud.label}</b></div>
             {(floodgateHud.phase === "blocked" || floodgateHud.phase === "ready") &&
               <button type="button" className="floodgate-action" onClick={closeEstuaryGate}
-                disabled={floodgateHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>防潮門を閉める</button>}
+                disabled={floodgateHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>
+                {floodgateHud.phase === "blocked" ? "ガイレン撃破後に操作可" : "防潮門を閉める"}
+              </button>}
             {(floodgateHud.phase === "closing" || floodgateHud.phase === "sealed") &&
               <i aria-hidden="true"><em style={{ width: `${floodgateHud.progress * 100}%` }} /></i>}
           </section>) : bridgeHud ? (!end && <section className="health-hud barrier-health bridge-objective"

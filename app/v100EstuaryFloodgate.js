@@ -57,9 +57,9 @@ export function floodgateReadout(runtime, bossDefeated) {
     return { phase: "closing", label: "閉鎖中", progress, objective: "防潮門を閉鎖中" };
   }
   if (bossDefeated) {
-    return { phase: "ready", label: "操作可", progress, objective: "閉鎖盤で防潮門を閉める" };
+    return { phase: "ready", label: "閉鎖可", progress, objective: "閉鎖盤で防潮門を閉める" };
   }
-  return { phase: "blocked", label: "開口あり", progress, objective: "ガイレンを倒し、防潮門を閉める" };
+  return { phase: "blocked", label: "開放中", progress, objective: "ガイレンを倒し、防潮門を閉める" };
 }
 
 // Reuse the gates and their rain-worn metal from the actual battlefield
