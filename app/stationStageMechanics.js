@@ -560,15 +560,15 @@ export function stationMissionObjective(runtime, config = {}) {
     if(config.convoyInterception === true) {
       if(runtime.failed) return "冷蔵車列の確保に失敗";
       if(runtime.completed) return "冷蔵車3台を停止・確保";
-      if(runtime.contaminated) return "漏泥の床汚染を排除";
-      if(runtime.repairRemaining>0) return `冷蔵車列の進路を復旧 ${Math.ceil(runtime.repairRemaining)}秒`;
+      if(runtime.contaminated) return "汚泥で冷蔵車列が立ち往生";
+      if(runtime.repairRemaining>0) return `進路を復旧中（あと${Math.ceil(runtime.repairRemaining)}秒）`;
       if(runtime.stalled) return "冷蔵車列を守る残存部隊を排除";
       return `冷蔵車3台を封鎖地点へ追い込む ${Math.floor(clamp01(runtime.progress)*100)}%`;
     }
     if (runtime.failed) return `${targetLabel}を防衛できなかった`;
     if (runtime.completed) return `${targetLabel}を出口へ護送完了`;
-    if (runtime.contaminated) return "漏泥の床汚染を排除";
-    if (runtime.repairRemaining > 0) return `${targetLabel}を復旧中 ${Math.ceil(runtime.repairRemaining)}秒`;
+    if (runtime.contaminated) return `汚泥で${targetLabel}が立ち往生`;
+    if (runtime.repairRemaining > 0) return `${targetLabel}を修理中（あと${Math.ceil(runtime.repairRemaining)}秒）`;
     if (runtime.stalled) return `${targetLabel}の周囲を確保`;
     return `${targetLabel}を護衛 ${Math.floor(clamp01(runtime.progress) * 100)}%`;
   }

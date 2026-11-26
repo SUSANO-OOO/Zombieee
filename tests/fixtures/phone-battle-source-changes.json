@@ -983,6 +983,46 @@
     [
       "                  addEnemyFirearmShot(g, f, { x: BASE_X + 8, y: f.y }, 18);",
       "                  if (addEnemyFirearmShot(g, f, { x: BASE_X + 8, y: f.y }, 18)) {\n                    playProductionCue(normalAttackProductionCueId(f), f.x, {\n                      ownerId: f.id,\n                      voiceAllowed: false,\n                      priority: 65,\n                      cooldownMs: 160,\n                      maxInstances: 3,\n                    });\n                  }"
+    ],
+    [
+      "g.banner = \"絡手 // 拘束予告\";",
+      "g.banner = \"絡手が腕を伸ばしてくる！\";"
+    ],
+    [
+      "g.banner = \"漏泥 // 床汚染予告\";",
+      "g.banner = \"足元から汚泥が湧く！\";"
+    ],
+    [
+      "g.banner = \"走鬼 // 後方侵入予告\";",
+      "g.banner = \"走鬼が後列を狙っている！\";"
+    ],
+    [
+      "g.banner = \"改札喰い // 突進予告\";",
+      "g.banner = \"改札喰いが突っ込んでくる！\";"
+    ],
+    [
+      "g.banner = \"TAKUYA // 鉄槌強襲予告\";",
+      "g.banner = \"TAKUYAが大剣を振り上げた！\";"
+    ],
+    [
+      "g.banner = \"オオグチ // 捕食突進\";",
+      "g.banner = \"オオグチが食らいついてくる！\";"
+    ],
+    [
+      "g.banner = \"マザー // 増殖兆候\";",
+      "g.banner = \"マザーが仲間を呼んでいる！\";"
+    ],
+    [
+      "g.banner = \"フタゴ // 片側撃破・残存個体が激昂\";",
+      "g.banner = \"フタゴの片割れが怒り狂った！\";"
+    ],
+    [
+      "g.banner = \"マザー // 増殖室離床\";",
+      "g.banner = summonPlan.length > 0 ? \"マザーから感染者が湧き出した！\" : \"マザーの衝撃波！\";"
+    ],
+    [
+      "{isSurvivalBattle ? \"防衛前線を維持\" : `目標：${formatBattleText(hud.objective)}`}",
+      "{isSurvivalBattle ? \"防衛前線を維持\" : hud.missionType === \"escort\" ? formatBattleText(hud.objective) : `目標：${formatBattleText(hud.objective)}`}"
     ]
   ],
   "app/manualAbilities.js": [

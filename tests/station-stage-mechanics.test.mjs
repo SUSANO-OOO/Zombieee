@@ -89,7 +89,9 @@ test("escort contamination starts a canonical twenty-second repair and can fail"
   });
   assert.equal(contaminated.repairRemaining, 20);
   assert.equal(contaminated.transitions.at(-1), "escort-contaminated");
-  assert.match(stationMissionObjective(contaminated), /床汚染/);
+  assert.equal(stationMissionObjective(contaminated), "汚泥で保守台車が立ち往生");
+  assert.equal(stationMissionObjective(contaminated, { targetLabel: "密閉搬送車" }), "汚泥で密閉搬送車が立ち往生");
+  assert.equal(stationMissionObjective(contaminated, { convoyInterception: true }), "汚泥で冷蔵車列が立ち往生");
 
   const clearing = advanceStationMissionRuntime({
     runtime: contaminated,
@@ -99,7 +101,8 @@ test("escort contamination starts a canonical twenty-second repair and can fail"
     contaminated: false,
   });
   assert.equal(clearing.repairRemaining, 12);
-  assert.match(stationMissionObjective(clearing), /12秒/);
+  assert.equal(stationMissionObjective(clearing), "保守台車を修理中（あと12秒）");
+  assert.equal(stationMissionObjective(clearing, { convoyInterception: true }), "進路を復旧中（あと12秒）");
 
   const destroyed = advanceStationMissionRuntime({
     runtime: initial,

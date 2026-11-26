@@ -22317,7 +22317,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.stationAbility = windup.runtime as StationAbilityRuntime;
                 startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 abilityFrame = true;
-                g.banner = "絡手 // 拘束予告";
+                g.banner = "絡手が腕を伸ばしてくる！";
                 g.bannerTime = Math.max(g.bannerTime, .75);
               }
             }
@@ -22367,7 +22367,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       playbackRate: .97 + f.id % 4 * .02,
                     });
                   }
-                  g.banner = "漏泥 // 床汚染予告";
+                  g.banner = "足元から汚泥が湧く！";
                   g.bannerTime = Math.max(g.bannerTime, .8);
                 }
               }
@@ -22381,7 +22381,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
                 startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
-                g.banner = "走鬼 // 後方侵入予告";
+                g.banner = "走鬼が後列を狙っている！";
                 g.bannerTime = Math.max(g.bannerTime, .62);
               }
             }
@@ -22606,7 +22606,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.attackSequence += 1;
                 g.flashOverlay = Math.max(g.flashOverlay, .08);
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
-                g.banner = "マザー // 増殖室離床";
+                g.banner = summonPlan.length > 0 ? "マザーから感染者が湧き出した！" : "マザーの衝撃波！";
                 g.bannerTime = .8;
                 playBattleSemanticCue(v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "boss-mother-brood-eruption", f.x, {
                   semantic: "boss-phase-impact",
@@ -22634,7 +22634,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.stationAbility = started.runtime as StationAbilityRuntime;
                 startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 abilityFrame = true;
-                g.banner = "マザー // 増殖兆候";
+                g.banner = "マザーが仲間を呼んでいる！";
                 g.bannerTime = .72;
                 playBattleSemanticCue(v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "boss-mother-brood-warning", f.x, {
                   semantic: "boss-phase-warning",
@@ -22706,7 +22706,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
               if (step.events.includes("activate")) {
                 if (anomalyKind === "ooguchi") {
-                  g.banner = "オオグチ // 捕食突進";
+                  g.banner = "オオグチが食らいついてくる！";
                   addDamageText(g, f.x, Math.max(110, f.y - 96), "捕食突進", .92, "#e5a06d");
                   addParticles(g, f.x - 38, f.y - 18, "#c4784e", 18);
                   playBattleSemanticCue(v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "boss-ooguchi-charge-impact", f.x, {
@@ -22982,7 +22982,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (started.ok) {
                 f.stationAbility = {...started.runtime,originX:f.x,originY:f.y} as StationAbilityRuntime;
                 startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
-                g.banner = "改札喰い // 突進予告";
+                g.banner = "改札喰いが突っ込んでくる！";
                 g.bannerTime = Math.max(
                   g.bannerTime,
                   bossDefinitionForEnemyKind("gate-eater")?.attackTelegraph.warningSeconds ?? 0,
@@ -23083,7 +23083,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.abilityWindup = bossDefinitionForEnemyKind("takuya")?.attackTelegraph.warningSeconds ?? 0;
               f.abilityCooldown = bossFinalPhase(f, .5) ? 4.8 : 6.5;
               if(f.abilityWindup>0)startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
-              g.banner = "TAKUYA // 鉄槌強襲予告";
+              g.banner = "TAKUYAが大剣を振り上げた！";
               g.bannerTime = f.abilityWindup + .05;
               if (f.abilityWindup > 0) {
                 const skillMaterialWarning = v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
@@ -25165,7 +25165,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && fighter.kind === g.definition.bossEnemyKind;
             const twinDefeat = isKuromeClone(fighter) ? { complete: false, enragedIds: [] } : resolveV100TwinDefeat(g, fighter);
             if (twinDefeat.enragedIds.length) {
-              g.banner = "フタゴ // 片側撃破・残存個体が激昂";
+              g.banner = "フタゴの片割れが怒り狂った！";
               g.bannerTime = 3.4;
               g.flashOverlay = Math.max(g.flashOverlay, .16);
             }
@@ -26296,7 +26296,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div className="battle-objective objective">
               {bayHud && <span className="bay-evacuation-objective" data-bay-evacuation={bayHud.phase}
                 data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>避難 {bayHud.count}/{bayHud.total}</span>}
-              {isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}
+              {isSurvivalBattle ? "防衛前線を維持" : hud.missionType === "escort" ? formatBattleText(hud.objective) : `目標：${formatBattleText(hud.objective)}`}
             </div>
           </div>
         </div>
