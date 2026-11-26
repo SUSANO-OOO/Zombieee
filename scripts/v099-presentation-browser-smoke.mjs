@@ -400,6 +400,10 @@ for (const engine of engines) {
           `${name}: terminal boss result mounted before the 2.6s sequence completed`);
         invariant(terminalMid.time === terminalStart.time,
           `${name}: gameplay time advanced during terminal boss presentation hold`);
+        const initialBody = terminalStart.corpses.find(corpse => corpse.id === terminalPrepared.bossId);
+        const fallingBody = terminalMid.corpses.find(corpse => corpse.id === terminalPrepared.bossId);
+        invariant(initialBody && fallingBody && (fallingBody.state === "corpse" || fallingBody.deathAge > initialBody.deathAge),
+          `${name}: the defeated boss stayed in its first pose while the result was held`);
         invariant(terminalMid.battlePresentation.effects.some((effect) => effect.kind === "boss-defeat" && effect.elapsed > 0),
           `${name}: terminal boss presentation did not advance under its hold`);
         const terminalScreenshot = path.join(evidenceDir, `${name}-terminal-boss-hold.png`);

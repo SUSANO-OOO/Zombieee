@@ -19973,6 +19973,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         g.shake = advanceCameraShakeRuntime(g.shake, dt);
         if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
         if (g.running && !g.paused && !battleSaveBoundaryRef.current) {
+          // The outcome freezes combat, but the boss can still be falling while the result waits.
+          if (g.over && !g.resultPresented && !g.survivalRun) {
+            for (const [index, corpse] of g.corpses.entries()) {
+              if (corpse.side === "zombie" && corpse.deathClass === "boss" && corpse.state === "dying") {
+                g.corpses[index] = advanceEnemyLifecycle(corpse, dt) as Corpse;
+              }
+            }
+          }
           g.battlePresentation = advanceBattlePresentationRuntime(g.battlePresentation, dt);
         }
 

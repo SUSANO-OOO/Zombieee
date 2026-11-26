@@ -1,5 +1,7 @@
 # Third-party and generated asset ledger
 
+2026-11-26 / 味方とRED PANTHER部隊の被弾声に、HaelDBの同じ声の収録から短い反応を2本追加。配布用MP3は計15,970バイト。原音、使用区間、音量とハッシュは `assets/source/quality-20261126/recorded-light-hurt/provenance.json` に記録した。[Male Grunt/Yelling sounds](https://opengameart.org/content/male-gruntyelling-sounds)（CC0 1.0）
+
 2026-11-21 / 床汚染の効果音。rubberduck の泡と泥の音を予告と着地用に編集。オフライン保存用の MP3 は2件・14,717バイト。配信には同じ原版から書き出した Ogg Vorbis も用意。配布原版、CC0、加工内容、ハッシュは `assets/source/quality-20261121/station-mud/provenance.json` を参照。[40 CC0 water / splash / slime SFX](https://opengameart.org/content/40-cc0-water-splash-slime-sfx)
 
 2026-11-16: Producerは戦闘中の台詞読み上げを不要とし、敵味方の被弾・退場を無料の実録反応音で仕上げるよう指定した。クマバーソン、クレイジーキング、ババヤガとRED PANTHER四兵種の攻撃・被弾・退場は、下表で出典・加工・SHAを保持しているHaelDBの既存CC0人声へ接続する。人物ごとの太い／軽い男性声の系統と録音テイクを固定し、声の追加生成・高さや速さの変更・有料サービス利用はない。3人の出撃台詞は既存の車両発進音へ一本化する。旧VOICEVOX原版と配布ファイルは保全し、同梱の旧素材として出典表示も残す。物語原稿と戦況の警告文はこの音声変更の対象外。

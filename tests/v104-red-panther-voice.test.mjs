@@ -7,6 +7,7 @@ import {createHash} from 'node:crypto';
 import {createAudioRequestGate,runGuardedAudioRequest} from '../app/audioMixer.js';
 import {PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
 import {PWA_PAN_GUARD_FILE} from '../app/pwaPanGuardFile.js';
+import {withRecordedLightHurtTakes} from '../app/v100RecordedHurtTakes.js';
 import {v177JointActorKey} from '../app/v177JointActorHistory.js';
 import {playV104FighterVoice,v104MonsterVoiceEvent,v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
 const kinds=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander'];
@@ -99,6 +100,24 @@ test('generic heavy voice reactions prefer the matching short recording and reta
     }
   }
 });
+test('four distinct light hurt performances retain the same voice and both original fallback formats', () => {
+  const folder = 'assets/source/quality-20261126/recorded-light-hurt';
+  const evidence = JSON.parse(fs.readFileSync(folder + '/provenance.json', 'utf8'));
+  for (const manifest of [GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST]) {
+    const pool = manifest.poolById['human-male-light-hurt'];
+    assert.deepEqual(pool.assetIds, ['01','02','03','04'].map(take => 'human-male-light-hurt-' + take));
+    assert.ok(pool.avoidImmediateRepeat);
+    for (const [index, recording] of evidence.performances.entries()) {
+      const asset = manifest.assetById[pool.assetIds[index + 2]];
+      assert.equal(asset.sources[0].src, recording.runtime);
+      assert.deepEqual(asset.sources.slice(1), manifest.assetById[pool.assetIds[index]].sources);
+      assert.equal(createHash('sha256').update(fs.readFileSync(folder + '/' + recording.master)).digest('hex'), recording.masterSha256);
+      assert.equal(createHash('sha256').update(fs.readFileSync('public' + recording.runtime)).digest('hex'), recording.runtimeSha256);
+      assert.equal(INSTALL_AUDIO_ASSETS.filter(entry => entry.sources[0].src === recording.runtime).length, 1);
+    }
+  }
+});
+
 test('the game served under the Pages base still picks the short defeat recordings and the matching fallbacks', () => {
   const prefix = source => source.replaceAll('/audio/', '/Zombieee/audio/');
   const moduleSource = fs.readFileSync('app/v104CombatAudio.js', 'utf8');
@@ -106,7 +125,8 @@ test('the game served under the Pages base still picks the short defeat recordin
   const compiled = ts.transpileModule(prefix(moduleSource), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
   }).outputText;
-  const imports = { './pwaPanGuardFile.js': {PWA_PAN_GUARD_FILE}, './v177JointActorHistory.js': {v177JointActorKey} };
+  const imports = { './pwaPanGuardFile.js': {PWA_PAN_GUARD_FILE}, './v177JointActorHistory.js': {v177JointActorKey},
+    './v100RecordedHurtTakes.js': {withRecordedLightHurtTakes} };
   const exports = {};
   vm.runInNewContext(compiled, { exports, require(id) {
     assert.ok(Object.hasOwn(imports, id), id);
@@ -142,7 +162,19 @@ test('Red Panther combat cues alternate recordings from the same voice family at
       const pool = manifest.poolById[voice.cueId];
       const [first, second] = pool.assetIds.map(id => manifest.assetById[id]);
       assert.equal(pool.strategy, 'round-robin');
-      assert.equal(pool.assetIds.length, 2);
+      const extraHurt = event === 'hurt' && ['red-panther-knife', 'red-panther-smg'].includes(kind);
+      assert.equal(pool.assetIds.length, extraHurt ? 4 : 2);
+      if (extraHurt) {
+        const takes = pool.assetIds.slice(2).map(id => manifest.assetById[id]);
+        const expected = kind === 'red-panther-smg' ? ['04','03'] : ['03','04'];
+        for (const [index, asset] of takes.entries()) {
+          const src = '/audio/quality-20261126/voices/human-male-light-hurt-' + expected[index] + '.mp3';
+          assert.equal(asset.sources[0].src, src);
+          assert.ok(installed.has(src));
+          assert.deepEqual(asset.sources.slice(1), [first,second][index].sources);
+          assert.equal(asset.gain, first.gain);
+        }
+      }
       assert.equal(first.id, voice.asset.id);
       assert.deepEqual(first.sources, voice.asset.sources);
       assert.equal(pool.cooldownMs, voice.asset.cooldownMs);

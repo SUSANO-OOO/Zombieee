@@ -1,0 +1,35 @@
+{
+  "source": "Male Grunt/Yelling sounds",
+  "creator": "HaelDB",
+  "sourcePage": "https://opengameart.org/content/male-gruntyelling-sounds",
+  "archive": "https://opengameart.org/sites/default/files/yelling%20sounds.zip",
+  "archiveSha256": "e9100a4e3b9dcd146993089970dc6097dcf9935fa4683b196040012bad65d67a",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "permissions": ["commercial use", "editing", "redistribution"],
+  "producerDirection": "Use natural, nonverbal recorded reactions for allies and enemies. The two new performances use the same 1yell recording family as the existing light male hurt voices.",
+  "runtimeEncoding": "MP3, mono, 44100 Hz, 128 kbps. Trim surrounding silence, fade the ends, match the active level of the two existing takes. Original speed and pitch.",
+  "runtimeFiles": 2,
+  "logicalBytes": 15970,
+  "distinctBytes": 15970,
+  "performances": [
+    {
+      "archiveMember": "yelling sounds/1yell9.wav",
+      "master": "1yell9.wav",
+      "masterSha256": "da11a59a017ad4ed3f371ca0829c1f5f3d6a59106eee1ae914d39e04ffe08d6e",
+      "filter": "atrim=start=0.22:end=0.53,asetpts=PTS-STARTPTS,afade=t=in:d=0.004,afade=t=out:st=0.290:d=0.02,volume=1.371577",
+      "runtime": "/audio/quality-20261126/voices/human-male-light-hurt-03.mp3",
+      "runtimeSha256": "4fac3d49c98ed219e9c0a078e7139c8ca5700b8c415b0d0499806da519858e8d",
+      "bytes": 5895
+    },
+    {
+      "archiveMember": "yelling sounds/1yell14.wav",
+      "master": "1yell14.wav",
+      "masterSha256": "365ac7a540e2696bb3e3258b3aa26cc86c5781ff7e56c722b2679b28d41ba3fd",
+      "filter": "atrim=start=0.04:end=0.6,asetpts=PTS-STARTPTS,afade=t=in:d=0.004,afade=t=out:st=0.540:d=0.02,volume=2.484848",
+      "runtime": "/audio/quality-20261126/voices/human-male-light-hurt-04.mp3",
+      "runtimeSha256": "7fa844d6e9aa92e4e54bf93c1955fa561cc8ea0cb7a0c05b4c7638c87646b6d8",
+      "bytes": 10075
+    }
+  ]
+}

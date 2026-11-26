@@ -236,16 +236,25 @@ async function respondForAsset(request, asset) {
 
 /** Release metadata must never be served stale, so it is network-first. */
 async function respondNetworkFirst(request, cacheName) {
-  const cache = await caches.open(cacheName);
+  let response;
   try {
-    const response = await fetch(request, { cache: "no-store" });
-    if (response.ok && !isHtmlResponse(response)) await cache.put(request, response.clone());
-    return response;
-  } catch (error) {
-    const cached = await cache.match(request);
+    response = await fetch(request, { cache: "no-store" });
+  } catch (networkError) {
+    const cached = await caches.match(request, { cacheName }).catch(() => undefined);
     if (cached) return cached;
-    throw error;
+    throw networkError;
   }
+
+  if (response.ok && !isHtmlResponse(response)) {
+    try {
+      const cache = await caches.open(cacheName);
+      await cache.put(request, response.clone());
+    } catch {
+      // This is an optional offline copy. Installing the game verifies and
+      // commits the full pack separately before offering offline play.
+    }
+  }
+  return response;
 }
 
 /**
