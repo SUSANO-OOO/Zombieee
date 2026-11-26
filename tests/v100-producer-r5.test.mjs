@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {v100StoryFlowCheckpoint,createV100StoryFlowState} from '../app/v100StoryFlow.js';
 import {v100StoryDirectionFor,v100StoryExpressionFor,V100_MAIN_CAST} from '../app/v100StoryDirection.js';
-import {v100BasePresentationFor,V100_RETREAT_DOOR_ART} from '../app/v100BasePresentation.js';
+import {v100BaseAttackWarning,v100BasePresentationFor,V100_RETREAT_DOOR_ART} from '../app/v100BasePresentation.js';
 import {requiredBattleAssetPlan,BATTLE_CRAWLER_ASSET_PATHS} from '../app/battleAssetPlan.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -26,6 +26,20 @@ test('R5 leaves the car at hospital for S5/S6 and restores it at S7 without chan
   const legacy=requiredBattleAssetPlan({stageId:V100_STAGE_IDS[number-1]});assert.ok(legacy.persistent.some(a=>a.key==='crawlerHostClosed'));
  }
  assert.equal(v100BasePresentationFor(7).onFoot,false);
+});
+
+test('the first hit and critical warning identify what the crew is defending', () => {
+  for (const [stage, first, critical] of [
+    [5, '退路に敵襲！', '退路が断たれる！'],
+    [6, '退路に敵襲！', '退路が断たれる！'],
+    [7, '装甲車両に敵襲！', '装甲車両がもたない！'],
+    [15, '制御区に敵襲！', '制御区がもたない！'],
+    [17, '避難口に敵襲！', '避難口がもたない！'],
+    [25, '敵が医療物資を攻撃！', '医療物資が破壊されそうだ！'],
+  ]) {
+    assert.equal(v100BaseAttackWarning(stage), first);
+    assert.equal(v100BaseAttackWarning(stage, true), critical);
+  }
 });
 
 const at=line=>{

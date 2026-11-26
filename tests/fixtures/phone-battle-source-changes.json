@@ -501,8 +501,36 @@
       "import { drawBridgeEscort } from \"./v100BridgeEscortRender.js\";\nimport { advanceEstuaryFloodgate, beginEstuaryFloodgateClosure, drawEstuaryFloodgate,\n  floodgateClosureProgress, floodgateIngressDisposition, floodgateReadout, hasEstuaryFloodgate,\n  ESTUARY_CROP_TOP, ESTUARY_GATE_SILL_X } from \"./v100EstuaryFloodgate.js\";"
     ],
     [
+      "  g.banner = `${card.name} // 装甲車両から出撃`;",
+      "  g.banner = v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).onFoot\n    ? `${card.name}、出撃！`\n    : `${card.name} // 装甲車両から出撃`;"
+    ],
+    [
+      "  if (beforeHit === g.baseMaxHp) {\n              g.banner = \"突破発生 — 装甲車両が攻撃を受けています\";",
+      "  if (beforeHit === g.baseMaxHp) {\n              g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber);"
+    ],
+    [
+      "              g.banner = \"移動拠点 危険状態\";\n              g.bannerTime",
+      "              g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber, true);\n              g.bannerTime"
+    ],
+    [
+      "if (beforeHit === g.baseMaxHp) { g.banner = \"突破発生 — 装甲車両が攻撃を受けています\";",
+      "if (beforeHit === g.baseMaxHp) { g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber);"
+    ],
+    [
+      "g.criticalAnnounced = true; g.banner = \"移動拠点 危険状態\"; g.bannerTime",
+      "g.criticalAnnounced = true; g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber, true); g.bannerTime"
+    ],
+    [
+      "import { v100BasePresentationFor } from \"./v100BasePresentation.js\";",
+      "import { v100BaseAttackWarning, v100BasePresentationFor } from \"./v100BasePresentation.js\";"
+    ],
+    [
       "clearDelaySeconds?: number; requiredPowerCount?: number; units: string[] };",
       "clearDelaySeconds?: number; requiredPowerCount?: number; requiresOpenFloodgate?: boolean; units: string[] };"
+    ],
+    [
+      "              if (appliedCount > 0) {\n                if (firstHit && lastHit) queueV100ManualMuzzle(g, { owner, target: firstHit, precisionEnd: lastHit });\n                g.flashOverlay = Math.max(g.flashOverlay, .08);\n                playManualAbilityTimelineCue(owner, \"shot\", owner.x, \"precision-shot\", {\n                  priority: 86, cooldownMs: 100, maxInstances: 1,\n                });\n                playManualAbilityTimelineCue(owner, \"impact\", event.target.x, \"precision-impact\", {",
+      "              if (g.definition.missionConfig.v100StageNumber) {\n                const aim = firstHit ?? { x: event.target.x, y: event.target.y - 30 };\n                queueV100ManualMuzzle(g, { owner, target: aim, precisionEnd: lastHit ?? aim });\n              } else if (appliedCount === 0) {\n                continue;\n              }\n              playManualAbilityTimelineCue(owner, \"shot\", owner.x, \"precision-shot\", {\n                priority: 86, cooldownMs: 100, maxInstances: 1,\n              });\n              if (appliedCount > 0) {\n                g.flashOverlay = Math.max(g.flashOverlay, .08);\n                playManualAbilityTimelineCue(owner, \"impact\", firstHit?.x ?? event.target.x, \"precision-impact\", {"
     ],
     [
       "  gateTimedOut?: boolean;\n  archiveReady?: boolean;",
