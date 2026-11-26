@@ -939,6 +939,18 @@
     [
       "            const hint = v100BossCounterplayHint({ boss: fighter, telegraph, readyAbilities: readyAbilityFighters,\n              fighters: g.fighters, laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });\n            if (!hint) continue;\n            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, compactBattleViewport(), true, hint);",
       "            bossTelegraphWarning = v100BossWarningText({ boss: fighter, telegraph, fighters: g.fighters,\n              laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });"
+    ],
+    [
+      "    || !Object.hasOwn(ENEMY_FIREARM_WEAPON_PROFILE, fighter.kind)) return;",
+      "    || !Object.hasOwn(ENEMY_FIREARM_WEAPON_PROFILE, fighter.kind)) return false;"
+    ],
+    [
+      "    undefined, undefined, 0, 0, false, 0, 0);\n}\n\nfunction laneY",
+      "    undefined, undefined, 0, 0, false, 0, 0);\n  return true;\n}\n\nfunction laneY"
+    ],
+    [
+      "                  addEnemyFirearmShot(g, f, { x: BASE_X + 8, y: f.y }, 18);",
+      "                  if (addEnemyFirearmShot(g, f, { x: BASE_X + 8, y: f.y }, 18)) {\n                    playProductionCue(normalAttackProductionCueId(f), f.x, {\n                      ownerId: f.id,\n                      voiceAllowed: false,\n                      priority: 65,\n                      cooldownMs: 160,\n                      maxInstances: 3,\n                    });\n                  }"
     ]
   ],
   "app/manualAbilities.js": [

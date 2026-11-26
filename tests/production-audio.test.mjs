@@ -54,6 +54,10 @@ test("armored-vehicle damage uses a metal cue without a human-like attack voice"
   assert.ok(from > 0 && to > from);
   const vehicleStrike = source.slice(from, to);
   assert.ok(vehicleStrike.includes('playCue("crawler-hit")'));
+  assert.match(vehicleStrike, /if \(addEnemyFirearmShot\([^\n]+\)\) \{\s*playProductionCue\(normalAttackProductionCueId\(f\), f\.x, \{\s*ownerId: f\.id,\s*voiceAllowed: false,/);
+  for (const [kind, weapon] of [["red-panther-smg", "weapon-smg"], ["red-panther-commander", "v104-handgun"]]) {
+    assert.equal(V100_AUDIO_MANIFEST.aliasById[enemyVoiceCue(kind, "attack")].targetId, weapon);
+  }
   assert.ok(!vehicleStrike.includes('enemyVoiceCue('));
   assert.ok(!vehicleStrike.includes('humanVoiceCueForUnit('));
 });
