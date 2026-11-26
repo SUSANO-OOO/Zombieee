@@ -1281,6 +1281,7 @@ type PendingWeaponAudioCue = {
 type FighterVoiceEvent = "attack" | "exit";
 type PendingBattleAudioCue = {
   cueId: string;
+  hurtVoiceCueId?: string;
   x: number;
   dedupeKey: string;
   battleGeneration: number;
@@ -16319,6 +16320,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       receiptId?: string;
       semanticReceiptConsumed?: boolean;
       voiceAllowed?: boolean;
+      hurtVoiceCueId?: string;
       fighterVoiceEvent?: FighterVoiceEvent;
     } = {},
   ) => {
@@ -16386,7 +16388,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           onLoadFailure: fallback ? guardedFallback : undefined,
         };
         const primary = fighterVoiceEvent
-          ? playV104FighterVoice(productionMixer, cueId, fighterVoiceEvent, playback)
+          ? playV104FighterVoice(productionMixer, options.hurtVoiceCueId ?? cueId, fighterVoiceEvent, playback)
           : productionMixer.play(cueId, playback);
         const voice = v104SupplementalEnemyVoice(cueId);
         if (voice && options.ownerId !== undefined && options.voiceAllowed !== false) {
@@ -16397,7 +16399,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             isMuted: () => sfxMutedRef.current,
             play: () => {
               if (voice.event !== "attack") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });
-              return productionMixer.play(voice.cueId, {
+              return productionMixer.play(options.hurtVoiceCueId ?? voice.cueId, {
                 pan,
                 instanceKey,
                 maxInstances: 1,
@@ -20019,6 +20021,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             continue;
           }
           playProductionCue(pendingCue.cueId, pendingCue.x, {
+            hurtVoiceCueId: pendingCue.hurtVoiceCueId,
             priority: pendingCue.priority ?? 88,
             cooldownMs: pendingCue.cooldownMs ?? 80,
             volume: pendingCue.volume,

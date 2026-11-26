@@ -1107,6 +1107,26 @@
     [
       "              const from = { x: owner.x, y: owner.y };\n              owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);",
       "              const from = event.target.dashOrigin ?? { x: owner.x, y: owner.y };\n              owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);"
+    ],
+    [
+      "type PendingBattleAudioCue = {\n  cueId: string;\n  x: number;\n  dedupeKey: string;\n",
+      "type PendingBattleAudioCue = {\n  cueId: string;\n  hurtVoiceCueId?: string;\n  x: number;\n  dedupeKey: string;\n"
+    ],
+    [
+      "      voiceAllowed?: boolean;\n      fighterVoiceEvent?: FighterVoiceEvent;\n",
+      "      voiceAllowed?: boolean;\n      hurtVoiceCueId?: string;\n      fighterVoiceEvent?: FighterVoiceEvent;\n"
+    ],
+    [
+      "          ? playV104FighterVoice(productionMixer, cueId, fighterVoiceEvent, playback)\n",
+      "          ? playV104FighterVoice(productionMixer, options.hurtVoiceCueId ?? cueId, fighterVoiceEvent, playback)\n"
+    ],
+    [
+      "              return productionMixer.play(voice.cueId, {\n",
+      "              return productionMixer.play(options.hurtVoiceCueId ?? voice.cueId, {\n"
+    ],
+    [
+      "          }\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            priority: pendingCue.priority ?? 88,\n            cooldownMs: pendingCue.cooldownMs ?? 80,\n",
+      "          }\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            hurtVoiceCueId: pendingCue.hurtVoiceCueId,\n            priority: pendingCue.priority ?? 88,\n            cooldownMs: pendingCue.cooldownMs ?? 80,\n"
     ]
   ],
   "app/manualAbilities.js": [
@@ -1369,6 +1389,22 @@
     [
       "  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset));\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath);\nfor (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {\n  const key = asset.sources.map(source => source.src).join('|');\n",
       "  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset));\n// The older formats are already inventoried under their original cue IDs.\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)\n  .map(asset => ({ ...asset, sources: asset.sources.slice(0, 1) }));\nfor (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets]) {\n  const key = asset.sources.map(source => source.src).join('|');\n"
+    ],
+    [
+      "import {lightHurtFiles} from './v100RecordedHurtTakes.js';\n",
+      "import {recordedHurtFiles} from './v100RecordedHurtTakes.js';\n"
+    ],
+    [
+      "].filter(asset => !isShortHeavyDeath(asset) && !lightHurtFiles.includes(asset.sources[0].src));\n",
+      "].filter(asset => !isShortHeavyDeath(asset) && !recordedHurtFiles.includes(asset.sources[0].src));\n"
+    ],
+    [
+      "const lightHurtInstallAssets = lightHurtFiles.map(src => ({\n",
+      "const recordedHurtInstallAssets = recordedHurtFiles.map(src => ({\n"
+    ],
+    [
+      "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...lightHurtInstallAssets]) {\n",
+      "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...recordedHurtInstallAssets]) {\n"
     ]
   ]
 }

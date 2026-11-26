@@ -5604,6 +5604,28 @@
       "audioType": "audio/mpeg"
     },
     {
+      "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3",
+      "bytes": 7149,
+      "hash": "sha256-4ca313e12d3d0397f3ef168ac76dc6fb08943bea06ddf2a5b6d122759f72d354",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261127-voices-human-male-heavy-hurt-03",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-04.mp3",
+      "bytes": 8821,
+      "hash": "sha256-d2900d0da13b4f3c953941a186b7fcb089ae1e5544964a41d4ab4ea7a5df52ef",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261127-voices-human-male-heavy-hurt-04",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/v060/music/battle-stage1.mp3",
       "bytes": 925037,
       "hash": "sha256-71613b42c69632a6b6bb8db7a1bd8d92144eb217b147ebc0699e10f11f3514c9",

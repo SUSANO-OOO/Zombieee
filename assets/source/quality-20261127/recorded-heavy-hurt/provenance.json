@@ -1,0 +1,41 @@
+{
+  "source": "Male Grunt/Yelling sounds",
+  "creator": "HaelDB",
+  "sourcePage": "https://opengameart.org/content/male-gruntyelling-sounds",
+  "archive": "https://opengameart.org/sites/default/files/yelling%20sounds.zip",
+  "archiveSha256": "e9100a4e3b9dcd146993089970dc6097dcf9935fa4683b196040012bad65d67a",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "permissions": [
+    "commercial use",
+    "editing",
+    "redistribution"
+  ],
+  "direction": "Two short, wordless reactions from the same 3yell performer as the installed heavy male hurt recordings. Preserve pitch and performance speed.",
+  "performances": [
+    {
+      "archiveMember": "yelling sounds/3yell3.wav",
+      "master": "3yell3.wav",
+      "masterSha256": "2e55e23478c86bf9bfdf4297a24fb5135c18822dd38f95cabeb45612c840b64b",
+      "levelReference": "human-male-heavy-hurt-01.mp3",
+      "filter": "atrim=start=0.232:end=0.605,asetpts=PTS-STARTPTS,afade=t=in:d=0.006,afade=t=out:st=0.353:d=0.020,volume=1.649365",
+      "runtime": "/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3",
+      "runtimeSha256": "4ca313e12d3d0397f3ef168ac76dc6fb08943bea06ddf2a5b6d122759f72d354",
+      "bytes": 7149,
+      "durationSeconds": 0.373
+    },
+    {
+      "archiveMember": "yelling sounds/3yell4.wav",
+      "master": "3yell4.wav",
+      "masterSha256": "804966a07b60c8e80c8f45c33ae5adfb1d7abbe4ebd07d67eb5d31351f4d250c",
+      "levelReference": "human-male-heavy-hurt-02.mp3",
+      "filter": "atrim=start=0.192:end=0.675,asetpts=PTS-STARTPTS,afade=t=in:d=0.006,afade=t=out:st=0.463:d=0.020,volume=1.490529",
+      "runtime": "/audio/quality-20261127/voices/human-male-heavy-hurt-04.mp3",
+      "runtimeSha256": "d2900d0da13b4f3c953941a186b7fcb089ae1e5544964a41d4ab4ea7a5df52ef",
+      "bytes": 8821,
+      "durationSeconds": 0.483
+    }
+  ],
+  "runtimeFiles": 2,
+  "distinctBytes": 15970
+}

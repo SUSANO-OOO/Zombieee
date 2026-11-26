@@ -225,8 +225,10 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     "/audio/quality-20261125/voices/human-male-heavy-death-02.wav",
   ]);
   const approvedPanGuardSource = "/audio/quality-20261124/manual/pan-guard-contact.mp3";
-  const newHurtFiles = new Set(["03", "04"].map(take =>
-    "/audio/quality-20261126/voices/human-male-light-hurt-" + take + ".mp3"));
+  const newHurtFiles = new Set(["03", "04"].flatMap(take => [
+    "/audio/quality-20261126/voices/human-male-light-hurt-" + take + ".mp3",
+    "/audio/quality-20261127/voices/human-male-heavy-hurt-" + take + ".mp3",
+  ]));
   const approvedSource = source => approvedShortDeathSources.has(source) || source === approvedPanGuardSource || approvedStationSources.has(source) || approvedMayoSources.has(source) || approvedBossSkillSources.has(source) || /^\/audio\/quality-20261116\/boss-finales\/(?:gate-eater|mother|kurome|ooguchi|gairen|takuya|mugarian-president-mutated|futago|takuya-omega)-collapse-r1\.(mp3|ogg)$/.test(source) || /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105|weapons\/(?:recorded|chainsaw|melee)|quality-20261028)\/[a-z0-9-]+\.(mp3|ogg|wav)$/.test(source)
     || /^\/audio\/quality-20261114\/manual\/(?:medic|guardian|scout|ranger|brute|kumaverson|babayaga|gunner|engineer|zakimiya|mrs-chiha|miyamoto-musashi|brawler-pressure|tky-energy)-preparation-r1\.(mp3|ogg)$/.test(source);
   for (const kind of ["medic","guardian","scout","ranger","brute","kumaverson","babayaga","gunner","engineer","zakimiya","mrs-chiha","miyamoto-musashi","brawler-pressure","tky-energy"]) for (const ext of ["mp3", "ogg"])
@@ -251,7 +253,8 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     const shortDeathCue = approvedShortDeathSources.has(asset.sources[0]?.src);
     const newHurtCue = newHurtFiles.has(asset.sources[0]?.src);
     if (newHurtCue) {
-      assert.match(asset.sources[1].src, /^\/audio\/v060\/sfx\/human-male-light-hurt-0[12]\.mp3$/);
+      const family = asset.sources[0].src.includes("male-heavy-") ? "heavy" : "light";
+      assert.ok(["01","02"].some(take => asset.sources[1].src === "/audio/v060/sfx/human-male-" + family + "-hurt-" + take + ".mp3"));
       assert.equal(asset.sources[2].src, asset.sources[1].src.replace(/\.mp3$/, ".ogg"));
     }
     if (shortDeathCue) {

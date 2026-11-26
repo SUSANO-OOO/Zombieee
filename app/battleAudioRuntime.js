@@ -128,6 +128,7 @@ export function scheduleDelayedBattleAudioCue(runtime, entry = {}) {
     receiptId,
     cueId,
     dueSimulationTime,
+    ...(entry.hurtVoiceCueId ? {hurtVoiceCueId: entry.hurtVoiceCueId} : {}),
     x: Number.isFinite(Number(entry.x)) ? Number(entry.x) : 0,
     priority: entry.priority,
     cooldownMs: entry.cooldownMs,

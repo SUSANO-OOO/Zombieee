@@ -6345,6 +6345,28 @@
       "audioChannel": "voice",
       "audioId": "install-quality-20261126-voices-human-male-light-hurt-04",
       "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3",
+      "bytes": 7149,
+      "hash": "sha256-4ca313e12d3d0397f3ef168ac76dc6fb08943bea06ddf2a5b6d122759f72d354",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261127-voices-human-male-heavy-hurt-03",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-04.mp3",
+      "bytes": 8821,
+      "hash": "sha256-d2900d0da13b4f3c953941a186b7fcb089ae1e5544964a41d4ab4ea7a5df52ef",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-quality-20261127-voices-human-male-heavy-hurt-04",
+      "audioType": "audio/mpeg"
     }
   ],
   "retired": [

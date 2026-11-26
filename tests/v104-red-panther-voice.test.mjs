@@ -7,9 +7,10 @@ import {createHash} from 'node:crypto';
 import {createAudioRequestGate,runGuardedAudioRequest} from '../app/audioMixer.js';
 import {PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
 import {PWA_PAN_GUARD_FILE} from '../app/pwaPanGuardFile.js';
-import {withRecordedLightHurtTakes} from '../app/v100RecordedHurtTakes.js';
+import {shortHeavyHurtPool,withRecordedHurtTakes} from '../app/v100RecordedHurtTakes.js';
 import {v177JointActorKey} from '../app/v177JointActorHistory.js';
-import {playV104FighterVoice,v104MonsterVoiceEvent,v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
+import {playV104FighterVoice,queueV104HumanHurt,v104EnemyContactAudio,v104MonsterVoiceEvent,v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
+import {createBattleAudioRuntime,scheduleDelayedBattleAudioCue,takeDueBattleAudioCues} from '../app/battleAudioRuntime.js';
 const kinds=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander'];
 const events=['attack','hurt','death'];
 const shortDeathTake = { 'crazy-king': '02', kumaverson: '01', 'red-panther-shield': '02', 'red-panther-commander': '01' };
@@ -126,7 +127,7 @@ test('the game served under the Pages base still picks the short defeat recordin
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
   }).outputText;
   const imports = { './pwaPanGuardFile.js': {PWA_PAN_GUARD_FILE}, './v177JointActorHistory.js': {v177JointActorKey},
-    './v100RecordedHurtTakes.js': {withRecordedLightHurtTakes} };
+    './v100RecordedHurtTakes.js': {shortHeavyHurtPool,withRecordedHurtTakes} };
   const exports = {};
   vm.runInNewContext(compiled, { exports, require(id) {
     assert.ok(Object.hasOwn(imports, id), id);
@@ -227,6 +228,85 @@ test('named allies vary recorded hurt reactions while keeping the fighter and fi
     }
   }
 });
+test('a rapid series of minor injuries selects short takes for the same fighter only', async () => {
+  const world = {time:0, battleAudioGeneration:0};
+  const fighter = {id:17, kind:'guardian', hp:90, maxHp:100, x:640};
+  const cue = humanVoiceCueForUnit(fighter.kind,'hurt');
+  const brief = 'human-male-heavy-hurt-brief';
+  function hit(time,damage,who=fighter,battle=world) {
+    battle.time=time;
+    const accepted=queueV104HumanHurt(battle,who,who.hp+damage,cue);
+    return accepted ? battle.pendingBattleAudioCues.at(-1) : null;
+  }
+  assert.equal(hit(0,10).hurtVoiceCueId,undefined);
+  assert.equal(hit(.6,10),null);
+  assert.equal(hit(1,0),null);
+  const repeat=hit(1.4,5,{...fighter});
+  assert.equal(repeat.hurtVoiceCueId,brief);
+  assert.equal(hit(2.9,25).hurtVoiceCueId,undefined);
+  assert.equal(hit(5.1,5).hurtVoiceCueId,undefined);
+  assert.equal(hit(5.9,5,{...fighter,id:19}).hurtVoiceCueId,undefined);
+  assert.equal(hit(6,5,fighter,{time:6,battleAudioGeneration:0}).hurtVoiceCueId,undefined);
+  assert.equal(hit(7,5,{...fighter,hp:0}),null);
+  const runtime=createBattleAudioRuntime();
+  assert.equal(scheduleDelayedBattleAudioCue(runtime,repeat),true);
+  const [due]=takeDueBattleAudioCues(runtime,{simulationTime:2,resolveOwner:()=>({alive:true,retreat:false,activationId:0})});
+  assert.equal(due.hurtVoiceCueId,brief);
+  for(const external of [true,false]) {
+    const player=actualPlayer({external});
+    player.play(due.cueId,640,due);
+    await flush();
+    assert.equal(player.requests.length,1);
+    assert.equal(player.requests[0].cueId,brief);
+    assert.equal(player.requests[0].options.instanceKey,'fighter-voice:0:17');
+  }
+});
+
+test('each brief pool retains its original performer, gain and offline fallback', () => {
+  const log=JSON.parse(fs.readFileSync('assets/source/quality-20261127/recorded-heavy-hurt/provenance.json'));
+  const hash=file=>createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  for(const take of log.performances) {
+    assert.equal(hash('assets/source/quality-20261127/recorded-heavy-hurt/'+take.master),take.masterSha256);
+    assert.equal(hash('public'+take.runtime),take.runtimeSha256);
+  }
+  const cues=['human-male-heavy-hurt','voice-kumaverson-hurt','voice-crazy-king-hurt',
+    'voice-red-panther-shield-hurt','voice-red-panther-commander-hurt'];
+  for(const manifest of [V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST]) for(const cue of cues) {
+    const original=manifest.poolById[cue+'-takes']??manifest.poolById[cue];
+    const brief=manifest.poolById[shortHeavyHurtPool(cue)];
+    assert.deepEqual({...brief,id:original.id,assetIds:original.assetIds},original);
+    assert.equal(brief.assetIds.length,log.performances.length);
+    for(const [i,id] of brief.assetIds.entries()) {
+      const asset=manifest.assetById[id], full=manifest.assetById[original.assetIds[i]];
+      assert.deepEqual(asset.sources[0],{src:log.performances[i].runtime,type:'audio/mpeg'});
+      assert.deepEqual(asset.sources.slice(1),full.sources);
+      assert.equal(asset.gain,full.gain);
+    }
+  }
+});
+
+test('rapid Panther injuries shorten the voice while armor, fatal contacts and other voice families keep their own behavior', async () => {
+  for(const kind of kinds) {
+    const actor={id:13,kind,side:'zombie',hp:80,maxHp:120};
+    const world={time:1}, cue=enemyVoiceCue(kind,'hurt');
+    assert.equal(v104EnemyContactAudio(world,actor,8,cue).hurtVoiceCueId,undefined);
+    world.time=2.4;
+    assert.equal(v104EnemyContactAudio(world,actor,0,cue).voiceAllowed,false);
+    const options=v104EnemyContactAudio(world,actor,7,cue);
+    const expected=shortHeavyHurtPool('voice-'+kind+'-hurt');
+    assert.equal(options.hurtVoiceCueId,expected);
+    const player=actualPlayer();
+    player.play(cue,640,options);
+    await flush();
+    assert.deepEqual(player.requests.map(row=>row.cueId),[cue,expected??'voice-'+kind+'-hurt-takes']);
+    assert.equal(player.requests[1].options.instanceKey,'rp-voice:13');
+    world.time=3.5;
+    assert.equal(v104EnemyContactAudio(world,actor,30,cue).hurtVoiceCueId,undefined);
+    world.time=5;
+    assert.equal(v104EnemyContactAudio(world,{...actor,hp:0},20,cue),null);
+  }
+});
+
 test('the actual game keeps the weapon request unchanged and adds one independently controlled actor voice',async()=>{
  for(const kind of kinds)for(const event of events){
   const player=actualPlayer(),cueId=enemyVoiceCue(kind,event);
