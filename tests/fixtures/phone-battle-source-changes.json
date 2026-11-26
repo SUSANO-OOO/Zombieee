@@ -1213,6 +1213,10 @@
     [
       "      <div><dt>参照されていないデータ</dt><dd>{orphanCount == null ? \"なし\" : `${orphanCount}件`}</dd></div>",
       "      {orphanCount != null && <div><dt>使われていないファイル</dt><dd>{orphanCount}件</dd></div>}"
+    ],
+    [
+      "      <div className=\"pwa-notice-stack\">\n      {!blocking && registrationFailed && activation.safe && (\n        <aside className=\"pwa-notice\" onClickCapture={onPwaControlClick} role=\"status\">\n          <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>\n          <button type=\"button\" data-ui-sound=\"cancel\" onClick={() => setRegistrationFailed(false)}>閉じる</button>\n        </aside>\n      )}\n",
+      "      <div className=\"pwa-notice-stack\">\n"
     ]
   ],
   "app/globals.css": [

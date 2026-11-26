@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
+import { finishV100TitleIntro } from "./v100-title-qa-entry.mjs";
 
 const base = process.env.PWA_REGISTRATION_FALLBACK_BASE_URL;
 assert.ok(base, "PWA_REGISTRATION_FALLBACK_BASE_URL is required");
@@ -51,19 +52,22 @@ try {
     }));
     throw new Error(`${error.message}\n${JSON.stringify(diagnostic)}\n${JSON.stringify(errors)}`);
   });
-  // The game shell and registration-failure notice are rendered by separate
-  // async effects. Require both within the original 30-second budget.
-  await page.locator(".pwa-notice").waitFor({ state: "visible", timeout: Math.max(1, deadline - Date.now()) });
+  await finishV100TitleIntro(page, { timeout: Math.max(1, deadline - Date.now()) });
+  const repeatedWarning = page.locator(".pwa-notice").filter({ hasText: "オフライン用の設定に失敗しました" });
+  assert.equal(await repeatedWarning.count(), 0, "The player already acknowledged this registration failure");
+  await page.getByRole("button", { name: "設定", exact: true }).tap({ timeout: Math.max(1, deadline - Date.now()) });
+  await page.locator(".v100-player-menu").waitFor({ timeout: Math.max(1, deadline - Date.now()) });
   const state = await page.evaluate(() => ({
     standalone: Boolean(navigator.standalone),
     gameMounted: Boolean(document.querySelector(".v100-shell")),
     gateVisible: Boolean(document.querySelector(".pwa-gate")),
-    warning: document.querySelector(".pwa-notice")?.textContent ?? "",
+    attempts: window.__pwaRegistrationAttempts,
   }));
   assert.equal(state.standalone, true);
   assert.equal(state.gameMounted, true);
   assert.equal(state.gateVisible, false);
-  assert.match(state.warning, /オフライン用の設定に失敗しました/u);
+  assert.equal(state.attempts, 2);
+  assert.equal(await repeatedWarning.count(), 0);
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ status: "passed", before, retried: true, explicitOnlineChoice: true, offlineAccepted: false, state, errors }, null, 2));
 } finally {
