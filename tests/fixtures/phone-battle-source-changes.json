@@ -501,6 +501,30 @@
       "import { drawBridgeEscort } from \"./v100BridgeEscortRender.js\";\nimport { advanceEstuaryFloodgate, beginEstuaryFloodgateClosure, drawEstuaryFloodgate,\n  floodgateClosureProgress, floodgateIngressDisposition, floodgateReadout, hasEstuaryFloodgate,\n  ESTUARY_CROP_TOP, ESTUARY_GATE_SILL_X } from \"./v100EstuaryFloodgate.js\";"
     ],
     [
+      "  g.banner = `${card.name} // 装甲車両から出撃`;",
+      "  g.banner = v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).onFoot\n    ? `${card.name}、出撃！`\n    : `${card.name} // 装甲車両から出撃`;"
+    ],
+    [
+      "  if (beforeHit === g.baseMaxHp) {\n              g.banner = \"突破発生 — 装甲車両が攻撃を受けています\";",
+      "  if (beforeHit === g.baseMaxHp) {\n              g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber);"
+    ],
+    [
+      "              g.banner = \"移動拠点 危険状態\";\n              g.bannerTime",
+      "              g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber, true);\n              g.bannerTime"
+    ],
+    [
+      "if (beforeHit === g.baseMaxHp) { g.banner = \"突破発生 — 装甲車両が攻撃を受けています\";",
+      "if (beforeHit === g.baseMaxHp) { g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber);"
+    ],
+    [
+      "g.criticalAnnounced = true; g.banner = \"移動拠点 危険状態\"; g.bannerTime",
+      "g.criticalAnnounced = true; g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber, true); g.bannerTime"
+    ],
+    [
+      "import { v100BasePresentationFor } from \"./v100BasePresentation.js\";",
+      "import { v100BaseAttackWarning, v100BasePresentationFor } from \"./v100BasePresentation.js\";"
+    ],
+    [
       "clearDelaySeconds?: number; requiredPowerCount?: number; units: string[] };",
       "clearDelaySeconds?: number; requiredPowerCount?: number; requiresOpenFloodgate?: boolean; units: string[] };"
     ],

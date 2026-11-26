@@ -23,3 +23,10 @@ export function v100BasePresentationFor(stageNumber) {
     barrageLabel: onFoot ? "援護射撃" : "車両砲撃",
     assetPath: onFoot ? V100_RETREAT_DOOR_ART : null });
 }
+
+export function v100BaseAttackWarning(stageNumber, critical = false) {
+  const { label } = v100BasePresentationFor(stageNumber);
+  if (label === "医療物資") return critical ? "医療物資が破壊されそうだ！" : "敵が医療物資を攻撃！";
+  if (label === "退路" && critical) return "退路が断たれる！";
+  return critical ? `${label}がもたない！` : `${label}に敵襲！`;
+}

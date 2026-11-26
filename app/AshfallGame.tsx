@@ -17,7 +17,7 @@ import { V100BattleDeparture, v100DepartureCrewKind } from "./V100BattleDepartur
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
 import {v100SurvivalUpgradeArtworkStyle} from "./v100SurvivalUpgradeArt.js";
-import { v100BasePresentationFor } from "./v100BasePresentation.js";
+import { v100BaseAttackWarning, v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177ClearHeadHealthBarY } from "./v177HeadLabelPlacement.js";
@@ -3150,7 +3150,9 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     ...createUnitRoleRuntime(card),
   });
   addParticles(g, deployment.combatReadyX, deployment.combatReadyY, "#d0b48b", 7);
-  g.banner = `${card.name} // 装甲車両から出撃`;
+  g.banner = v100BasePresentationFor(g.definition.missionConfig.v100StageNumber).onFoot
+    ? `${card.name}、出撃！`
+    : `${card.name} // 装甲車両から出撃`;
   g.bannerTime = .8;
   return card;
 }
@@ -20835,7 +20837,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             g.lastVehicleHit = v100VehicleHitFor({ enemyKind: hit.weapon, time: g.time, beforeHp: beforeHit, afterHp: g.baseHp }) ?? g.lastVehicleHit;
             g.crawlerHitFlash = .18;
             if (beforeHit === g.baseMaxHp) {
-              g.banner = "突破発生 — 装甲車両が攻撃を受けています";
+              g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber);
               g.bannerTime = 1.4;
             }
             if (g.crawlerHitSfxCooldown <= 0 && g.baseHp > 0) {
@@ -20846,7 +20848,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             if (!g.criticalAnnounced && beforeHit > 130 && g.baseHp <= 130 && g.baseHp > 0) {
               g.criticalAnnounced = true;
-              g.banner = "移動拠点 危険状態";
+              g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber, true);
               g.bannerTime = 1.6;
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               g.crawlerHitSfxCooldown = Math.max(g.crawlerHitSfxCooldown, .5);
@@ -24714,7 +24716,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   });
                 } else {
                   g.crawlerHitFlash = .18;
-                  if (beforeHit === g.baseMaxHp) { g.banner = "突破発生 — 装甲車両が攻撃を受けています"; g.bannerTime = 1.4; }
+                  if (beforeHit === g.baseMaxHp) { g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber); g.bannerTime = 1.4; }
                   if (g.crawlerHitSfxCooldown <= 0 && g.baseHp > 0) {
                     g.crawlerHitSfxCooldown = .28;
                     playCue("crawler-hit");
@@ -24722,7 +24724,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     addDamageText(g, BASE_X + 12, f.y - 36, formatBattleText(`移動拠点 -${siegeDamage}`), .7, "#ff7658");
                   }
                   if (!g.criticalAnnounced && beforeHit > 130 && g.baseHp <= 130 && g.baseHp > 0) {
-                    g.criticalAnnounced = true; g.banner = "移動拠点 危険状態"; g.bannerTime = 1.6; g.flashOverlay = Math.max(g.flashOverlay, .12);
+                    g.criticalAnnounced = true; g.banner = v100BaseAttackWarning(g.definition.missionConfig.v100StageNumber, true); g.bannerTime = 1.6; g.flashOverlay = Math.max(g.flashOverlay, .12);
                     g.crawlerHitSfxCooldown = Math.max(g.crawlerHitSfxCooldown, .5); playCue("crawler-critical");
                     emitBattleBark(g, "crawler-critical", "crawler", "crawler");
                   }
