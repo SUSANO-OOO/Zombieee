@@ -646,6 +646,24 @@ export function V100Campaign() {
     eventId: replayEventId, phase: eventPhaseForId(replayEventId), node: replayNode, nodeIndex: replayPage.nodeIndex,
   }) : null, [replayEventId, replayNode, replayPage.nodeIndex]);
   const battleAudioActive = !entryOpen && (flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle");
+  const preparingParty = hydrated && documentVisible && !battleAudioActive && (
+    flow.phase === "map" || (flow.phase === "result" && !flow.pendingResult?.won)
+    || (flow.phase === "event" && flow.eventId?.endsWith(":pre"))
+    || (entryOpen && flow.phase === "formation")
+  );
+  const upcomingParty = preparingParty ? save.formationSlots.filter(Boolean).join(",") : "";
+  useEffect(() => {
+    if (!upcomingParty) return;
+    for (const id of new Set(upcomingParty.split(","))) {
+      const art = v100StoryPortraitPath(id) ?? formationCardForUnit(id);
+      if (!art) continue;
+      const image = new Image();
+      image.decoding = "async";
+      image.fetchPriority = "low";
+      image.src = art;
+      if (typeof image.decode === "function") void image.decode().catch(() => {});
+    }
+  }, [upcomingParty]);
   const modeScoreResult = surface !== "modes" ? null : save.survival.view === "result"
     ? save.survival.lastResult?.endReason === "withdrawal" ? "victory" : "defeat"
     : save.outbreak.view === "result" ? save.outbreak.lastResult?.won ? "victory" : "defeat" : null;
@@ -1469,7 +1487,9 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
             const info = unitId ? v100UnitPresentation(save, unitId) : null;
             const unavailable = v100StageAbsenceReason(stageId, unitId);
             return <button type="button" key={"slot-" + index} data-crew-role={unit?.role} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); if (placingUnit) { onSlotChange(index, placingUnit.id); setPickerOpen(false); } else setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")} aria-describedby={unavailable ? absenceDescriptionId : undefined}>
-              <span className="v100-slot-portrait">{art && unitId ? <CrewPortrait unitId={unitId} /> : <i aria-hidden="true">＋</i>}</span>
+              <span className="v100-slot-portrait" style={{ "--v100-slot-pan": `${100 * index / Math.max(1, save.formationSlots.length - 1)}%` } as CSSProperties}>
+                {art && unitId ? <><CrewPortrait unitId={unitId} /><CrewInsignia unitId={unitId} /></> : <i aria-hidden="true">＋</i>}
+              </span>
               <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き枠"}</strong><b className={unavailable ? "v100-slot-unavailable" : undefined}>{unavailable ? "出撃不可" : info ? `指揮 ${info.commandCost}` : placingUnit ? <>ここに<wbr />配置</> : <>仲間を<wbr />選ぶ</>}</b></span>
             </button>;
           })}</div>

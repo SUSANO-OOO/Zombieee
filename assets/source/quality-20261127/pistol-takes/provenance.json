@@ -1,0 +1,71 @@
+{
+  "creator": [
+    "Ben Jaszczak",
+    "Brian Nelson",
+    "Kevin Heras",
+    "Matthew Nanney",
+    "Kenney"
+  ],
+  "license": "CC0-1.0",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "producerApproval": "Issue 177 P03, existing recorded materials for distinct firearm sounds.",
+  "originalRecordings": [
+    {
+      "file": "assets/source/weapon-recordings/X_39P.wav",
+      "sha256": "d679a3cd87eae2898d984159f83544392932e6b77526045b672e3aaa9c2dda9f"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+      "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+    }
+  ],
+  "notices": [
+    "assets/source/weapon-recordings/LICENSE.txt",
+    "assets/source/v100/audio/kenney-rpg/License.txt"
+  ],
+  "method": "Two different discharges from the same field recording. The suppressed pistol is a filtered game sound. Original timing and pitch; RMS matched to each existing first take over 200 ms.",
+  "recipe": "scripts/build-pistol-takes.mjs",
+  "runtimeAssetCount": 4,
+  "logicalBytes": 31940,
+  "distinctBytes": 31940,
+  "files": {
+    "handgun-02": {
+      "cue": "v104-handgun",
+      "sourceStartSeconds": 6.441,
+      "sourceDurationSeconds": 0.42,
+      "latchDelayMs": 24,
+      "path": "/audio/quality-20261127/firearms/handgun-02.mp3",
+      "hash": "sha256-3a3c1f8e65d27830ff78d5e293b07a6c0a2aa5e77c63cce32836ceff56b4ebd4",
+      "bytes": 7985
+    },
+    "handgun-03": {
+      "cue": "v104-handgun",
+      "sourceStartSeconds": 10.657,
+      "sourceDurationSeconds": 0.42,
+      "latchDelayMs": 19,
+      "path": "/audio/quality-20261127/firearms/handgun-03.mp3",
+      "hash": "sha256-af4b42969873a487a836bb71740ed062d019255bc3a94bec31d74acd422d2880",
+      "bytes": 7985
+    },
+    "suppressed-pistol-02": {
+      "cue": "weapon-suppressed-pistol",
+      "sourceStartSeconds": 6.441,
+      "sourceDurationSeconds": 0.42,
+      "latchDelayMs": 24,
+      "path": "/audio/quality-20261127/firearms/suppressed-pistol-02.mp3",
+      "hash": "sha256-7ae31da1be45e8aa720b01691e997fc32dd2025d0b35fd98221594ea509c1d9b",
+      "bytes": 7985
+    },
+    "suppressed-pistol-03": {
+      "cue": "weapon-suppressed-pistol",
+      "sourceStartSeconds": 10.657,
+      "sourceDurationSeconds": 0.42,
+      "latchDelayMs": 19,
+      "path": "/audio/quality-20261127/firearms/suppressed-pistol-03.mp3",
+      "hash": "sha256-cb4d7496c0ae17f7f6640dbadc4e1481b3a887f7df3baa0897fb8d2669d0d306",
+      "bytes": 7985
+    }
+  }
+}

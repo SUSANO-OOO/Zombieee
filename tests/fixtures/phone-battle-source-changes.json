@@ -1281,6 +1281,14 @@
     [
       "      <div className=\"pwa-notice-stack\">\n      {!blocking && registrationFailed && activation.safe && (\n        <aside className=\"pwa-notice\" onClickCapture={onPwaControlClick} role=\"status\">\n          <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>\n          <button type=\"button\" data-ui-sound=\"cancel\" onClick={() => setRegistrationFailed(false)}>閉じる</button>\n        </aside>\n      )}\n",
       "      <div className=\"pwa-notice-stack\">\n"
+    ],
+    [
+      "import {PWA_PAN_GUARD_FILE} from \"./pwaPanGuardFile.js\";\nimport {PWA_GUN_FINISH_FILES} from \"./pwaGunFinishFiles.js\";\nimport {PWA_HACHI_CROWBAR_FILES} from \"./pwaHachiCrowbarFiles.js\";\nimport {PWA_BOSS_COLLAPSE_FILES} from \"./pwaBossCollapseFiles.js\";\n",
+      "import {PWA_PAN_GUARD_FILE} from \"./pwaPanGuardFile.js\";\nimport {PWA_GUN_FINISH_FILES} from \"./pwaGunFinishFiles.js\";\nimport {PWA_PISTOL_TAKE_FILES} from \"./pwaPistolTakeFiles.js\";\nimport {PWA_HACHI_CROWBAR_FILES} from \"./pwaHachiCrowbarFiles.js\";\nimport {PWA_BOSS_COLLAPSE_FILES} from \"./pwaBossCollapseFiles.js\";\n"
+    ],
+    [
+      "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n",
+      "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n"
     ]
   ],
   "app/globals.css": [
@@ -1405,6 +1413,30 @@
     [
       "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...lightHurtInstallAssets]) {\n",
       "for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets, ...recordedHurtInstallAssets]) {\n"
+    ],
+    [
+      ")));\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n",
+      ")));\n\nconst naoReactions = [\"nao-hurt-01\", \"nao-hurt-02\", \"nao-death\"].map(name => ({\n  ...sfxAsset(\"voice-\" + name, \"humanVoices\", {\n    gain: 0.8, priority: name === \"nao-death\" ? 86 : 66, cooldownMs: 260, maxInstances: 3,\n  }),\n  sources: [{ src: \"/audio/quality-20261127/voices/\" + name + \".mp3\", type: \"audio/mpeg\" }],\n}));\nexport const NAO_REACTION_PATHS = Object.freeze(naoReactions.map(asset => asset.sources[0].src));\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n"
+    ],
+    [
+      "  ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),\n  ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),\n];\n\n",
+      "  ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),\n  ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),\n  ...naoReactions,\n];\n\n"
+    ],
+    [
+      "  ...humanVoicePools,\n  ...enemyVoicePools,\n];\nconst aliases = [\n",
+      "  ...humanVoicePools,\n  ...enemyVoicePools,\n  variationPool(\"voice-nao-hurt\", \"humanVoices\", { priority: 66, cooldownMs: 260, maxInstances: 3 }),\n];\nconst aliases = [\n"
+    ],
+    [
+      "  brawler: \"male-heavy\",\n  gunner: \"female\",\n  medic: \"male-light\",\n  \"crazy-king\": \"male-heavy\",\n  kumaverson: \"male-heavy\",\n",
+      "  brawler: \"male-heavy\",\n  gunner: \"female\",\n  medic: \"female\",\n  \"crazy-king\": \"male-heavy\",\n  kumaverson: \"male-heavy\",\n"
+    ],
+    [
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n  if (contractCue) return contractCue;\n",
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  if (kind === \"medic\" && (event === \"hurt\" || event === \"death\")) return \"voice-nao-\" + event;\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n  if (contractCue) return contractCue;\n"
+    ],
+    [
+      "  }\n}\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([...installAudioBySource.values()]);\n\nexport const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({\n",
+      "  }\n}\n// Existing installations keep the same inventory order when Nao's three\n// individual files are added after the previous download set.\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([\n  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n]);\n\nexport const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({\n"
     ]
   ]
 }

@@ -112,6 +112,28 @@ test('an unavailable optional sheet retains the existing real ground material wi
  assert.equal(drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport),1);assert.ok(f.calls.every(c=>c.args[0]===f.objects['v100-ground-impact']));assertState(f);
 });
 
+test('all six bosses pick up late art on their next strike, including across simulation clones',()=>{
+ for(const kind of kinds){
+  const f=fixture(kind);
+  const artId=ART[kind].id,paint=f.objects[artId],ground=f.objects['v100-ground-impact'];
+  f.owner.attackSequence=12;
+  delete f.objects[artId];
+  function assertDrawsOnly(expected){
+   f.calls.length=0;
+   assert.equal(drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport),1);
+   assert.ok(f.calls.length>0&&f.calls.every(c=>c.args[0]===expected),kind);
+  }
+  assertDrawsOnly(ground);
+  f.objects[artId]=paint;
+  f.world.fighters=[{...f.owner}];
+  assertDrawsOnly(ground);
+  f.world.fighters=[{...f.owner,attackSequence:13}];
+  assertDrawsOnly(paint);
+  delete f.objects[artId];
+  assertDrawsOnly(paint);
+ }
+});
+
 test('invalid viewports and non-V1 worlds draw nothing',()=>{
  for(const v of [{...viewport,viewportWidth:0},{...viewport,viewportHeight:NaN},{...viewport,worldScale:-1}]){const f=fixture('mother');assert.equal(drawV100BossReleaseFields(f.ctx,f.objects,f.world,v),0);assert.equal(f.calls.length,0);}
  const f=fixture('mother');delete f.world.definition.missionConfig.v100StageNumber;assert.equal(drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport),0);assert.equal(f.calls.length,0);

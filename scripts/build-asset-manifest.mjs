@@ -14,6 +14,7 @@ import { DIRECT_AUDIO_FALLBACKS, FALLBACK_AUDIO_BUNDLE_NAME, v100OfflineAudioFal
 
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { PWA_HACHI_CROWBAR_FILES } from "../app/pwaHachiCrowbarFiles.js";
+import { PWA_PISTOL_TAKE_FILES } from "../app/pwaPistolTakeFiles.js";
 import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_SCENE_PORTRAITS, V100_R5_STORY_CUTS, V100_R9_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
 import { V100_RETREAT_DOOR_ART } from "../app/v100BasePresentation.js";
 import { V100_STORY_LOCATION_BACKDROPS } from "../app/v100StoryLocations.js";
@@ -48,7 +49,7 @@ import {
 } from "../app/visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
-import { INSTALL_AUDIO_ASSETS } from "../app/productionAudio.js";
+import { INSTALL_AUDIO_ASSETS, NAO_REACTION_PATHS } from "../app/productionAudio.js";
 import { V104_SHORT_HEAVY_DEATH_PATHS } from "../app/v104CombatAudio.js";
 import { recordedHurtFiles } from "../app/v100RecordedHurtTakes.js";
 import { V100_CREDITS_SONG } from "../app/v100StaffRoll.js";
@@ -341,7 +342,7 @@ record(V100_TITLE_VOICE.src, { pack: "audio", category: "audio", criticality: "o
 record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", criticality: "optional", audioChannel: "se", audioId: "sfx-v100-king-laugh", audioType: "audio/mpeg" });
 record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });
-for (const [audioId, { path }] of Object.entries(PWA_HACHI_CROWBAR_FILES)) {
+for (const [audioId, { path }] of Object.entries({...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES})) {
   record(path, { pack: "audio", category: "audio", criticality: "optional", audioChannel: "se", audioId, audioType: "audio/mpeg" });
 }
 
@@ -370,7 +371,7 @@ function recordAudio(source, audioId, audioChannel, bundleIndex) {
     } : {}),
   });
 }
-const directVoicePaths = new Set([...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles]);
+const directVoicePaths = new Set([...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles, ...NAO_REACTION_PATHS]);
 for (const asset of INSTALL_AUDIO_ASSETS) {
   const source = selectPreferredAudioSource(asset.sources);
   if (source) {

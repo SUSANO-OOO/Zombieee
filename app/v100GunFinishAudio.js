@@ -30,9 +30,31 @@ export function v100GunFinishInstallAssets(manifest){
   return withV100GunFinish(manifest).assets.filter(asset=>paths.has(asset.sources[0].src))
     .map(asset=>({...asset,sources:asset.sources.slice(0,1)}));
 }
+function withPistolTakes(manifest, allowed) {
+  const pistols = new Map([['v104-handgun','handgun'], ['weapon-suppressed-pistol','suppressed-pistol']]);
+  const pools = [...manifest.pools];
+  const assets = manifest.assets.flatMap(asset => {
+    const name = pistols.get(asset.id);
+    if (!name || !allowed.has(playbackFiles[asset.id].path)) return [asset];
+    const alternates = ['02','03'].map(take => {
+      const src = '/audio/quality-20261127/firearms/' + name + '-' + take + '.mp3';
+      return { ...asset, id: asset.id+'-take-'+take, sources: [{src,type:'audio/mpeg'}, ...asset.sources] };
+    });
+    if (!alternates.every(take => allowed.has(take.sources[0].src))) return [asset];
+    const takes = [{...asset,id:asset.id+'-take-01'}, ...alternates];
+    pools.push({
+      id: asset.id, category: asset.category, assetIds: takes.map(take => take.id),
+      strategy: 'shuffle', avoidImmediateRepeat: true, cooldownMs: asset.cooldownMs,
+      priority: asset.priority, maxInstances: asset.maxInstances,
+    });
+    return takes;
+  });
+  return { ...manifest, assets, pools };
+}
 // A battle/conversation snapshots this whitelist at entry. Old committed packs,
 // uncommitted bytes and unwrapped callers retain the original recorded cues.
 export function selectV100GunFinishPlayback(manifest,verifiedPaths=''){
   const allowed = new Set(verifiedPaths.split('\n').filter(Boolean));
-  return createAudioManifest(withV100HachiCrowbar(rewrite(manifest, allowed), allowed));
+  const guns=withPistolTakes(rewrite(manifest, allowed),allowed);
+  return createAudioManifest(withV100HachiCrowbar(guns, allowed));
 }
