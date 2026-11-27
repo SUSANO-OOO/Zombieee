@@ -123,7 +123,8 @@ export function V100EquipmentView({ save, notice, saving, onBack, onPurchase, on
         {notice && <p role="status">{notice}</p>}
         </div></div>
         <footer>
-          <span aria-live="polite">所持金 {save.caps} CAPS<br />{quantity > 0 ? `所持 ${quantity}個（予備 ${comparison.spare}個）` : "未所持"}</span>
+          <span aria-live="polite">所持金 {save.caps} CAPS<br />{needsCopy && price != null && (!unlocked || save.caps < price)
+            ? `価格 ${price} CAPS` : quantity > 0 ? `所持 ${quantity}個（予備 ${comparison.spare}個）` : "未所持"}</span>
           {needsCopy && canBuyHere ? purchaseButton : <button type="button" disabled={saving || !comparison.canEquip}
             onClick={() => onEquip(item.slotType === "personal" ? selectedUnit : null, previewSlot, item.id)}>
             {comparison.reason ?? `枠${previewSlot + 1}に装備する`}

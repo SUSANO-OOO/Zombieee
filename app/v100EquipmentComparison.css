@@ -18,7 +18,7 @@
 .v100-fitting-result p { margin:4px 0 10px; color:#263b23; }
 .v100-fitting-result { align-self:start; border-block:1px solid #9e906e; padding:6px 10px; background:#f4eedc80; }
 .v100-equipment-fitting footer { border-top:1px solid #aa9c79; padding-top:6px; font-variant-numeric:tabular-nums; }
-.v100-equipment-fitting footer .v100-primary:enabled { background:#784526; border-color:#58341e; color:#fff3d9; }
+.v100-equipment-fitting footer .v100-primary:disabled { color:#514731 !important; background:#bcb39a !important; border-color:#8b866e !important; }
 .v100-fitting-changes { margin:0 0 10px; }
 .v100-fitting-changes > div { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #aaa188; }
 .v100-fitting-changes dd { display:flex; gap:9px; margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
