@@ -125,6 +125,9 @@ test('the four arm impacts stay planted while the blade opens its own trench in 
     assert.equal(full.length,4);
     assert.equal(new Set(full.map(c=>[c.tx,c.ty].join(','))).size,4);
     assert.deepEqual(first.map(c=>c.args.slice(1)),full.map(c=>c.args.slice(1)));
+    at(.26);
+    const impact=f.calls.filter(c=>c.args[0]===f.objects[ART[kind].id]);
+    assert.deepEqual(new Set(impact.map(c=>[c.tx,c.ty].join(','))),new Set(full.map(c=>[c.tx,c.ty].join(','))));
    }
    assert.ok(last.every((c,i)=>c.alpha<full[i].alpha*.2));
    image.complete=false;

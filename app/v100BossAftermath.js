@@ -39,13 +39,29 @@ const PROFILES=Object.freeze({
  'takuya-omega':{spread:182,size:118,count:8,lift:35,trail:0,smoke:.3},
 });
 
+const presidentRadius = bossGroundWarningRadius('mugarian-president-mutated');
+const PRESIDENT_FLOOR_CONTACTS = [
+ // Time, ground position, bearing of the fracture, relative spread.
+ [0, -.43, -.42, -.64, .94], [.055, .34, -.35, 1.04, .81],
+ [.115, -.40, .36, 2.30, 1.05], [.18, .40, .40, -.23, .91],
+].map(([delay, x, y, angle, spread]) => ({
+ delay, x: x * presidentRadius, y: y * presidentRadius / BOSS_AREA_DEPTH_SCALE, angle, spread,
+}));
+
+function releaseProfile(size, beats) {
+ const offsets = beats.map(([, x]) => x);
+ const depths = beats.map(([, , y = 0]) => y);
+ return { size, beats, spread: Math.max(...offsets) - Math.min(...offsets),
+  depthSpread: Math.max(...depths) - Math.min(...depths) };
+}
+
 const RELEASES=Object.freeze({
- mother:{size:192,beats:[[0,-42],[.08,0],[.16,42]]},
- ooguchi:{size:220,beats:[[0,18]]},
- gairen:{size:230,beats:[[0,-24],[.1,24]]},
- futago:{size:238,beats:[[0,-8],[.045,8]]},
- 'mugarian-president-mutated':{size:208,beats:[[0,-62],[.04,-20],[.08,20],[.12,62]]},
- 'takuya-omega':{size:312,beats:[[0,0]]},
+ mother:releaseProfile(192,[[0,-42],[.08,0],[.16,42]]),
+ ooguchi:releaseProfile(220,[[0,18]]),
+ gairen:releaseProfile(230,[[0,-24],[.1,24]]),
+ futago:releaseProfile(238,[[0,-8],[.045,8]]),
+ 'mugarian-president-mutated':releaseProfile(208,PRESIDENT_FLOOR_CONTACTS.map(({delay,x,y})=>[delay,x,y])),
+ 'takuya-omega':releaseProfile(312,[[0,0]]),
 });
 function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewport}){
  const p=RELEASES[kind];
@@ -62,19 +78,23 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
  let size=p.size;
  if(viewport){
   const {viewportWidth,viewportHeight,worldScale}=viewport;
-  const offsets=p.beats.map(([,offset])=>offset),spread=Math.max(...offsets)-Math.min(...offsets);
+  const {spread,depthSpread}=p;
   const budget=viewportWidth*viewportHeight*.18/(worldScale*worldScale);
   const widthInCells = twinStrike ? 2 * (1 - anchorX) : 1;
-  size=Math.min(size,(Math.sqrt(spread*spread+4*widthInCells*budget)-spread)/(2*widthInCells));
+  // (spread + widthInCells * size) * (depthSpread + size) must fit.
+  const linear=spread+widthInCells*depthSpread;
+  const available=budget-spread*depthSpread;
+  if(available<=0)return false;
+  size=Math.min(size,(Math.sqrt(linear*linear+4*widthInCells*available)-linear)/(2*widthInCells));
  }
  // The painted debris travels right from its impact point. Place that point
  // beneath the blade's reach and mirror the burst for a leftward strike.
  const strikeX = bladeSweep ? x + direction * size * .58 : x;
- for(const [delay,offset] of p.beats){
+ for(const [delay,offset,depth=0] of p.beats){
   const age=elapsed-delay;if(age<0||age>=.54)continue;
   const progress=age/.54,frame=Math.min(5,Math.floor(progress*6));
   ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=progress>.8?(1-progress)/.2:1;ctx.shadowBlur=0;
-  ctx.translate(strikeX+(kind==='ooguchi'?-direction:1)*offset,y+4);
+  ctx.translate(strikeX+(kind==='ooguchi'?-direction:1)*offset,y+depth+(kind==='mugarian-president-mutated'?0:4));
   if ((bladeSweep && direction < 0) || (kind === 'futago' && offset < 0)) ctx.scale(-1, 1);
   if(art){
    const position=progress*5,first=Math.floor(position),next=Math.min(5,first+1),blend=position-first;
@@ -124,12 +144,6 @@ function drawBroodSeepage(ctx, objects, radius, progress, intensity = 1) {
  ctx.restore();
 }
 
-// The four planted strikes share the floor, but land at different bearings.
-const PRESIDENT_FLOOR_CONTACTS = [
- [-.43, -.42, -.64, .94], [.34, -.35, 1.04, .81],
- [-.40, .36, 2.30, 1.05], [.40, .40, -.23, .91],
-];
-
 function bossFloorImage(objects, kind) {
  if (kind !== 'mugarian-president-mutated' && kind !== 'takuya-omega') return null;
  const image = objects?.[V100_BOSS_FLOOR_ART.id];
@@ -139,20 +153,18 @@ function bossFloorImage(objects, kind) {
 
 function drawPresidentFractures(ctx, image, radius, progress, opacity) {
  const cell = V100_BOSS_FLOOR_ART.cellSize;
- ctx.save();
- ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
- for (const [index, [x, y, angle, spread]] of PRESIDENT_FLOOR_CONTACTS.entries()) {
+ for (const [index, {x, y, angle, spread}] of PRESIDENT_FLOOR_CONTACTS.entries()) {
   const growth = Math.max(0, Math.min(1, (progress - index * .12) / .62));
   if (growth <= 0) continue;
   const width = radius * spread * (.32 + growth * .85);
   ctx.save();
-  ctx.translate(radius * x, radius * y);
+  ctx.translate(x, y);
+  ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
   ctx.rotate(angle);
   ctx.globalAlpha = opacity * Math.min(1, growth * 3);
   ctx.drawImage(image, 0, 0, cell, cell, -width / 2, -width / 2, width, width);
   ctx.restore();
  }
- ctx.restore();
 }
 
 function drawBladeGouge(ctx, image, radius, direction, elapsed) {
