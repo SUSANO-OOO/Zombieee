@@ -417,8 +417,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // progress callbacks by definition, so the only way to notice one is to look
   // at the clock on our own schedule rather than waiting to be told.
   useEffect(() => {
-    const running = downloadState === "running" || downloadState === "paused";
-    if (stalledSince == null || !running) return undefined;
+    if (stalledSince == null || downloadState !== "running") return undefined;
     const timer = setInterval(
       () => setStalledSeconds(Math.round((Date.now() - stalledSince) / 1000)),
       1000,
@@ -537,6 +536,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     const startedAt = Date.now();
     let lastProgressAt = startedAt;
     let lastCompleted = -1;
+    let wasPaused = false;
 
     // An update must not run under a worker that answers asset requests from
     // the generation it is replacing. Promoting the waiting worker first is what
@@ -551,10 +551,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       store,
       fetchAsset: createAssetFetcher({ baseUrl }),
       onProgress: (snapshot) => {
-        if (snapshot.completedCount !== lastCompleted) {
+        if (snapshot.completedCount !== lastCompleted || (wasPaused && snapshot.state === "running")) {
           lastCompleted = snapshot.completedCount;
           lastProgressAt = Date.now();
         }
+        wasPaused = snapshot.state === "paused";
         // Transport completion still needs shell warm, durable commit and
         // read-back. Only finalize's onCommitted may announce success.
         if (snapshot.state === "complete") setDownloadState("committing");
@@ -1168,9 +1169,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             )}
             {phase === "installing" && downloadState !== "checking-download" && progress && (
               <>
-                <h2>ゲームデータをダウンロード中</h2>
+                <h2>{downloadState === "paused" ? "ダウンロードを一時停止中" : "ゲームデータをダウンロード中"}</h2>
                 <p className="pwa-progress-line"><small>{progress.countLine}・</small><strong>{progress.byteLine}</strong></p>
-                {progress.categoryLine && <p className="pwa-hint">{progress.categoryLine}</p>}
+                {downloadState === "running" && progress.categoryLine && <p className="pwa-hint">{progress.categoryLine}</p>}
                 {progress.failedLine && <p className="pwa-warning">{progress.failedLine}</p>}
                 {/*
                   Large assets take a long time to arrive, verify and store, and
@@ -1178,7 +1179,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                   between "working" and "frozen"; without it the only honest
                   reading of a still screen is that the app has died.
                 */}
-                {stalledSeconds >= 12 && (
+                {downloadState === "running" && stalledSeconds >= 12 && (
                   <p className="pwa-hint" role="status">
                     大きなデータを取得・検証中です（最終進捗から{stalledSeconds}秒）。
                     中断しても続きから再開できます。
@@ -1215,7 +1216,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 {downloadState !== "commit-failed" && progress?.remainingLine && <p className="pwa-progress-line">{progress.remainingLine}</p>}
                 <div className="pwa-actions">
                   <button type="button" className="pwa-primary" onClick={retryFailed}>
-                    {commitRecovery.required ? "保存済みデータを反映し直す" : "ダウンロードを再開"}
+                    {commitRecovery.required || downloadState === "commit-failed" ? "保存を確認する" : "ダウンロードを再開"}
                   </button>
                 </div>
                 {diagnostics && diagnostics.failures.length > 0 && (
