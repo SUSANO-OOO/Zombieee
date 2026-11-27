@@ -506,6 +506,7 @@ export function survivalHudSnapshot(run, {
     phase: current.phase,
     wave: current.currentWave,
     lastCompletedWave: current.lastCompletedWave,
+    pendingCaps: current.pendingReward.caps,
     bossKills: current.stats.bossKills,
     nextBossWave,
     speed: current.speed,

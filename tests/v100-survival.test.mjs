@@ -7,9 +7,25 @@ import { v100SurvivalBossPool } from "../app/v100Survival.js";
 import { beginV100Outbreak } from "../app/v100Transactions.js";
 import { v100EquipmentQuantityCap } from "../app/v100Equipment.js";
 import { createSurvivalRun, normalizeSurvivalRun, beginSurvivalWave, completeSurvivalWave, endSurvivalRun, normalizeSurvivalBossPool, SURVIVAL_END_REASONS } from "../app/survival.js";
-import { survivalWaveReward, selectSurvivalBossKind, survivalWaveSpawnPlan, advanceSurvivalCombat, createSurvivalCombatRuntime, captureUnfinishedSurvivalCombatStats } from "../app/survivalBattleRuntime.js";
+import { survivalHudSnapshot, survivalWaveReward, selectSurvivalBossKind, survivalWaveSpawnPlan, advanceSurvivalCombat, createSurvivalCombatRuntime, captureUnfinishedSurvivalCombatStats } from "../app/survivalBattleRuntime.js";
 
 const reload = save => deserializeV100Save(serializeV100Save(save)).save;
+test("withdrawal shows only CAPS paid on exit, including after a boss checkpoint", () => {
+  const started = beginV100Survival(ready(), { runId: "withdrawal-preview" }).save;
+  const firstRun = started.survival.active.run;
+  const afterBoss = choose(checkpointV100Survival(started, completeThrough(firstRun, 5)).save).save;
+  for (const save of [started, reload(afterBoss)]) {
+    const run = save.survival.active.run;
+    for (const current of [run, completeThrough(run, run.currentWave), completeThrough(run, run.currentWave + 1)]) {
+      const preview = survivalHudSnapshot(current).pendingCaps;
+      const result = settleV100Survival(save, endSurvivalRun(current, SURVIVAL_END_REASONS.WITHDRAWAL));
+      assert.equal(result.applied, true);
+      assert.equal(preview, result.save.caps - save.caps);
+      assert.equal(preview, result.save.survival.lastResult.finalCaps);
+    }
+  }
+});
+
 test("survival discloses only equipment actually received, contribution and a new best across reload", () => {
   const prepared = ready();
   const full = survivalWaveReward(5).equipmentGrants[0];
