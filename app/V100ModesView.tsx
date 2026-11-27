@@ -10,7 +10,7 @@ import { beginV100Outbreak, dismissV100OutbreakResult, leaveV100Outbreak, settle
 import { V100SurvivalView } from "./V100SurvivalView";
 import { V100_UNITS, V100_SUPPORTS } from "./v100Registry.js";
 import { stageVisualFor } from "./productionVisuals.js";
-import { v100BossActionGuidanceFor, bossDefinitionForId } from "./bossFoundation.js";
+import { v100BossObservationFor, bossDefinitionForId } from "./bossFoundation.js";
 import { V100_BOSS_DOSSIER_ART } from "./v100BossDossierArt.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
@@ -78,13 +78,13 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     const item = boss.rewardEquipment;
     const rewardOwned = item && (save.equipment.inventory[item.id] ?? 0) >= v100EquipmentQuantityCap(item.id);
     const clears = save.outbreak.clearCounts[boss.id] ?? 0;
-    const guidance = v100BossActionGuidanceFor(boss.id);
+    const observation = v100BossObservationFor(boss.id);
     return <article className="v100-outbreak-file" key={boss.id} data-outbreak-boss-id={boss.id}>
       <div className="v100-outbreak-location" aria-hidden="true"><img src={stageVisualFor(boss.stageId)} alt="" loading="lazy" decoding="async" /></div>
       <div className="v100-outbreak-intel">
         <span className="v100-kicker">物語 ステージ {boss.stageNumber} / 撃破済み</span>
         <h3>{boss.displayName}</h3>
-        {guidance && <p className="v100-outbreak-guidance"><b>対策</b>{guidance}</p>}
+        {observation && <p className="v100-outbreak-guidance">{observation}</p>}
         <dl className="v100-outbreak-reward">
           <div><dt>制圧報酬</dt><dd>{boss.rewardCaps}<small>CAPS</small></dd></div>
           <div><dt>初回装備</dt><dd>{item?.displayName ?? "なし"}<small>{clears > 0 ? "（初回制圧済み）" : rewardOwned ? "（所持上限のため追加なし）" : ""}</small></dd></div>
@@ -97,14 +97,14 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
 </div>}
     {tab === "outbreak" && bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
     {tab === "compendium" && <div className="v100-compendium-register">
-  <p className="v100-register-intro">物語で撃破した個体の特徴と対策を確認できます。個別の撃破記録は全モードで共有します。</p>
+  <p className="v100-register-intro">物語で倒したボスと、各モードでの撃破記録。</p>
   {bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
   {bosses.map(boss => {
     const detail = bossDefinitionForId(boss.id === "boss-kurome" ? "boss-kurome-prototype" : boss.id);
     // V1 twins cooperate; R9 leaves Omega's large blade deliberately unclassified.
     const classification = boss.id === "boss-futago" ? "双体連携型異常発生個体"
       : boss.id === "boss-takuya-omega" ? "終端防衛型異常発生個体" : detail?.classification;
-    const guidance = v100BossActionGuidanceFor(boss.id);
+    const observation = v100BossObservationFor(boss.id);
     const total = defeatCounts[boss.id] ?? 0;
     const outbreak = save.outbreak.clearCounts[boss.id] ?? 0;
     const survival = save.survival.clearCounts[boss.id] ?? 0;
@@ -117,8 +117,8 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
       </div>
       <div className="v100-compendium-body">
         <h3>{boss.displayName}</h3>
-        {classification && <p className="v100-compendium-feature"><b>特徴</b><span>{classification}</span></p>}
-        {guidance && <p className="v100-compendium-counter"><b>対策</b><span>{guidance}</span></p>}
+        {classification && <p className="v100-compendium-feature"><b>分類</b><span>{classification}</span></p>}
+        {observation && <p className="v100-compendium-counter"><b>行動</b><span>{observation}</span></p>}
         <dl className="v100-compendium-history" aria-label={boss.displayName + "の撃破履歴"}>
           <div data-record-mode="total"><dt>総撃破</dt><dd>{total}<small>回</small></dd></div>
           <div data-record-mode="outbreak"><dt>異常発生</dt><dd>{outbreak}<small>回</small></dd></div>
