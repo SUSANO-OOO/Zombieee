@@ -333,12 +333,23 @@ export function survivalWaveDescriptor(waveNumber) {
   };
 }
 
+export function survivalHighestStartWave(highestCompletedWave) {
+  const completed = clampInteger(highestCompletedWave, 0, SURVIVAL_MAX_SAFE_WAVE - 1, 0);
+  return Math.floor(completed / SURVIVAL_START_SKIP_WAVES) * SURVIVAL_START_SKIP_WAVES + 1;
+}
+
+export function isUnlockedSurvivalStartWave(startWave, highestCompletedWave) {
+  return Number.isSafeInteger(startWave) && startWave >= 1
+    && (startWave - 1) % SURVIVAL_START_SKIP_WAVES === 0
+    && startWave <= survivalHighestStartWave(highestCompletedWave);
+}
+
 export function survivalUnlockedStartWaves(highestCompletedWave) {
-  const highest = clampInteger(highestCompletedWave, 0, SURVIVAL_MAX_SAFE_WAVE, 0);
+  const lastStart = survivalHighestStartWave(highestCompletedWave);
   const starts = [1];
   for (
     let startWave = SURVIVAL_START_SKIP_WAVES + 1;
-    startWave <= highest + 1;
+    startWave <= lastStart;
     startWave += SURVIVAL_START_SKIP_WAVES
   ) {
     starts.push(startWave);
