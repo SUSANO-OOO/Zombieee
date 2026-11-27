@@ -163,6 +163,24 @@ test("late starts require completed milestones and cannot earn skipped rewards o
   const late = beginV100Survival(save, { runId: "late", startWave: 21 }); assert.equal(late.applied, true);
   const ended = settleV100Survival(late.save, endSurvivalRun(late.save.survival.active.run, SURVIVAL_END_REASONS.WITHDRAWAL)).save;
   assert.equal(ended.caps, caps); assert.equal(ended.bosses.defeatCounts[V100_BOSSES[0].id], count); assert.equal(ended.survival.lastResult.totalCaps, 0);
+  const settled = reload(ended);
+  const retry = { runId: "retry", startWave: 21, retryOf: "late" };
+  assert.equal(settled.survival.lastResult.startWave, 21);
+  assert.equal(settled.survival.lastResult.completedWave, 20);
+  assert.equal(beginV100Survival(settled, { ...retry, startWave: 1 }).applied, false);
+  assert.equal(beginV100Survival(settled, { ...retry, retryOf: "stale" }).applied, false);
+  const restarted = beginV100Survival(settled, retry);
+  assert.equal(restarted.applied, true);
+  assert.equal(restarted.save.survival.active.run.startWave, 21);
+  assert.equal(restarted.save.caps, caps);
+  assert.equal(restarted.save.survival.totalRuns, settled.survival.totalRuns);
+  assert.deepEqual(restarted.save.survival.lastResult, settled.survival.lastResult);
+  assert.equal(beginV100Survival(restarted.save, retry).applied, false);
+  const legacy = structuredClone(settled);
+  delete legacy.survival.lastResult.startWave;
+  assert.equal(reload(legacy).survival.lastResult.startWave, undefined);
+  assert.equal(beginV100Survival(legacy, retry).applied, false);
+  assert.equal(dismissV100SurvivalResult(legacy).applied, true);
 });
 
 test("invalid starting points preserve the save and a completed record only offers playable waves", () => {

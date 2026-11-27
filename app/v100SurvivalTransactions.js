@@ -19,11 +19,14 @@ function observedRunValid(run) {
     && ['kills', 'bossKills', 'battleSeconds'].every(key => Number.isFinite(run.stats?.[key]) && run.stats[key] >= 0);
 }
 
-/** @param {object} save @param {{runId?: string, startWave?: number, now?: string | number}} options */
-export function beginV100Survival(save, { runId, startWave = 1, now } = {}) {
+/** @param {object} save @param {{runId?: string, startWave?: number, retryOf?: string, now?: string | number}} options */
+export function beginV100Survival(save, { runId, startWave = 1, retryOf, now } = {}) {
   const current = normalizeV100Save(save), bossPool = v100SurvivalBossPool(current.receipts);
   if (!bossPool.length) return reject(current, 'boss-undiscovered');
-  if (current.flowState.phase !== 'map' || current.pendingResult || current.outbreak.view !== 'hub' || current.survival.view !== 'hub') return reject(current, 'activity-active');
+  const { view, lastResult } = current.survival;
+  const canStart = retryOf === undefined ? view === 'hub'
+    : view === 'result' && lastResult?.runId === retryOf && lastResult.startWave === startWave;
+  if (current.flowState.phase !== 'map' || current.pendingResult || current.outbreak.view !== 'hub' || !canStart) return reject(current, 'activity-active');
   const receipt = v100SurvivalReceipt(runId, 'start');
   if (!v100SurvivalRunIdValid(runId) || current.receipts.includes(receipt)) return reject(current);
   if (!isUnlockedSurvivalStartWave(startWave, current.survival.highestCompletedWave)) return reject(current, 'invalid-survival-start');
@@ -98,7 +101,7 @@ export function settleV100Survival(save, rawRun, { now } = {}) {
     survival: { ...next.survival, active: null, view: 'result', totalRuns: next.survival.totalRuns + 1,
       highestCompletedWave: Math.max(next.survival.highestCompletedWave, incoming.lastCompletedWave),
       highestReachedWave: Math.max(next.survival.highestReachedWave, incoming.reachedWave),
-      lastResult: { runId: prior.runId, endReason: incoming.endReason, reachedWave: incoming.reachedWave, completedWave: incoming.lastCompletedWave,
+      lastResult: { runId: prior.runId, startWave: prior.startWave, endReason: incoming.endReason, reachedWave: incoming.reachedWave, completedWave: incoming.lastCompletedWave,
         kills: incoming.stats.kills, clearedBosses: prior.checkpointRewards.length, elapsedSeconds: incoming.stats.battleSeconds,
         totalCaps, finalCaps, receivedEquipmentById: current.survival.active.receivedEquipmentById,
         equipmentRewardsTracked: current.survival.active.equipmentRewardsTracked,
