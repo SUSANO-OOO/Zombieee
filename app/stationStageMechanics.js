@@ -149,6 +149,7 @@ export function createStationMissionRuntime(missionType, config = {}) {
       repairRemaining: 0,
       contaminated: false,
       stalled: false,
+      awaitingEscort: false,
       completed: false,
       failed: false,
       transitions: freeze([]),
@@ -381,6 +382,7 @@ export function advanceStationMissionRuntime({
       repairRemaining,
       contaminated: contaminationActive,
       stalled: bridge && bridge.bridge.gateElapsed !== null ? routeBlocked : stalled,
+      awaitingEscort: escorts === 0 && !routeBlocked,
       completed,
       failed,
       transitions: appendTransition(current, transition),
@@ -562,14 +564,14 @@ export function stationMissionObjective(runtime, config = {}) {
       if(runtime.completed) return "冷蔵車3台を停止・確保";
       if(runtime.contaminated) return "汚泥で冷蔵車列が立ち往生";
       if(runtime.repairRemaining>0) return `進路を復旧中（あと${Math.ceil(runtime.repairRemaining)}秒）`;
-      if(runtime.stalled) return "冷蔵車列を守る残存部隊を排除";
+      if(runtime.stalled) return runtime.awaitingEscort ? "味方を冷蔵車のそばへ" : "冷蔵車付近の敵を倒せ";
       return `冷蔵車3台を封鎖地点へ追い込む ${Math.floor(clamp01(runtime.progress)*100)}%`;
     }
     if (runtime.failed) return `${targetLabel}を防衛できなかった`;
     if (runtime.completed) return `${targetLabel}を出口へ護送完了`;
     if (runtime.contaminated) return `汚泥で${targetLabel}が立ち往生`;
     if (runtime.repairRemaining > 0) return `${targetLabel}を修理中（あと${Math.ceil(runtime.repairRemaining)}秒）`;
-    if (runtime.stalled) return `${targetLabel}の周囲を確保`;
+    if (runtime.stalled) return runtime.awaitingEscort ? `味方を${targetLabel}のそばへ` : `${targetLabel}付近の敵を倒せ`;
     return `${targetLabel}を護衛 ${Math.floor(clamp01(runtime.progress) * 100)}%`;
   }
   if (hasRailEvacuation(runtime?.missionType, config)) {

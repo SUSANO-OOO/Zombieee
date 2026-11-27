@@ -88,6 +88,27 @@ test("V1 escort profiles retain every wave and finish an unobstructed supported 
   }
 });
 
+test("a stopped escort identifies a missing ally, enemies, or a repair before showing movement again", () => {
+  for (const number of [6, 12, 26]) {
+    const { missionType, missionConfig: config } = v100BattleDefinitionFor(V100_STAGES[number - 1].id);
+    const label = number === 26 ? "冷蔵車" : config.targetLabel;
+    let runtime = createStationMissionRuntime(missionType, config);
+    const tick = (escortCount, nearbyThreats, contaminated = false) => {
+      runtime = advanceStationMission({ runtime, missionType, config, escortCount, nearbyThreats,
+        contaminated, seconds: 1, baseHp: 1000 });
+      return stationMissionObjective(runtime, config);
+    };
+    assert.equal(tick(0, 0), `味方を${label}のそばへ`);
+    assert.equal(tick(0, 1), `${label}付近の敵を倒せ`);
+    assert.equal(tick(1, 1), `${label}付近の敵を倒せ`);
+    assert.equal(runtime.progress, 0);
+    assert.match(tick(1, 0), /[0-9]+%$/);
+    assert.ok(runtime.progress > 0);
+    assert.match(tick(0, 0, true), /汚泥/);
+    assert.match(tick(0, 0), /修理中|復旧中/);
+  }
+});
+
 test("the actual mission renderer draws all four authored panels at their runtime positions", async () => {
   const source = await readFile("app/AshfallGame.tsx", "utf8");
   const ast = ts.createSourceFile("AshfallGame.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
