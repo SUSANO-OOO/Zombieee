@@ -1,0 +1,182 @@
+{
+  "license": "CC0-1.0",
+  "creators": [
+    "Ben Jaszczak",
+    "Brian Nelson",
+    "Kevin Heras",
+    "Matthew Nanney",
+    "Kenney"
+  ],
+  "notices": [
+    "assets/source/weapon-recordings/LICENSE.txt",
+    "assets/source/v100/audio/kenney-impact/License.txt",
+    "assets/source/v100/audio/kenney-rpg/License.txt"
+  ],
+  "recipe": "scripts/build-manual-strikes.mjs",
+  "originals": [
+    {
+      "file": "assets/source/weapon-recordings/D_32P.wav",
+      "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+      "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+      "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+      "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+      "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+      "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+      "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d"
+    }
+  ],
+  "recipes": [
+    {
+      "cue": "ability-ranger-precision-shot",
+      "duration": 0.63,
+      "onsetDb": -16,
+      "layers": [
+        {
+          "sourceKey": "rifle",
+          "start": 5.64,
+          "length": 0.55,
+          "delay": 0,
+          "gain": 1,
+          "low": 70,
+          "high": 10300
+        },
+        {
+          "sourceKey": "rifle",
+          "start": 5.644,
+          "length": 0.24,
+          "delay": 0.056,
+          "gain": 0.24,
+          "low": 170,
+          "high": 2600
+        },
+        {
+          "sourceKey": "rifle",
+          "start": 5.646,
+          "length": 0.25,
+          "delay": 0.122,
+          "gain": 0.12,
+          "low": 250,
+          "high": 1650
+        },
+        {
+          "sourceKey": "latch",
+          "start": 0.005,
+          "length": 0.12,
+          "delay": 0.205,
+          "gain": 0.17,
+          "low": 1050,
+          "high": 5700
+        }
+      ]
+    },
+    {
+      "cue": "ability-ranger-precision-impact",
+      "duration": 0.24,
+      "onsetDb": -21,
+      "layers": [
+        {
+          "sourceKey": "soft",
+          "start": 0,
+          "length": 0.16,
+          "delay": 0,
+          "gain": 0.92,
+          "low": 180,
+          "high": 2100
+        },
+        {
+          "sourceKey": "wood",
+          "start": 0.004,
+          "length": 0.14,
+          "delay": 0.005,
+          "gain": 0.7,
+          "low": 650,
+          "high": 5000
+        },
+        {
+          "sourceKey": "tick",
+          "start": 0.002,
+          "length": 0.12,
+          "delay": 0.022,
+          "gain": 0.22,
+          "low": 2400,
+          "high": 7600
+        }
+      ]
+    },
+    {
+      "cue": "ability-scout-intercept-impact",
+      "duration": 0.39,
+      "onsetDb": -14.5,
+      "layers": [
+        {
+          "sourceKey": "soft",
+          "start": 0,
+          "length": 0.23,
+          "delay": 0,
+          "gain": 1.15,
+          "low": 75,
+          "high": 1350
+        },
+        {
+          "sourceKey": "steel",
+          "start": 0,
+          "length": 0.18,
+          "delay": 0.004,
+          "gain": 0.94,
+          "low": 470,
+          "high": 6500
+        },
+        {
+          "sourceKey": "cloth",
+          "start": 0.008,
+          "length": 0.16,
+          "delay": 0.028,
+          "gain": 0.34,
+          "low": 550,
+          "high": 4600
+        },
+        {
+          "sourceKey": "steel",
+          "start": 0.027,
+          "length": 0.15,
+          "delay": 0.069,
+          "gain": 0.23,
+          "low": 400,
+          "high": 2900
+        }
+      ]
+    }
+  ],
+  "files": {
+    "ability-ranger-precision-shot": {
+      "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-shot.mp3",
+      "hash": "sha256-39e9711fbd3e4a0fdd0473266edd42917795c83d5830377f8919bddcf1108b8e"
+    },
+    "ability-ranger-precision-impact": {
+      "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-impact.mp3",
+      "hash": "sha256-e8cae52b9403b17a192783b2327d5e0cce638ac43e7a07cd03d6021f13f05e99"
+    },
+    "ability-scout-intercept-impact": {
+      "path": "/audio/quality-20261127/manual-strikes/ability-scout-intercept-impact.mp3",
+      "hash": "sha256-198e4d8d74ce82edfe5558e2ca5b39d0f14f783b6a94af4731dd10269108d5f4"
+    }
+  }
+}

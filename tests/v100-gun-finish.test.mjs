@@ -11,6 +11,7 @@ import {PWA_GUN_FINISH_FILES as files} from '../app/pwaGunFinishFiles.js';
 import {PWA_HACHI_CROWBAR_FILES as crowbarFiles} from '../app/pwaHachiCrowbarFiles.js';
 import {PWA_PISTOL_TAKE_FILES as pistolFiles} from '../app/pwaPistolTakeFiles.js';
 import {PWA_CHIHA_SALVO_FILES as salvoFiles} from '../app/pwaChihaSalvoFiles.js';
+import {PWA_MANUAL_STRIKE_FILES as strikeFiles} from '../app/pwaManualStrikeFiles.js';
 import {withV100GunFinish,selectV100GunFinishPlayback} from '../app/v100GunFinishAudio.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 const ids=['v104-handgun','weapon-rifle-01','weapon-rifle-02','weapon-gunner-01','weapon-gunner-02','weapon-smg-01','weapon-smg-02','weapon-suppressed-pistol'];
@@ -19,6 +20,27 @@ const sha=b=>createHash('sha256').update(b).digest('hex');
 const baseRef='b228ee4a6ae944af4cec62524a4b2dd5b1205946';
 const oldJson=p=>JSON.parse(execFileSync('git',['show',baseRef+':'+p],{maxBuffer:8*1024*1024,encoding:'utf8'}));
 const allPaths=Object.values(files).map(f=>f.path).join(String.fromCharCode(10));
+
+test('Hachi and Mizuchi use a dedicated manual strike only after that recording is saved',()=>{
+ const installedManifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));
+ const previous=selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,allPaths);
+ for(const [cue,file] of Object.entries(strikeFiles)){
+  const entry=installedManifest.assets.find(asset=>asset.path===file.path);
+  assert.equal(entry.hash,'sha256-'+sha(fs.readFileSync('public'+file.path)));
+  assert.equal(entry.hash,file.hash);
+  const policy={artworks:strikeFiles,installedManifest,gameBlocked:false};
+  for(const [cached,ready] of [[file.hash,true],['sha256-'+'0'.repeat(64),false]]){
+   const allowed=verifiedPwaArtworkPaths({...policy,storedHashes:new Set([cached])});
+   const selected=selectV100GunFinishPlayback(V100_AUDIO_MANIFEST,allPaths+'\n'+allowed);
+   for(const id of Object.keys(strikeFiles)){
+    const old=previous.assetById[id];
+    const expected=ready&&id===cue?[{src:file.path,type:'audio/mpeg'},...old.sources]:old.sources;
+    assert.deepEqual(selected.assetById[id],{...old,sources:expected});
+   }
+   assert.deepEqual(selected.assetById['weapon-rifle-01'],previous.assetById['weapon-rifle-01']);
+  }
+ }
+});
 
 test('Chiha alternates both loaded discharges and keeps the final landing separate from the preceding three',()=>{
  const paths=Object.values(salvoFiles).map(f=>f.path);

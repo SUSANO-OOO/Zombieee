@@ -1325,6 +1325,14 @@
     [
       "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n",
       "  });\n  const verifiedGunFinishPaths = verifiedPwaArtworkPaths({\n    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n"
+    ],
+    [
+      "import {PWA_CHIHA_SALVO_FILES} from \"./pwaChihaSalvoFiles.js\";\n",
+      "import {PWA_CHIHA_SALVO_FILES} from \"./pwaChihaSalvoFiles.js\";\nimport {PWA_MANUAL_STRIKE_FILES} from \"./pwaManualStrikeFiles.js\";\n"
+    ],
+    [
+      "    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n",
+      "    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES,...PWA_MANUAL_STRIKE_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n"
     ]
   ],
   "app/globals.css": [

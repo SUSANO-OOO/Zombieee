@@ -71,6 +71,7 @@ import {PWA_PAN_GUARD_FILE} from "./pwaPanGuardFile.js";
 import {PWA_GUN_FINISH_FILES} from "./pwaGunFinishFiles.js";
 import {PWA_PISTOL_TAKE_FILES} from "./pwaPistolTakeFiles.js";
 import {PWA_CHIHA_SALVO_FILES} from "./pwaChihaSalvoFiles.js";
+import {PWA_MANUAL_STRIKE_FILES} from "./pwaManualStrikeFiles.js";
 import {PWA_HACHI_CROWBAR_FILES} from "./pwaHachiCrowbarFiles.js";
 import {PWA_BOSS_COLLAPSE_FILES} from "./pwaBossCollapseFiles.js";
 import {PWA_BOSS_SKILL_FILES} from "./pwaBossSkillFiles.js";
@@ -945,7 +946,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedGunFinishPaths = verifiedPwaArtworkPaths({
-    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES,...PWA_MANUAL_STRIKE_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedBossSkillPaths = verifiedPwaArtworkPaths({

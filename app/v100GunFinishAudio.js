@@ -11,15 +11,20 @@ const sharedShots=Object.freeze({
   'ability-gunner-suppression-muzzle':'weapon-gunner-01',
   'ability-babayaga-appraise-shot':'weapon-suppressed-pistol',
 });
+const manualStrikes = new Set(['ability-ranger-precision-shot','ability-ranger-precision-impact','ability-scout-intercept-impact']);
 function rewrite(manifest,allowed){
   return {...manifest,assets:manifest.assets.map(asset=>{
     const key=Object.hasOwn(sharedShots,asset.id)?sharedShots[asset.id]:asset.id;
     const file=Object.hasOwn(playbackFiles,key)?playbackFiles[key]:null;
-    if(!file)return asset;
-    const fallback=asset.sources.filter(source=>source.src!==file.path);
-    if(!fallback.length)throw new Error('Missing original gun source: '+asset.id);
-    if(allowed&&!allowed.has(file.path))return fallback.length===asset.sources.length?asset:{...asset,sources:fallback};
-    return {...asset,sources:[{src:file.path,type:'audio/mpeg'},...fallback]};
+    const strikePath=manualStrikes.has(asset.id)?'/audio/quality-20261127/manual-strikes/'+asset.id+'.mp3':null;
+    if(!file&&!strikePath)return asset;
+    const fallback=asset.sources.filter(source=>source.src!==file?.path&&source.src!==strikePath);
+    if(!fallback.length)throw new Error('Missing original weapon source: '+asset.id);
+    const sources=[];
+    if(strikePath&&allowed?.has(strikePath))sources.push({src:strikePath,type:'audio/mpeg'});
+    if(file&&(!allowed||allowed.has(file.path)))sources.push({src:file.path,type:'audio/mpeg'});
+    if(!sources.length&&fallback.length===asset.sources.length)return asset;
+    return {...asset,sources:[...sources,...fallback]};
   })};
 }
 // Playback retains the recorded fallback sources in their existing order.

@@ -5692,6 +5692,39 @@
       "audioType": "audio/mpeg"
     },
     {
+      "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-impact.mp3",
+      "bytes": 5059,
+      "hash": "sha256-e8cae52b9403b17a192783b2327d5e0cce638ac43e7a07cd03d6021f13f05e99",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "ability-ranger-precision-impact",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-shot.mp3",
+      "bytes": 11328,
+      "hash": "sha256-39e9711fbd3e4a0fdd0473266edd42917795c83d5830377f8919bddcf1108b8e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "ability-ranger-precision-shot",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/manual-strikes/ability-scout-intercept-impact.mp3",
+      "bytes": 7149,
+      "hash": "sha256-198e4d8d74ce82edfe5558e2ca5b39d0f14f783b6a94af4731dd10269108d5f4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "ability-scout-intercept-impact",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3",
       "bytes": 7149,
       "hash": "sha256-4ca313e12d3d0397f3ef168ac76dc6fb08943bea06ddf2a5b6d122759f72d354",
