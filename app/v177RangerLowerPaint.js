@@ -3,7 +3,6 @@ import {createV177RangerLowerPose,v177RangerLowerPose} from './v177RangerLowerMo
 const painters=new WeakMap(),MAX_PIXELS=65536,MAX_SURFACES=32;
 const paintCounts={createdPainters:0,rasterizedDraws:0,reusedDraws:0};
 export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
-const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
 const topLeft=(ax,ay,bx,by)=>by<ay||(by===ay&&bx>ax);
 const owned=(v,edge)=>v>1e-10||(Math.abs(v)<=1e-10&&edge);
 function sourceKernelOccupancy(data,width,height){
@@ -61,7 +60,10 @@ function ensureCapacity(p,w,h) {
   if(width*height>MAX_PIXELS){if(w*h>MAX_PIXELS){invalidateRasters(p);return false;}width=w;height=h;}
   if(width===p.width&&height===p.height)return true;
   try{
-    const sample=new Float32Array(width*height*4),accum=new Float32Array(width*height*4),visits=new Uint8Array(width*height);
+    // Four subpixels per output pixel. Large or clipped poses use tiles so
+    // the scratch buffers still have the original maximum size.
+    const sampleCapacity=Math.min(MAX_PIXELS,width*height*4);
+    const sample=new Float32Array(sampleCapacity*4),accum=new Float32Array(width*height*4),visits=new Uint8Array(sampleCapacity);
     p.width=width;p.height=height;p.sample=sample;p.accum=accum;p.visits=visits;
     for(const raster of p.rasters)if(raster.valid){
       const backingWidth=raster.width+(width>raster.width?1:0),backingHeight=raster.height+(width===raster.width&&height>raster.height?1:0);
@@ -135,20 +137,28 @@ function selectPartDiagonals(g) {
     }
   }
 }
-function rasterPart(p,g,w,h,ox,oy,stats) {
-  p.visits.fill(0,0,w*h);
+function rasterPart(p,g,tileX,tileY,columns,rows,stats) {
+  p.visits.fill(0,0,columns*rows);
   for(let ti=0;ti<g.rasterIndices.length;ti+=3){
     let ia=g.rasterIndices[ti]*2,ib=g.rasterIndices[ti+1]*2,ic=g.rasterIndices[ti+2]*2;
     let ax=g.target[ia],ay=g.target[ia+1],bx=g.target[ib],by=g.target[ib+1],cx=g.target[ic],cy=g.target[ic+1];
-    let area=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);if(Math.abs(area)<1e-12){stats.degenerate++;continue;}
+    let area=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+    if(Math.abs(area)<1e-12){
+      if(tileX===0 && tileY===0)stats.degenerate+=4;
+      continue;
+    }
     if(area<0){const index=ib;ib=ic;ic=index;const x=bx,y=by;bx=cx;by=cy;cx=x;cy=y;area=-area;}
     const abTop=topLeft(ax,ay,bx,by),bcTop=topLeft(bx,by,cx,cy),caTop=topLeft(cx,cy,ax,ay);
-    const xmin=Math.max(0,Math.ceil(Math.min(ax,bx,cx)-ox)),xmax=Math.min(w-1,Math.floor(Math.max(ax,bx,cx)-ox));
-    const ymin=Math.max(0,Math.ceil(Math.min(ay,by,cy)-oy)),ymax=Math.min(h-1,Math.floor(Math.max(ay,by,cy)-oy));
+    // Adjacent grid points are the same .25 and .75 coverage locations as
+    // the four individual passes, with the same winding and shared edges.
+    const xmin=Math.max(tileX,Math.ceil((Math.min(ax,bx,cx)-.25)*2));
+    const xmax=Math.min(tileX+columns-1,Math.floor((Math.max(ax,bx,cx)-.25)*2));
+    const ymin=Math.max(tileY,Math.ceil((Math.min(ay,by,cy)-.25)*2));
+    const ymax=Math.min(tileY+rows-1,Math.floor((Math.max(ay,by,cy)-.25)*2));
     for(let py=ymin;py<=ymax;py++)for(let px=xmin;px<=xmax;px++){
-      const x=px+ox,y=py+oy,ab=(bx-ax)*(y-ay)-(by-ay)*(x-ax),bc=(cx-bx)*(y-by)-(cy-by)*(x-bx),ca=(ax-cx)*(y-cy)-(ay-cy)*(x-cx);
+      const x=px*.5+.25,y=py*.5+.25,ab=(bx-ax)*(y-ay)-(by-ay)*(x-ax),bc=(cx-bx)*(y-by)-(cy-by)*(x-bx),ca=(ax-cx)*(y-cy)-(ay-cy)*(x-cx);
       if(!owned(ab,abTop)||!owned(bc,bcTop)||!owned(ca,caTop))continue;
-      const pixel=py*w+px;if(p.visits[pixel]++)stats.duplicateWithinPart++;
+      const pixel=(py-tileY)*columns+px-tileX;if(p.visits[pixel]++)stats.duplicateWithinPart++;
       const wa=bc/area,wb=ca/area,wc=ab/area;
       const sx=g.uv[ia]*wa+g.uv[ib]*wb+g.uv[ic]*wc-g.rect.x-.5,sy=g.uv[ia+1]*wa+g.uv[ib+1]*wb+g.uv[ic+1]*wc-g.rect.y-.5;
       const ix=Math.floor(sx),iy=Math.floor(sy),fx=sx-ix,fy=sy-iy;
@@ -181,6 +191,37 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
       if(a===1){p.sample[at]=r;p.sample[at+1]=green;p.sample[at+2]=b;p.sample[at+3]=1;continue;}
       const keep=1-a;
       p.sample[at]=r+p.sample[at]*keep;p.sample[at+1]=green+p.sample[at+1]*keep;p.sample[at+2]=b+p.sample[at+2]*keep;p.sample[at+3]=a+p.sample[at+3]*keep;
+    }
+  }
+}
+
+function rasterPose(p, w, h, receipt) {
+  const tileWidth = Math.min(w, Math.floor(p.visits.length / 4));
+  const tileHeight = Math.floor(p.visits.length / (4 * tileWidth));
+  for (let y = 0; y < h; y += tileHeight) {
+    for (let x = 0; x < w; x += tileWidth) {
+      const width = Math.min(w - x, tileWidth), height = Math.min(h - y, tileHeight);
+      const columns = width * 2, rows = height * 2, stride = columns * 4;
+      p.sample.fill(0, 0, rows * stride);
+      for (const part of p.parts) rasterPart(p, part, x * 2, y * 2, columns, rows, receipt);
+      for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+          const top = row * 2 * stride + col * 8, bottom = top + stride;
+          const dst = ((y + row) * w + x + col) * 4;
+          if (!p.sample[top+3] && !p.sample[top+7] && !p.sample[bottom+3] && !p.sample[bottom+7]) {
+            p.accum[dst+3] = 0;
+            continue;
+          }
+          for (let channel = 0; channel < 4; channel++) {
+            const upper = top + channel, lower = bottom + channel;
+            // Match the Float32 accumulator after each original coverage sample.
+            const first = Math.fround(p.sample[upper] * .25);
+            const pair = Math.fround(first + p.sample[upper+4] * .25);
+            const third = Math.fround(pair + p.sample[lower] * .25);
+            p.accum[dst+channel] = third + p.sample[lower+4] * .25;
+          }
+        }
+      }
     }
   }
 }
@@ -237,11 +278,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     // Reassigning an owner can also turn it into an alias. Retire all old
     // borrowers before either its payload or its ownership is changed.
     retireRaster(p,last);
-    p.accum.fill(0,0,w*h*4);
-    for(const [ox,oy]of samples){
-      p.sample.fill(0,0,w*h*4);for(const g of p.parts)rasterPart(p,g,w,h,ox,oy,receipt);
-      for(let i=0;i<w*h*4;i++)p.accum[i]+=p.sample[i]*.25;
-    }
+    rasterPose(p,w,h,receipt);
     // Sampling is finished. Its existing Float32 workspace can retain every
     // old byte exactly while generating the new payload, with no extra buffer.
     if(retainOwnPayload)p.sample.set(p.imageData.data);
