@@ -128,22 +128,25 @@ export const V104_BEAM_AUDIO=['warning','fire'].map(event=>({id:`v104-eye-${even
 // actor and game clock, rather than a random roll that can silence a character
 // for an entire encounter. The existing mixer still owns overlap and priority.
 const voiceClocks=new WeakMap();
-// A fighter under sustained fire uses a short breath between hits. An isolated
-// hit, or one that costs a quarter of full health, keeps the full performance.
-function followupHurtCue(world, actor, damage, cueId) {
- const pool = shortHeavyHurtPool(cueId);
- if (!pool || !(damage > 0 && damage < actor.maxHp * .25)) return undefined;
- const previous = voiceClocks.get(v177JointActorKey(actor,world))?.hurt;
- const elapsed = world?.time - previous;
- return elapsed >= 0 && elapsed <= 2 ? pool : undefined;
+const lastHumanInjury=new WeakMap();
+function humanInjuryCue(world, actor, damage, cueId) {
+ if (!cueId || !(damage > 0 && actor.hp > 0) || !Number.isFinite(world?.time)) return null;
+ const key=v177JointActorKey(actor,world);
+ const sinceHit=world.time-lastHumanInjury.get(key);
+ lastHumanInjury.set(key,world.time);
+ // A continuous volley has many contacts but only intermittent audible breaths.
+ // Measure the break from contact, even when the last hit produced no voice.
+ const sustained=actor.kind!=='mayo-chan' && sinceHit>=0 && sinceHit<=2 && damage<actor.maxHp*.25;
+ if (!battleVoiceReady(actor,'hurt',world.time,world,sustained?2.25:.8)) return null;
+ return sustained ? shortHeavyHurtPool(cueId) ?? cueId : cueId;
 }
 // Close-contact effort uses the existing recorded nonverbal voice family.
 // Steady ranged fire keeps the weapon cue; hurt and death stay separate.
 const weaponOnlyAttackKinds=new Set(['ranger','gunner','medic','engineer','mrs-chiha','babayaga']);
-export function battleVoiceReady(actor,event,time,world){
+export function battleVoiceReady(actor,event,time,world,gap=event==='attack'?2.1:.8){
  if(event==='attack'&&weaponOnlyAttackKinds.has(actor?.kind))return false;
  if(!actor||!(actor.hp>0)||!Number.isFinite(time))return false;
- const key=v177JointActorKey(actor,world),clocks=voiceClocks.get(key)??{},last=clocks[event],gap=event==='attack'?2.1:.8;
+ const key=v177JointActorKey(actor,world),clocks=voiceClocks.get(key)??{},last=clocks[event];
  if(Number.isFinite(last)&&time>=last&&time-last<gap)return false;
  clocks[event]=time;voiceClocks.set(key,clocks);return true;
 }
@@ -154,9 +157,15 @@ export function v104EnemyContactAudio(world,actor,damage,cueId){
  const voiceAllowed=damage>0;
  const voice=v104SupplementalEnemyVoice(cueId);
  if(!voiceAllowed&&voice?.event!=='hurt')return null;
- const hurtVoiceCueId=voiceAllowed ? followupHurtCue(world,actor,damage,voice?.asset.id) : undefined;
+ if (voiceAllowed && voice?.event==='hurt') {
+   if(!battleVoiceReady(actor,'wound-contact',world?.time,world))return null;
+   const selected=humanInjuryCue(world,actor,damage,voice.asset.id);
+   return selected && selected!==voice.asset.id
+     ? {ownerId:actor.id,voiceAllowed:true,hurtVoiceCueId:selected}
+     : {ownerId:actor.id,voiceAllowed:Boolean(selected)};
+ }
  if(!battleVoiceReady(actor,voiceAllowed?'hurt':'armor-contact',world?.time,world))return null;
- return hurtVoiceCueId ? {ownerId:actor.id,voiceAllowed,hurtVoiceCueId} : {ownerId:actor.id,voiceAllowed};
+ return {ownerId:actor.id,voiceAllowed};
 }
 // A monster's vocal reaction follows its actor. Weapon, impact and body-fall
 // aliases keep their separate playback, including the Red Panther material cues.
@@ -179,10 +188,10 @@ export function playV104FighterVoice(mixer,cueId,event,options){
  return mixer.play(takes ? takes.id : cueId,{...options,maxInstances:1});
 }
 export function queueV104HumanHurt(world,actor,hpBefore,cueId){
- const hurtVoiceCueId=followupHurtCue(world,actor,hpBefore-actor.hp,cueId);
- if(!(hpBefore>actor.hp)||!cueId||!battleVoiceReady(actor,'hurt',world.time,world))return false;
+ const selected=humanInjuryCue(world,actor,hpBefore-actor.hp,cueId);
+ if(!selected)return false;
  const receiptId=`hurt:${actor.id}:${world.time.toFixed(6)}:${actor.hp}`;
- (world.pendingBattleAudioCues??=[]).push({cueId,...(hurtVoiceCueId ? {hurtVoiceCueId} : {}),x:actor.x,battleGeneration:world.battleAudioGeneration,
+ (world.pendingBattleAudioCues??=[]).push({cueId,...(selected!==cueId ? {hurtVoiceCueId:selected} : {}),x:actor.x,battleGeneration:world.battleAudioGeneration,
   ownerId:actor.id,activationId:0,semantic:'battle-hurt',receiptId,dueSimulationTime:world.time,
   priority:72,cooldownMs:0,maxInstances:2,volume:['brute','brawler'].includes(actor.kind)?.94:.8});
  return true;
