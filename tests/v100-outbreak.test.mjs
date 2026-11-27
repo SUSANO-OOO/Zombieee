@@ -62,6 +62,25 @@ test("defeat, withdrawal and restart preserve money/counts and reject late resul
   assert.equal(beginV100Outbreak(withdrawn, boss.id, { runId: "third" }).applied, false);
 });
 
+test("one tap on a saved win or loss starts the same boss once without paying the last reward again", () => {
+  const boss = V100_BOSSES.find(entry => entry.id === "boss-mugarian-president-mutated");
+  for (const won of [false, true]) {
+    const active = beginV100Outbreak(ready(boss), boss.id, { runId: "original" }).save;
+    const previous = resultFor(active, { won, bossDefeated: won, baseHp: won ? 300 : 0 });
+    const finished = reload(settleV100Outbreak(active, previous).save);
+    assert.equal(finished.outbreak.view, "result");
+    const next = beginV100Outbreak(finished, boss.id, { runId: "rematch" });
+    assert.equal(next.applied, true);
+    const restored = reload(next.save);
+    assert.deepEqual(restored.outbreak.active, { bossId: boss.id, runId: "rematch" });
+    assert.equal(restored.caps, finished.caps);
+    assert.deepEqual(restored.equipment, finished.equipment);
+    assert.deepEqual(restored.outbreak.clearCounts, finished.outbreak.clearCounts);
+    assert.equal(settleV100Outbreak(restored, previous).applied, false);
+    assert.equal(beginV100Outbreak(restored, boss.id, { runId: "extra-tap" }).applied, false);
+  }
+});
+
 test("capped tactical duplicate rewards do not convert to money or claim another item", () => {
   const futago = V100_BOSSES.find(b => b.id === "boss-futago"), president = V100_BOSSES.find(b => b.id === "boss-mugarian-president-mutated");
   let save = ready(futago); save.receipts.push(president.firstDefeatReceipt); save = normalizeV100Save(save);

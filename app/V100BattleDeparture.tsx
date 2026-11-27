@@ -63,7 +63,7 @@ export function V100BattleDeparture({ session, progress, assetError, background,
   const stageTitle = stage
     ? stage.number < 27 ? stage.displayName.replace(/RED PANTHER/gu, "赤レンズ部隊") : stage.displayName
     : session.survivalRun ? "サバイバル" : session.displayName || "迎撃任務";
-  const briefing = stage && session.battleMode !== "outbreak" ? v100MissionObjectiveFor(stage.id) : null;
+  const briefing = stage ? v100MissionObjectiveFor(stage.id) : null;
   const progressValue = Math.max(0, Math.min(progress.total, progress.completed));
 
   return <section className="v100-battle-asset-status" aria-label="戦闘データの準備" style={style}>

@@ -12,6 +12,7 @@ import { V100_UNITS, V100_SUPPORTS } from "./v100Registry.js";
 import { stageVisualFor } from "./productionVisuals.js";
 import { v100BossObservationFor, bossDefinitionForId } from "./bossFoundation.js";
 import { V100_BOSS_DOSSIER_ART } from "./v100BossDossierArt.js";
+import { v100BasePresentationFor } from "./v100BasePresentation.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Encounter = { id: string; displayName: string; stageNumber: number; stageId: string; rewardCaps: number; rewardEquipment: { id: string; displayName: string } | null };
@@ -55,12 +56,28 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     {unsaved && <div className="v100-save-retry" role="alertdialog" aria-label="異常発生の戦果保存"><div><h2>戦果を保存できませんでした</h2><p>戦闘結果をまだ保存できていません。この画面を閉じずに、もう一度保存してください。保存できると報酬を受け取れます。</p><button type="button" onClick={() => void settle(unsaved)}>もう一度保存する</button></div></div>}
   </>;
   const result = save.outbreak.lastResult;
-  if (save.outbreak.view === "result" && result) return <section className="v100-panel v100-mode-result" data-v100-surface="outbreak-result" aria-label="異常発生の戦果">
-    <span className="v100-kicker">異常発生 / 戦果</span><h2>{result.won ? "再制圧成功" : "再制圧失敗"}</h2>
-    <h3>{bosses.find(boss => boss.id === result.bossId)?.displayName}</h3>
-    <dl><div><dt>獲得CAPS</dt><dd>+{result.rewardCaps}</dd></div><div><dt>装甲車両</dt><dd>{result.vehicleHp} / {result.vehicleMaxHp}</dd></div><div><dt>経過時間</dt><dd>{result.elapsedSeconds}秒</dd></div><div><dt>装備</dt><dd>{v100EquipmentFor(result.grantedEquipmentId)?.displayName ?? "なし"}</dd></div></dl>
-    <button type="button" onClick={() => void onSave(dismissV100OutbreakResult(save))}>異常発生一覧へ</button>
-  </section>;
+  if (save.outbreak.view === "result" && result) {
+    const boss = bosses.find(entry => entry.id === result.bossId);
+    const portrait = V100_BOSS_DOSSIER_ART[result.bossId];
+    const equipment = v100EquipmentFor(result.grantedEquipmentId);
+    return <section className="v100-panel v100-mode-result v100-outbreak-result" data-v100-surface="outbreak-result" data-won={result.won} aria-label="異常発生の戦果">
+      <header className="v100-outbreak-result-photo">
+        {boss && <img src={stageVisualFor(boss.stageId)} alt="" />}
+        {portrait && <span className="v100-outbreak-result-boss" aria-hidden="true" style={{ "--boss-portrait": `url("${portrait.path}")` } as CSSProperties} />}
+        <div><span>異常発生</span><h2>{result.won ? "撃破" : "敗北"}</h2><h3>{boss?.displayName}</h3></div>
+      </header>
+      <dl className="v100-outbreak-result-stats">
+        <div><dt>{v100BasePresentationFor(boss?.stageNumber).healthLabel}</dt><dd>{result.vehicleHp} <small>/ {result.vehicleMaxHp}</small></dd></div>
+        <div><dt>戦闘時間</dt><dd>{Math.floor(result.elapsedSeconds / 60)}<small>分</small>{result.elapsedSeconds % 60}<small>秒</small></dd></div>
+        <div><dt>獲得CAPS</dt><dd>+{result.rewardCaps}</dd></div>
+        {equipment && result.grantedQuantity > 0 && <div><dt>獲得装備</dt><dd>{equipment.displayName}</dd></div>}
+      </dl>
+      <footer>
+        <button type="button" onClick={() => void onSave(dismissV100OutbreakResult(save))}>異常発生一覧へ</button>
+        {boss && <button className="v100-outbreak-fight-again" type="button" onClick={() => void onSave(beginV100Outbreak(save, boss.id, { runId: runId() }))}>{result.won ? "もう一度戦う" : "再挑戦"}</button>}
+      </footer>
+    </section>;
+  }
   return <section className="v100-panel v100-modes-screen" data-v100-surface="modes" data-mode-tab={tab} aria-label="モード選択">
     <div className="v100-panel-heading"><h2>{tab === "overview" ? "モード選択" : tab === "outbreak" ? "異常発生" : tab === "survival" ? "サバイバル" : tab === "compendium" ? "ボス図鑑" : "戦績"}</h2><button type="button" onClick={tab === "overview" ? onBack : () => setTab("overview")}>{tab === "overview" ? "ステージ選択へ" : "モード選択へ"}</button></div>
     {tab === "overview" && <>
