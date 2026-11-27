@@ -3,8 +3,33 @@ import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from '../app/productionAudio.js';
+import {playV104FighterVoice} from '../app/v104CombatAudio.js';
 const folder='assets/source/quality-20261114/kumaverson-attack-b-r1/';
 const sha=b=>createHash('sha256').update(b).digest('hex');
+test('Kuma and King keep their opening effort and use two extra performances from their own attack pool',async()=>{
+ const manifest=GAMEPLAY_PRODUCTION_AUDIO_MANIFEST;
+ const provenance=JSON.parse(await readFile('assets/source/quality-20261127/melee-effort/provenance.json'));
+ const recorded=new Set();
+ for(const kind of ['kumaverson','crazy-king']){
+   const cue='voice-'+kind+'-attack';
+   const pool=manifest.poolById[cue+'-takes'];
+   assert.deepEqual(pool.assetIds,[cue,cue+'-02',cue+'-03']);
+   assert.equal(pool.strategy,'round-robin');
+   const played=playV104FighterVoice({manifest,play:id=>id},cue,'attack',{instanceKey:'fighter-42'});
+   assert.equal(played,pool.id);
+   for(const id of pool.assetIds.slice(1)){
+     const clip=manifest.assetById[id];
+     const row=provenance.performances.find(r=>r.character===kind&&r.runtime===clip.sources[0].src);
+     assert.ok(row);
+     assert.equal(sha(await readFile('public'+row.runtime)),row.runtimeSha256);
+     assert.equal(sha(await readFile('assets/source/quality-20261127/melee-effort/'+row.master)),row.masterSha256);
+     assert.deepEqual(clip.sources.slice(1),manifest.assetById[cue].sources);
+     recorded.add(row.masterSha256);
+   }
+ }
+ assert.equal(recorded.size,4);
+ assert.equal(playV104FighterVoice({manifest,play:id=>id},'human-male-light-attack','attack',{instanceKey:'fighter-8'}),'human-male-light-attack');
+});
 const approved='2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584';
 test('producer choice B remains the same Kuma style53 and utterance without replacing the original master',async()=>{
  const choice=JSON.parse(await readFile(folder+'selection.json')),voices=JSON.parse(await readFile('assets/source/v104/combat-audio/voices.json'));

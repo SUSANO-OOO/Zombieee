@@ -10,10 +10,15 @@
 .v100-fitting-person label { display:grid; gap:4px; }
 .v100-fitting-person select { width:100%; background:#f1ead7; color:#263b23; }
 .v100-fitting-slots { display:flex; gap:6px; margin:6px 0; }
-.v100-fitting-slots button { flex:1; }
-.v100-fitting-slots button[aria-pressed="true"] { outline:2px solid #d6ad5a; outline-offset:-4px; }
+.v100-fitting-slots button { flex:1; min-width:0; text-align:left; background:#d6ccb1; border:1px dashed #837957; color:#3e4736; }
+.v100-fitting-slots button span { display:block; font-size:12px; }
+.v100-fitting-slots button strong { display:block; line-height:1.25; overflow-wrap:anywhere; }
+.v100-fitting-slots button[aria-pressed="true"] { background:#2b4433; border:1px solid #786740; color:#fff4d6; box-shadow:inset 3px 0 #daaf63; }
 .v100-equipment-fitting small { display:block; font-size:13px; line-height:1.5; color:#43523d; }
 .v100-fitting-result p { margin:4px 0 10px; color:#263b23; }
+.v100-fitting-result { align-self:start; border-block:1px solid #9e906e; padding:6px 10px; background:#f4eedc80; }
+.v100-equipment-fitting footer { border-top:1px solid #aa9c79; padding-top:6px; font-variant-numeric:tabular-nums; }
+.v100-equipment-fitting footer .v100-primary:disabled { color:#514731 !important; background:#bcb39a !important; border-color:#8b866e !important; }
 .v100-fitting-changes { margin:0 0 10px; }
 .v100-fitting-changes > div { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #aaa188; }
 .v100-fitting-changes dd { display:flex; gap:9px; margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }

@@ -1,6 +1,6 @@
 import {withV100BossCollapseAudio} from './v100BossCollapseAudio.js';
 import {withV100BossSkillAudio} from './v100BossSkillAudio.js';
-import {withV104CombatAudio,V104_SHORT_HEAVY_DEATH_PATHS} from './v104CombatAudio.js';
+import {withV104CombatAudio,V104_SHORT_HEAVY_DEATH_PATHS,V104_MELEE_ATTACK_PATHS} from './v104CombatAudio.js';
 import {recordedHurtFiles} from './v100RecordedHurtTakes.js';
 import { createAudioManifest } from "./audioManifest.js";
 import { withRecordedWeapons, recordedWeaponSources } from "./weaponRecordingRecipes.js";
@@ -810,7 +810,8 @@ const isShortHeavyDeath = asset => shortHeavyDeathPaths.has(asset.sources[0].src
 const precedingInstallAssets = [
   ...legacyVoiceInstallAssets, ...existingV100InstallAssets,
   ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,
-].filter(asset => !isShortHeavyDeath(asset) && !recordedHurtFiles.includes(asset.sources[0].src));
+].filter(asset => !isShortHeavyDeath(asset) && !recordedHurtFiles.includes(asset.sources[0].src)
+  && !V104_MELEE_ATTACK_PATHS.includes(asset.sources[0].src));
 // The older formats are already inventoried under their original cue IDs.
 const shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)
   .map(asset => ({ ...asset, sources: asset.sources.slice(0, 1) }));
@@ -830,6 +831,11 @@ for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets,
 export const INSTALL_AUDIO_ASSETS = Object.freeze([
   ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),
   ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),
+  ...V104_MELEE_ATTACK_PATHS.map(src => ({
+    ...V100_AUDIO_MANIFEST.assets.find(asset => asset.sources[0].src === src),
+    id: "install-melee-effort-" + src.split("/").pop().replace(/\.mp3$/, ""),
+    sources: [{src, type:"audio/mpeg"}],
+  })),
 ]);
 
 export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({

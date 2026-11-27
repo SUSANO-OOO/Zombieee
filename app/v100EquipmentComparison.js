@@ -38,7 +38,11 @@ export function v100EquipmentComparison(save,{unitId,itemId,slot=0}={}){
   add('support','開幕の支援',v100OpeningSupportGauge(beforeSnapshot),v100OpeningSupportGauge(afterSnapshot));
   const before=aggregateEquipmentEffects(beforeSnapshot.tacticalEquipmentIds,beforeSnapshot.equipmentEnhancementLevels);
   const after=aggregateEquipmentEffects(afterSnapshot.tacticalEquipmentIds,afterSnapshot.equipmentEnhancementLevels);
-  add('energy','開幕の指揮への上乗せ',before.startingEnergyFlat,after.startingEnergyFlat);
+  add('energy','開始時の追加指揮',before.startingEnergyFlat,after.startingEnergyFlat);
+  if(before.healingMultiplier!==after.healingMultiplier && unitId!=='unit-nao' && save.ownedUnitIds.includes('unit-nao')){
+   const medicBefore=v100UnitPresentation(save,'unit-nao'),medicAfter=v100UnitPresentation(nextSave,'unit-nao');
+   add('team-healing','ナオの通常治療',medicBefore.current.healing,medicAfter.current.healing,' HP');
+  }
  }
  return {unitId,itemId,slot,current,next,changes,quantity,spare,alreadyEquipped,otherSlot,
   replacedName:v100EquipmentFor(oldId)?.displayName??'装備なし',canEquip:!alreadyEquipped&&!otherSlot&&spare>0,
