@@ -72,6 +72,7 @@ import { V100_PREPARATION_ART } from "../app/v100PreparationArt.js";
 import { V100_BOSS_DOSSIER_ART } from "../app/v100BossDossierArt.js";
 import { V100_BOSS_DEFEAT_ART } from "../app/v100BossDefeatArt.js";
 import { V100_BOSS_ATTACK_ART } from "../app/v100BossAttackArt.js";
+import { V100_BOSS_FLOOR_ART } from "../app/v100BossFloorArt.js";
 import { V100_MANUAL_IMPACT_ART } from "../app/v100ManualImpactArt.js";
 import { V100_PARTICLE_MATERIAL_ART } from "../app/v100ParticleMaterialArt.js";
 import { V100_KING_EXHAUST_ART } from "../app/v100KingExhaustArt.js";
@@ -404,6 +405,8 @@ for (const match of runtimeCss.matchAll(/url\(\s*["']?(\/[A-Za-z0-9_@.+=~%:/-]+\
 }
 
 // --- Hash and size --------------------------------------------------------
+
+record(V100_BOSS_FLOOR_ART.path, { pack: "units", category: "boss", criticality: "critical" });
 
 const assets = [];
 const missing = [];

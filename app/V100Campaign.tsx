@@ -1466,7 +1466,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
           </div>
           {activePresentation && <dl className="v100-briefing-callin">
             <div><dt>必要指揮</dt><dd>{activePresentation.commandCost}</dd></div>
-            <div><dt>再出撃</dt><dd>{formatV100Number(activePresentation.redeploySeconds)}秒</dd></div>
+            <div><dt>再出撃間隔</dt><dd>{formatV100Number(activePresentation.redeploySeconds)}秒</dd></div>
           </dl>}
         </aside>
         <div className="v100-callin-roster">
@@ -1527,7 +1527,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
           const unavailable = v100StageAbsenceReason(stageId, unit.id);
           return <button type="button" disabled={Boolean(unavailable)} data-roster-unit={unit.id} data-crew-role={unit.role} className={"v100-roster-card game-unit-card " + (activeUnitId === unit.id ? "selected" : "")} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={unavailable ?? unit.displayName + "を枠" + (activeSlot + 1) + "へ配置"}>
             <span className="v100-roster-card-art">{art && <><CrewPortrait unitId={unit.id} /><CrewInsignia unitId={unit.id} /></>}</span>
-            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small className="v100-roster-role">{v100RoleLabelFor(unit.role)}</small><span className="v100-roster-advice">{unavailable ?? `手動アビリティ：${info?.abilityAdvice}`}</span><small className="v100-roster-callin"><span>指揮 <b>{info?.commandCost}</b></span><span>次の出撃まで <b>{formatV100Number(info?.redeploySeconds ?? 0)}秒</b></span></small></span>
+            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small className="v100-roster-role">{v100RoleLabelFor(unit.role)}</small><span className="v100-roster-advice">{unavailable ?? `手動アビリティ：${info?.abilityAdvice}`}</span><small className="v100-roster-callin"><span>指揮 <b>{info?.commandCost}</b></span><span>再出撃間隔 <b>{formatV100Number(info?.redeploySeconds ?? 0)}秒</b></span></small></span>
           </button>;
         })}</div></div>
       </div>

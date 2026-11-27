@@ -1,0 +1,25 @@
+{
+  "creator": "OpenAI built-in image_gen, directed by Codex for 西新世紀末物語",
+  "source": "master-r1.png",
+  "prompt": "prompt.txt",
+  "license": "Original generated floor-damage artwork under the project asset policy; no third-party material.",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true
+  },
+  "producerApproval": "Requested smartphone boss spectacle; development candidate. Final appearance and public release not yet accepted.",
+  "masterSha256": "a1f86376e9cd42a06c4abbd605749852d3587990382cfc64af76c7870677fb08",
+  "masterSize": [
+    1774,
+    887
+  ],
+  "packaging": "Pillow RGBA Lanczos resize to 768x384. WebP quality 86, method 6, exact=True. Preserve the alpha channel and both equal 384px cells.",
+  "runtime": {
+    "path": "/art/quality-20261127/vfx/late-boss-floor-r1.webp",
+    "sha256": "d73266558f889f3cd4ed726b961a6ca184190c729b4648505d09b982401ee0fb",
+    "assets": 1,
+    "logicalBytes": 78302,
+    "distinctBytes": 78302
+  }
+}

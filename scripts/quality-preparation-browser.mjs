@@ -36,7 +36,7 @@ try{
      assert.ok(info.abilityAdvice,unit.id+' must have concrete advice');
      await card.scrollIntoViewIfNeeded();
      assert.equal(await card.locator('.v100-roster-advice').innerText(),'手動アビリティ：'+info.abilityAdvice);
-     assert.equal((await card.locator('.v100-roster-callin').innerText()).trim(),`指揮 ${info.commandCost}\n次の出撃まで ${formatV100Number(info.redeploySeconds)}秒`);
+     assert.equal((await card.locator('.v100-roster-callin').innerText()).trim(),`指揮 ${info.commandCost}\n再出撃間隔 ${formatV100Number(info.redeploySeconds)}秒`);
      const bounds=await card.evaluate(el=>{
       const c=el.getBoundingClientRect(),grid=el.closest('.v100-roster-grid').getBoundingClientRect();
       return {height:c.height,width:c.width,visible:c.top>=grid.top-1&&c.bottom<=grid.bottom+1,

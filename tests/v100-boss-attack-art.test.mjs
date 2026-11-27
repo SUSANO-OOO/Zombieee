@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {V100_BOSS_ATTACK_ART as ART} from '../app/v100BossAttackArt.js';
+import {V100_BOSS_FLOOR_ART as FLOOR} from '../app/v100BossFloorArt.js';
 import {bossAttackReleaseSource,drawV100BossAftermath} from '../app/v100BossAftermath.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {canUseVerifiedPwaArtwork} from '../app/pwaArtworkAvailability.js';
@@ -64,6 +65,14 @@ test('only the actual stage boss and explicitly permitted paths enter optional l
 });
 
 test('an old committed pack cannot fetch the new effects, even with browser play accepted',()=>{
+ const oldPack={artwork:FLOOR,installedManifest:{assets:[]},storedHashes:new Set([FLOOR.hash]),browserPlayAccepted:true,gameBlocked:false};
+ assert.equal(canUseVerifiedPwaArtwork(oldPack),false);
+ for(const kind of ['mugarian-president-mutated','takuya-omega','mother']){
+  for(const permitted of [true,false]){
+   const plan=requiredBattleAssetPlan({stageId:V100_STAGE_IDS[24],enemyKinds:[kind],verifiedBossAttackPaths:permitted?[FLOOR.path]:[]});
+   assert.equal(plan.stageObjects.some(a=>a.id===FLOOR.id&&a.optional),permitted&&kind!=='mother');
+  }
+ }
  for(const art of Object.values(ART)){
   const facts={artwork:art,gameBlocked:false,storedHashes:new Set([art.hash]),browserPlayAccepted:true};
   assert.equal(canUseVerifiedPwaArtwork({...facts,installedManifest:{assets:[]}}),false);

@@ -26,11 +26,11 @@ export function V100BattleBriefing({ children, initiallyShowControls = false, al
       <div className="v100-briefing-page" tabIndex={0} aria-label={controls?"戦闘の操作":"今回の作戦"}>
         {controls?<>
           <ol className="v100-battle-instructions">
-            <li><span aria-hidden="true">01</span><h3>仲間を呼ぶ</h3><p>画面下のカードを押すと、{base.onFoot ? "退路側" : "車両"}から出撃。移動と通常攻撃は、仲間が自動で行う。</p></li>
-            <li><span aria-hidden="true">02</span><h3>手動アビリティ</h3><p>仲間の頭上にある技ボタンをタップ。技の効果は一時停止中の「仲間の技」で確認できる。</p></li>
-            <li><span aria-hidden="true">03</span><h3>支援を使う</h3><p>航空支援はボタンを押し、戦場で着弾地点をタップ。着弾まで少し時間がかかる。{base.barrageLabel}はボタンを押すだけ。どちらも支援ゲージを使う。</p></li>
+            <li><span aria-hidden="true">01</span><h3>仲間を出撃させる</h3><p>画面下の「出撃可」「再出撃可」のカードをタップ。指揮を消費して仲間が出撃し、自動で戦う。</p></li>
+            <li><span aria-hidden="true">02</span><h3>手動アビリティ</h3><p>技を使うときは、仲間の頭上のボタンをタップ。技の効果は一時停止メニューの「出撃中の仲間の技」で確認できる。</p></li>
+            <li><span aria-hidden="true">03</span><h3>支援を使う</h3><p>「航空支援」をタップし、次に戦場で狙う場所をタップ。少し遅れて着弾する。「{base.barrageLabel}」はワンタップで発動。どちらも支援ゲージを消費する。</p></li>
           </ol>
-          <p className="v100-battle-instructions-note">指揮は時間で回復する。仲間は同時に7体まで。{base.healthLabel}がゼロになると敗北。</p>
+          <p className="v100-battle-instructions-note">指揮は時間とともに回復。出撃枠は全部で7つ。{base.label}の耐久がゼロになると敗北。</p>
         </>:children}
       </div>
     </section>
