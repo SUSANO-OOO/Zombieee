@@ -15,17 +15,11 @@
 .pwa-edition-heading > span { color:#c0c7a9; font-size:11px; letter-spacing:.05em; }
 .pwa-gate .pwa-gate-panel h2 { margin:0; font:800 21px/1.35 var(--v100-display-font,"Zen Kaku Gothic New",sans-serif); color:#f6e9c4; }
 .pwa-gate .pwa-gate-panel > p { margin:0; font-size:14px; line-height:1.5; }
-.pwa-gate :is(.pwa-install-overview,.pwa-install-guide) { min-width:0; }
-.pwa-install-overview { display:flex; flex-direction:column; align-items:stretch; gap:8px; }
-.pwa-install-overview > p { margin:0; font-size:14px; line-height:1.5; }
-.pwa-install-guide { display:flex; flex-direction:column; gap:4px; }
-.pwa-gate .pwa-install-size,.pwa-gate .pwa-plan-capacity {
+.pwa-gate .pwa-plan-capacity {
   margin:0; padding:9px 12px; background:linear-gradient(110deg,#e7dab7,#cfc7a2);
   color:#293c29; border-left:4px solid #987047; box-shadow:inset 0 -2px #8d8d6355;
 }
-.pwa-gate .pwa-install-size { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:2px 10px; }
-.pwa-install-size > span { font-size:13px; }
-.pwa-gate :is(.pwa-install-size,.pwa-plan-capacity,.pwa-progress-line) strong { font:800 28px/1.1 var(--v100-numeric-font,"Rajdhani",sans-serif); }
+.pwa-gate :is(.pwa-plan-capacity,.pwa-progress-line) strong { font:800 28px/1.1 var(--v100-numeric-font,"Rajdhani",sans-serif); }
 .pwa-gate .pwa-plan-capacity { padding:9px 12px; font-size:13px; }
 .pwa-plan-capacity small { font-size:13px; }
 .pwa-gate .pwa-progress-line { color:#ead19a; line-height:1.5; }
@@ -93,14 +87,6 @@
   .pwa-gate .pwa-gate-panel { max-height:calc(100dvh - 20px - var(--app-viewport-safe-top,0px) - var(--app-viewport-safe-bottom,0px)); padding:10px 14px; gap:6px; }
   .pwa-gate .pwa-edition-heading h1 { font-size:22px; }
   .pwa-gate .pwa-gate-panel h2 { font-size:20px; }
-  .pwa-gate[data-pwa-stage="install-offer"] .pwa-gate-panel { width:min(800px,100%); height:calc(100dvh - 24px - var(--app-viewport-safe-top,0px) - var(--app-viewport-safe-bottom,0px)); display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); grid-template-rows:auto minmax(0,1fr) auto; gap:8px 16px; overflow:hidden; }
-  .pwa-gate[data-pwa-stage="install-offer"] .pwa-edition-heading { grid-column:1/-1; }
-  .pwa-gate[data-pwa-stage="install-offer"] .pwa-install-overview { grid-column:1; grid-row:2; overflow:auto; overscroll-behavior:contain; }
-  .pwa-gate[data-pwa-stage="install-offer"] .pwa-install-guide { grid-column:2; grid-row:2; overflow:auto; overscroll-behavior:contain; }
-  .pwa-gate[data-pwa-stage="install-offer"] .pwa-secondary-actions { grid-column:1; grid-row:3; }
-  .pwa-gate[data-pwa-stage="install-offer"] .pwa-install-offer-skip { grid-column:2; grid-row:3; align-self:center; }
-  .pwa-gate[data-pwa-stage="install-offer"] .pwa-gate-panel[data-home-added] { height:auto; grid-template-rows:auto auto auto; overflow:auto; }
-  .pwa-gate[data-pwa-stage="install-offer"] [data-home-added] .pwa-install-overview { grid-column:1/-1; }
   .pwa-gate .pwa-install-guidance { padding:7px 9px; }
   .pwa-gate .pwa-install-steps { gap:5px; }
   .pwa-gate .pwa-install-steps li { font-size:13px; line-height:1.4; }
@@ -108,6 +94,75 @@
   #v100-campaign .v100-data-note { font-size:11px; line-height:1.4; }
 }
 @media (prefers-reduced-motion:reduce) { .pwa-progress-fill { transition:none; } }
+
+/* The install invitation opens on the streets of Nishijin. Keep every actual
+   control together so the smallest landscape phone has one place to scroll. */
+.pwa-gate[data-pwa-stage="install-offer"] {
+  padding:max(8px,var(--app-viewport-safe-top,0px)) max(8px,var(--app-viewport-safe-right,0px))
+    max(8px,var(--app-viewport-safe-bottom,0px)) max(8px,var(--app-viewport-safe-left,0px));
+  background-color:#121a1d;
+  background-image:linear-gradient(#09151abf,#101818d9),url("/art/v060/title-key-visual-v1.webp");
+}
+.pwa-gate[data-pwa-stage="install-offer"] .pwa-gate-panel {
+  display:grid; grid-template-columns:minmax(0,1fr); gap:0; width:min(454px,100%);
+  max-height:100%; padding:0; overflow:auto; border:1px solid #a6936e85;
+  background:#182023; color:#f2e9d6; box-shadow:0 12px 38px #040709b3;
+}
+.pwa-install-cover {
+  display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start;
+  min-height:clamp(128px,25svh,220px); padding:14px 18px; box-sizing:border-box;
+  border-bottom:2px solid #bf9e66; background-color:#253039;
+  background-image:linear-gradient(0deg,#0c1418 0%,#10171b94 36%,transparent 76%),url("/art/v060/title-key-visual-v1.webp");
+  background-size:cover; background-position:53% 60%;
+}
+.pwa-gate .pwa-install-cover h1 {
+  margin:0; color:#ffedc7; font:400 clamp(24px,6vw,34px)/1.25 "New Tegomin Title",serif;
+  letter-spacing:.05em; text-shadow:0 1px 6px #070d10;
+}
+.pwa-install-cover p { margin:3px 0 0; font-size:13px; line-height:1.45; color:#f2e8d4; }
+.pwa-install-cover .pwa-install-size {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 8px;
+  margin:9px 0 0; padding:5px 0 0; border-top:1px solid #c3a4779e;
+  font-size:12px; color:#ecd6ad;
+}
+.pwa-install-size strong { font:700 19px/1.15 var(--v100-numeric-font,sans-serif); color:#ffefcf; }
+.pwa-install-overview {
+  display:flex; flex-direction:column; justify-content:center; min-width:0; gap:9px;
+  padding:clamp(14px,4vw,24px); background:linear-gradient(120deg,#2a3335,#1c2528 80%);
+}
+.pwa-gate .pwa-install-overview h2 { color:#fff1d4; font-size:clamp(18px,4vw,23px); }
+.pwa-install-overview p { margin:0; font-size:14px; line-height:1.5; }
+.pwa-gate .pwa-install-overview .pwa-install-guidance { padding:0; border:0; background:none; }
+.pwa-install-overview .pwa-install-steps { list-style:none; padding:0; gap:0; }
+.pwa-gate .pwa-install-overview .pwa-install-steps li {
+  display:grid; grid-template-columns:20px minmax(0,1fr); align-items:center; gap:8px;
+  margin:0; padding:7px 0; border-top:1px solid #adb3a444; color:#fff4df; font-size:14px; line-height:1.45;
+}
+.pwa-install-overview .pwa-step-body { display:grid; grid-template-columns:24px minmax(0,1fr); gap:7px; align-items:center; }
+.pwa-install-overview .pwa-step-icon svg { height:22px; width:22px; stroke:#f0c585; }
+.pwa-step-control-name { display:inline-block; max-width:100%; vertical-align:top; }
+.pwa-gate .pwa-install-overview .pwa-step-number { border-radius:2px; color:#1b2224; background:#d6b27b; }
+.pwa-install-overview .pwa-hint { color:#ddd4bf; }
+.pwa-install-overview details p { margin:0 0 8px; }
+.pwa-install-alternative { display:flex; flex-wrap:wrap; align-items:center; gap:2px 9px; border-top:1px solid #aba38b66; padding-top:6px; }
+.pwa-install-alternative button { color:#fff1d6; background:#253034; border-color:#a39d86; }
+.pwa-install-alternative small { font-size:12px; color:#d1cab7; }
+@media (orientation:portrait) and (min-height:620px) {
+  .pwa-gate[data-pwa-stage="install-offer"] .pwa-gate-panel {
+    min-height:min(700px,100%); grid-template-rows:minmax(min-content,1fr) auto;
+  }
+}
+@media (orientation:landscape) {
+  .pwa-gate[data-pwa-stage="install-offer"] .pwa-gate-panel {
+    width:min(850px,100%); grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);
+    height:min(350px,100%); overflow:hidden;
+  }
+  .pwa-install-cover { min-height:0; padding:clamp(10px,2vw,22px); border:0; border-right:2px solid #bf9e66; }
+  .pwa-gate .pwa-install-cover h1 { font-size:clamp(21px,3.7vw,31px); }
+  .pwa-install-overview { justify-content:flex-start; overflow:auto; padding:clamp(9px,2vw,18px); gap:5px; }
+  .pwa-gate .pwa-install-overview h2 { margin-top:auto; }
+  .pwa-install-alternative { margin-bottom:auto; }
+}
 
 /* Keep offline storage in a mounted panel while the player changes pages.
    File import, export and the PWA portal keep their existing owners. */

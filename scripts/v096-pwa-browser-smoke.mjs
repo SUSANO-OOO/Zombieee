@@ -414,6 +414,22 @@ const invitation = await entryPage.evaluate(() => ({
   text: document.querySelector(".pwa-gate")?.textContent ?? "",
 }));
 record("first phone visit explains installation and size before browser play", invitation.gateVisible && /ホーム画面に追加/u.test(invitation.text) && /ダウンロード容量：\d/u.test(invitation.text) && /追加したアイコン/u.test(invitation.text), invitation);
+const entrySize = entryPage.viewportSize();
+await entryPage.setViewportSize({ width: 568, height: 320 });
+const compactEntry = await entryPage.locator('[data-pwa-stage="install-offer"]').evaluate(async gate => {
+  await document.fonts.ready;
+  const rows = [...gate.querySelectorAll(".pwa-install-size, .pwa-install-steps li, summary, button")];
+  return rows.map(element => {
+    const rect = element.getBoundingClientRect();
+    const middle = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    const visible = rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.bottom <= innerHeight
+      && rect.left >= 0 && rect.right <= innerWidth && element.contains(middle);
+    return { label: element.textContent, visible };
+  });
+});
+record("the three home-screen steps, size, help and browser choice fit the small phone before scrolling",
+  compactEntry.length === 6 && compactEntry.every(element => element.visible), compactEntry);
+await entryPage.setViewportSize(entrySize);
 await entryPage.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
 // Browser play remains an explicit choice, without downloading the offline pack.
 await entryPage.locator(".game-shell, .game-frame").first().waitFor({state:"visible",timeout:30000});
@@ -517,7 +533,7 @@ const firstRunCase = await appPage.evaluate((expected) => {
     gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
     mentionsCount: text.includes(`${expected}件`),
     // The install invitation belongs to the browser, not to the installed app.
-    saysInstall: text.includes("西新世紀末物語をインストール"),
+    saysInstall: Boolean(document.querySelector('.pwa-gate[data-pwa-stage="install-offer"]')),
   };
 }, shipped.count);
 record("the first home-screen launch asks to download, stating the manifest's counts", (
