@@ -225,6 +225,10 @@ test("every referenced source is repository-local, nonempty, and has a complete 
   const approvedPanGuardSource = "/audio/quality-20261124/manual/pan-guard-contact.mp3";
   const naoSources = new Map(["nao-hurt-01", "nao-hurt-02", "nao-death"].map(name =>
     ["voice-" + name, "/audio/quality-20261127/voices/" + name + ".mp3"]));
+  const effortSources = new Map(["kumaverson","crazy-king"].flatMap(kind => ["02","03"].map(take => {
+    const name = kind + "-attack-" + take;
+    return ["voice-" + name, "/audio/quality-20261127/melee-effort/" + name + ".mp3"];
+  })));
   const newHurtFiles = new Set(["03", "04"].flatMap(take => [
     "/audio/quality-20261126/voices/human-male-light-hurt-" + take + ".mp3",
     "/audio/quality-20261127/voices/human-male-heavy-hurt-" + take + ".mp3",
@@ -254,6 +258,12 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     if (panGuardCue) assert.equal(asset.sources[0]?.src, approvedPanGuardSource);
     const shortDeathCue = approvedShortDeathSources.has(asset.sources[0]?.src);
     const newHurtCue = newHurtFiles.has(asset.sources[0]?.src);
+    const effortSource = effortSources.get(asset.id);
+    if (effortSource) {
+      const opening = asset.id.includes("kumaverson") ? "01" : "02";
+      assert.deepEqual(asset.sources.map(source => source.src), [effortSource,
+        ...["mp3","ogg"].map(ext => "/audio/v060/sfx/human-male-heavy-attack-" + opening + "." + ext)]);
+    }
     if (newHurtCue) {
       const family = asset.sources[0].src.includes("male-heavy-") ? "heavy" : "light";
       assert.ok(["01","02"].some(take => asset.sources[1].src === "/audio/v060/sfx/human-male-" + family + "-hurt-" + take + ".mp3"));
@@ -268,12 +278,12 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     }
     assert.deepEqual(
       asset.sources.map((source) => source.type),
-      newHurtCue ? ["audio/mpeg", "audio/mpeg", "audio/ogg"] : shortDeathCue ? ["audio/wav", "audio/mpeg", "audio/ogg"]
+      newHurtCue || effortSource ? ["audio/mpeg", "audio/mpeg", "audio/ogg"] : shortDeathCue ? ["audio/wav", "audio/mpeg", "audio/ogg"]
         : wavCue ? ["audio/wav"] : singleMpegCue ? ["audio/mpeg"] : ["audio/mpeg", "audio/ogg"],
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.ok(approvedSource(source.src) || newHurtFiles.has(source.src) || naoSources.get(asset.id) === source.src, source.src);
+      assert.ok(approvedSource(source.src) || newHurtFiles.has(source.src) || naoSources.get(asset.id) === source.src || effortSource === source.src, source.src);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);

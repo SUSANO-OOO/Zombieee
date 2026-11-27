@@ -552,3 +552,7 @@ The Free Firearm Sound Library（Ben Jaszczak、Brian Nelson、Kevin Heras、Mat
 ### Mrs.チハ「全弾制圧」（2026-11-27）
 
 発射には The Free Firearm Sound Library の異なる2発と Kenney の打撃音を使用。着弾には Joth の「Chunky Explosion」を重ね、最後の一発にだけ破片が落ちる音と長い余韻を加えた。いずれも CC0 1.0。[原音・加工内容・配布ファイル](../assets/source/quality-20261127/chiha-salvo/provenance.json)
+
+### クマバーソンとクレイジーキングの攻撃声（2026-11-27）
+
+HaelDB「Male Grunt/Yelling sounds」（CC0 1.0）から、二人の従来の掛け声と同じ収録シリーズの実演を各2本追加した。クマバーソンには短い掛け声、クレイジーキングには長さの違う力声を選び、音程と速さを保って音量を合わせた。[原音と加工の記録](../assets/source/quality-20261127/melee-effort/provenance.json)
