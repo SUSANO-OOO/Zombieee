@@ -123,13 +123,13 @@ try {
             await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot().paused === false);
             await page.getByRole("button", { name: "一時停止", exact: true }).click(); await shot(page, record, "paused");
             if (short) await fault(page, true);
-            await page.getByRole("button", { name: "ステージ選択へ撤退", exact: true }).click();
+            await page.getByRole("button", { name: "撤退", exact: true }).click();
             if (short) {
-              const before = await saved(page); await page.getByRole("button", { name: "実行する", exact: true }).click();
-              const retry = page.getByRole("button", { name: "一括保存を再試行", exact: true }); await retry.waitFor();
+              const before = await saved(page); await page.getByRole("button", { name: "撤退する", exact: true }).click();
+              const retry = page.getByRole("button", { name: "もう一度保存", exact: true }); await retry.waitFor();
               assert.deepEqual(await saved(page), before); await shot(page, record, "settlement-aborted"); await fault(page, false);
               await action(page, () => retry.click());
-            } else await action(page, () => page.getByRole("button", { name: "実行する", exact: true }).click());
+            } else await action(page, () => page.getByRole("button", { name: "撤退する", exact: true }).click());
             await page.getByRole("region", { name: "サバイバルの戦果", exact: true }).waitFor(); record.result = await saved(page);
             assert.equal(record.result.survival.active, null); assert.equal(record.result.survival.totalRuns, 1); assert.equal(record.result.bosses.defeatCounts[boss.id], 2);
             assert.equal(record.result.caps, 2000 + record.result.survival.lastResult.totalCaps);

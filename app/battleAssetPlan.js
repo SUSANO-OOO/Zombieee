@@ -25,6 +25,7 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { V177_JOINT_ATLASES } from "./v177JointPresentation.js";
 import { V100_BOSS_DEFEAT_ART } from "./v100BossDefeatArt.js";
 import { V100_BOSS_ATTACK_ART } from "./v100BossAttackArt.js";
+import { V100_BOSS_FLOOR_ART } from "./v100BossFloorArt.js";
 import { V100_MANUAL_IMPACT_ART } from "./v100ManualImpactArt.js";
 import { V100_PARTICLE_MATERIAL_ART } from "./v100ParticleMaterialArt.js";
 import { V100_KING_EXHAUST_ART } from "./v100KingExhaustArt.js";
@@ -145,6 +146,10 @@ export function requiredBattleAssetPlan({
   const bossAttackObjects = includeV100Sprites && v100Stage
     ? Object.entries(V100_BOSS_ATTACK_ART).filter(([kind,art])=>enemyKinds.includes(kind)&&verifiedBossAttackPaths.includes(art.path))
       .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
+  if (includeV100Sprites && v100Stage && verifiedBossAttackPaths.includes(V100_BOSS_FLOOR_ART.path)
+    && enemyKinds.some(kind => kind === "mugarian-president-mutated" || kind === "takuya-omega")) {
+    bossAttackObjects.push({id: V100_BOSS_FLOOR_ART.id, path: V100_BOSS_FLOOR_ART.path, runtimeUsage: "battle-overlay", optional: true});
+  }
   const manualImpactObjects = includeV100Sprites && v100Stage
     ? Object.entries(V100_MANUAL_IMPACT_ART).filter(([kind,art])=>formationKinds.includes(kind)&&verifiedManualImpactPaths.includes(art.path))
       .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
