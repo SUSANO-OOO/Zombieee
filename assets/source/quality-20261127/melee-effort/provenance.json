@@ -1,0 +1,60 @@
+{
+  "source": "Male Grunt/Yelling sounds",
+  "creator": "HaelDB",
+  "sourcePage": "https://opengameart.org/content/male-gruntyelling-sounds",
+  "archive": "https://opengameart.org/sites/default/files/yelling%20sounds.zip",
+  "archiveSha256": "e9100a4e3b9dcd146993089970dc6097dcf9935fa4683b196040012bad65d67a",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "direction": "Keep the current first attack. Additional recordings are from the same HaelDB 3grunt series. Short strikes for Kumaverson, longer exertions for Crazy King. No speech, time stretch or pitch shift.",
+  "performances": [
+    {
+      "character": "kumaverson",
+      "archiveMember": "yelling sounds/3grunt1.wav",
+      "master": "3grunt1.wav",
+      "masterSha256": "57b3a59c39ffe74a1706bcb85c451443c3b388d1f6423827b2af4af508c8416b",
+      "levelReference": "human-male-heavy-attack-01.mp3",
+      "filter": "atrim=start=0.51200:end=0.89500,asetpts=PTS-STARTPTS,afade=t=in:d=0.004,afade=t=out:st=0.36900:d=0.014,volume=0.950405,alimiter=limit=0.72:attack=2:release=25:level=false",
+      "runtime": "/audio/quality-20261127/melee-effort/kumaverson-attack-02.mp3",
+      "runtimeSha256": "f452e207c3c183a61f41c435204741644a19f673b8492c6556c8df61afed8150",
+      "bytes": 7149,
+      "durationSeconds": 0.383
+    },
+    {
+      "character": "kumaverson",
+      "archiveMember": "yelling sounds/3grunt5.wav",
+      "master": "3grunt5.wav",
+      "masterSha256": "32705e7835d0cdce3eb6e9d3a512ef128ee6c50564bd53bb0723b4474be85181",
+      "levelReference": "human-male-heavy-attack-01.mp3",
+      "filter": "atrim=start=0.13200:end=0.50000,asetpts=PTS-STARTPTS,afade=t=in:d=0.004,afade=t=out:st=0.35400:d=0.014,volume=2.042915,alimiter=limit=0.72:attack=2:release=25:level=false",
+      "runtime": "/audio/quality-20261127/melee-effort/kumaverson-attack-03.mp3",
+      "runtimeSha256": "b7c74f511c9fe7d55cd137325262c7e2d992cb69e958ea46ede0fe2a2e1350fb",
+      "bytes": 7149,
+      "durationSeconds": 0.368
+    },
+    {
+      "character": "crazy-king",
+      "archiveMember": "yelling sounds/3grunt2.wav",
+      "master": "3grunt2.wav",
+      "masterSha256": "a377c43f2151000713a45c18223c94e1de2e2393ad10569a391c1b9f96898544",
+      "levelReference": "human-male-heavy-attack-02.mp3",
+      "filter": "atrim=start=0.27200:end=0.92500,asetpts=PTS-STARTPTS,afade=t=in:d=0.004,afade=t=out:st=0.63900:d=0.014,volume=4.639247,alimiter=limit=0.72:attack=2:release=25:level=false",
+      "runtime": "/audio/quality-20261127/melee-effort/crazy-king-attack-02.mp3",
+      "runtimeSha256": "49372e5caa89bec014ef64197058d96bcf768e4aebf9725aa620666da0d8d21f",
+      "bytes": 11328,
+      "durationSeconds": 0.653
+    },
+    {
+      "character": "crazy-king",
+      "archiveMember": "yelling sounds/3grunt6.wav",
+      "master": "3grunt6.wav",
+      "masterSha256": "c334b34e7a64d67f226cd0a54fb237b8fbcc09e5ac6258a32fafcecc2c2e0857",
+      "levelReference": "human-male-heavy-attack-02.mp3",
+      "filter": "atrim=start=0.39200:end=1.42500,asetpts=PTS-STARTPTS,afade=t=in:d=0.004,afade=t=out:st=1.01900:d=0.014,volume=3.195898,alimiter=limit=0.72:attack=2:release=25:level=false",
+      "runtime": "/audio/quality-20261127/melee-effort/crazy-king-attack-03.mp3",
+      "runtimeSha256": "713aca3530900f89fce61d6bfc7af56887e8e410cbe3ac3c966e52706f78637e",
+      "bytes": 17598,
+      "durationSeconds": 1.033
+    }
+  ]
+}

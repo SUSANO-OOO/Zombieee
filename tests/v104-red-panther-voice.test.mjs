@@ -224,7 +224,10 @@ test('named allies vary recorded hurt reactions while keeping the fighter and fi
         assert.ok(asset.sources.every(source => installed.has(source.src)));
         assert.equal(asset.gain, manifest.assetById[cue].gain);
       }
-      for (const event of ['attack', 'death']) assert.equal(manifest.poolById['voice-' + kind + '-' + event + '-takes'], undefined);
+      assert.equal(manifest.poolById['voice-' + kind + '-death-takes'], undefined);
+      const attack = 'voice-' + kind + '-attack';
+      assert.deepEqual(manifest.poolById[attack+'-takes']?.assetIds,
+        kind === 'babayaga' ? undefined : [attack,attack+'-02',attack+'-03']);
     }
   }
 });

@@ -5725,6 +5725,50 @@
       "audioType": "audio/mpeg"
     },
     {
+      "path": "/audio/quality-20261127/melee-effort/crazy-king-attack-02.mp3",
+      "bytes": 11328,
+      "hash": "sha256-49372e5caa89bec014ef64197058d96bcf768e4aebf9725aa620666da0d8d21f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-melee-effort-crazy-king-attack-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/melee-effort/crazy-king-attack-03.mp3",
+      "bytes": 17598,
+      "hash": "sha256-713aca3530900f89fce61d6bfc7af56887e8e410cbe3ac3c966e52706f78637e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-melee-effort-crazy-king-attack-03",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/melee-effort/kumaverson-attack-02.mp3",
+      "bytes": 7149,
+      "hash": "sha256-f452e207c3c183a61f41c435204741644a19f673b8492c6556c8df61afed8150",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-melee-effort-kumaverson-attack-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/melee-effort/kumaverson-attack-03.mp3",
+      "bytes": 7149,
+      "hash": "sha256-b7c74f511c9fe7d55cd137325262c7e2d992cb69e958ea46ede0fe2a2e1350fb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "install-melee-effort-kumaverson-attack-03",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3",
       "bytes": 7149,
       "hash": "sha256-4ca313e12d3d0397f3ef168ac76dc6fb08943bea06ddf2a5b6d122759f72d354",
