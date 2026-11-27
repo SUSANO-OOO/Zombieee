@@ -1,0 +1,16 @@
+{
+  "creator": "cicifyre",
+  "title": "Female RPG Voice Starter Pack",
+  "license": "CC0 1.0",
+  "sourcePage": "https://opengameart.org/content/female-rpg-voice-starter-pack",
+  "archiveSha256": "6ad46457e66c25e1318f2d45251afc549df22c3cab05b553dd6717ca2a1c7d04",
+  "archiveMember": "RPG Voice Starter Pack/Type 3/damaged3.wav",
+  "master": "type3-damaged3.wav",
+  "masterSha256": "e54849b73113ccfe2d6de66225c477d4ad34a7c4ec64e2ed09f73c50dd6724d9",
+  "reference": "/audio/v060/sfx/human-female-hurt-01.mp3",
+  "filters": "atrim=start=0.00000:end=0.36500,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=0.34700:d=0.018,volume=2.390554",
+  "runtime": "/audio/quality-20261127/voices/field-reaction-03.mp3",
+  "runtimeSha256": "e274dfbb4ed14bf4ffb11c9da45efbcac376bd939fbcbcbf916806cc06db8023",
+  "bytes": 6731,
+  "durationSeconds": 0.365
+}
