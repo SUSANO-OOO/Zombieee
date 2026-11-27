@@ -600,7 +600,7 @@ export function setSurvivalRunSpeed(run, speed) {
   const current = normalizeSurvivalRun(run);
   const requested = Number(speed);
   if (!current
-    || current.phase !== SURVIVAL_RUN_PHASES.IN_WAVE
+    || (current.phase !== SURVIVAL_RUN_PHASES.WAVE_READY && current.phase !== SURVIVAL_RUN_PHASES.IN_WAVE)
     || !SURVIVAL_SPEED_OPTIONS.includes(requested)
     || (requested === 2 && current.bossEntrancePending)) {
     return current;

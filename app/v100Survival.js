@@ -49,6 +49,8 @@ export function normalizeV100SurvivalProgress(raw, receipts, ownedUnitIds) {
   const prior = source.lastResult;
   const lastResult = v100SurvivalRunIdValid(prior?.runId) && committed.has(v100SurvivalReceipt(prior.runId, 'result'))
     ? { runId: prior.runId, endReason: String(prior.endReason ?? ''), reachedWave: wave(prior.reachedWave), completedWave: wave(prior.completedWave),
+      ...(isUnlockedSurvivalStartWave(prior.startWave, wave(source.highestCompletedWave)) && prior.startWave - 1 <= wave(prior.completedWave)
+        ? { startWave: prior.startWave } : {}),
       kills: number(prior.kills), clearedBosses: number(prior.clearedBosses), elapsedSeconds: number(prior.elapsedSeconds),
       totalCaps: number(prior.totalCaps), finalCaps: number(prior.finalCaps), finishedAt: String(prior.finishedAt ?? ''),
       equipmentRewardsTracked: prior.equipmentRewardsTracked === true, receivedEquipmentById: equipmentCounts(prior.receivedEquipmentById),

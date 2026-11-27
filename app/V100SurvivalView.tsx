@@ -8,7 +8,7 @@ import { beginV100Survival, checkpointV100Survival, selectV100SurvivalUpgrade, s
 import { v100EquipmentFor } from "./v100Equipment.js";
 import { V100_UNITS } from "./v100Registry.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
-import { SURVIVAL_START_SKIP_WAVES } from "./survival.js";
+import { SURVIVAL_END_REASONS, SURVIVAL_START_SKIP_WAVES } from "./survival.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Props = { save: Save; waveInput: string; onWaveInput: (value: string) => void; onLoadout?: () => void; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
@@ -34,16 +34,43 @@ export function V100SurvivalView({ save, waveInput, onWaveInput, onSave, onLoado
     {unexpected && <div className="v100-save-retry" role="alertdialog" aria-label="サバイバルの戦果確認"><div><h2>戦果の内容を確認できませんでした</h2><p>保存済みの中間記録を保持しています。再読み込みして再開してください。</p></div></div>}
   </>;
   const result = progress.lastResult;
-  if (progress.view === "result" && result) return <section className="v100-panel v100-mode-result" data-v100-surface="survival-result" aria-label="サバイバルの戦果">
-    <span className="v100-kicker">サバイバル / 戦果</span><h2>{result.endReason === "withdrawal" ? "撤退完了" : "防衛終了"}</h2>
-    <dl><div><dt>到達</dt><dd>第{result.reachedWave}波</dd></div><div><dt>最後にクリアした波</dt><dd>{result.completedWave > 0 ? `第${result.completedWave}波` : "なし"}</dd></div><div><dt>倒したボス</dt><dd>{result.clearedBosses}体</dd></div><div><dt>獲得CAPS</dt><dd>+{result.totalCaps}</dd></div></dl>
-    {result.totalCaps > result.finalCaps && <p>このうち {result.totalCaps - result.finalCaps} CAPSは、ボス戦で受け取り済みです。</p>}
-    {result.newHighestCompletedWave && <strong className="v100-survival-best">新記録！　第{result.completedWave}波クリア</strong>}
-    <h3>獲得した装備</h3>{result.equipmentRewardsTracked ? <p>{Object.entries(result.receivedEquipmentById).map(([id, quantity]) => `${v100EquipmentFor(id)?.displayName} ×${quantity}`).join(" / ") || "今回は追加なし（所持上限を含む）"}</p> : <p>以前のプレイは装備の獲得内訳を保存していません。</p>}
-    {result.battleReport?.units.length > 0 && <details className="v100-survival-contribution"><summary>ユニットの貢献</summary><div className="v100-contribution-scroll"><table><thead><tr><th>ユニット</th><th>与ダメージ</th><th>被ダメージ</th><th>回復</th></tr></thead><tbody>{result.battleReport.units.map((unit: { unitId: string; damage: number; damageTaken: number; healing: number }) => <tr key={unit.unitId}><th>{V100_UNITS.find(member => member.id === unit.unitId)?.displayName}</th><td>{Math.round(unit.damage).toLocaleString("ja-JP")}</td><td>{Math.round(unit.damageTaken).toLocaleString("ja-JP")}</td><td>{Math.round(unit.healing).toLocaleString("ja-JP")}</td></tr>)}</tbody></table></div></details>}
-    <button type="button" onClick={() => void onSave(dismissV100SurvivalResult(save))}>サバイバルへ戻る</button>
-    {onLoadout && <button type="button" onClick={() => { void onSave(dismissV100SurvivalResult(save)).then(accepted => { if (accepted) onLoadout(); }); }}>編成を見直す</button>}
-  </section>;
+  if (progress.view === "result" && result) {
+    async function leaveResult(editFormation: boolean) {
+      if (!await onSave(dismissV100SurvivalResult(save))) return;
+      if (result.startWave !== undefined) onWaveInput(String(result.startWave));
+      if (editFormation) onLoadout?.();
+    }
+    const title = {
+      [SURVIVAL_END_REASONS.WITHDRAWAL]: "撤退完了",
+      [SURVIVAL_END_REASONS.CRAWLER_DESTROYED]: "装甲車大破",
+      [SURVIVAL_END_REASONS.SQUAD_DEFEATED]: "部隊全滅",
+    }[result.endReason] ?? "防衛終了";
+    return <section className="v100-mode-result v100-survival-debrief" data-v100-surface="survival-result" aria-label="サバイバルの戦果">
+      <header className="v100-survival-debrief-scene">
+        <img src={PRODUCTION_VISUALS.stages["stage-nishijin-shopping-street"]} alt="" />
+        <div><span>サバイバル</span><h2>{title}</h2><p>{result.reachedWave >= (result.startWave ?? 1) ? `第${result.reachedWave}波に到達` : "開戦前"}</p></div>
+      </header>
+      <div className="v100-survival-debrief-record">
+        <dl>
+          {result.startWave !== undefined && <div><dt>突破した波</dt><dd>{Math.max(0, result.completedWave - result.startWave + 1)}波</dd></div>}
+          <div><dt>敵撃破</dt><dd>{result.kills}体</dd></div>
+          <div><dt>ボス撃破</dt><dd>{result.clearedBosses}体</dd></div>
+          <div><dt>獲得CAPS</dt><dd>+{result.totalCaps}</dd></div>
+        </dl>
+        {result.totalCaps > result.finalCaps && <p>うち {result.totalCaps - result.finalCaps} CAPSはボス撃破時に獲得</p>}
+        {result.newHighestCompletedWave && <strong>新記録！　第{result.completedWave}波突破</strong>}
+        <p><b>装備報酬</b>　{result.equipmentRewardsTracked ? Object.entries(result.receivedEquipmentById).map(([id, quantity]) => `${v100EquipmentFor(id)?.displayName} ×${quantity}`).join(" / ") || "なし" : "記録なし"}</p>
+      </div>
+      <footer>
+        {result.startWave !== undefined && <button className="v100-survival-retry" type="button" onClick={() => void onSave(beginV100Survival(save, {
+          runId: `v100-survival:${crypto.randomUUID()}`, retryOf: result.runId, startWave: result.startWave,
+        }))}>第{result.startWave}波から再挑戦</button>}
+        {onLoadout && <button type="button" onClick={() => void leaveResult(true)}>編成を見直す</button>}
+        <button type="button" onClick={() => void leaveResult(false)}>出撃準備へ</button>
+      </footer>
+      {result.battleReport?.units.length > 0 && <details className="v100-survival-contribution"><summary>ユニット別の戦績</summary><div className="v100-contribution-scroll"><table><thead><tr><th>ユニット</th><th>与ダメージ</th><th>被ダメージ</th><th>回復</th></tr></thead><tbody>{result.battleReport.units.map((unit: { unitId: string; damage: number; damageTaken: number; healing: number }) => <tr key={unit.unitId}><th>{V100_UNITS.find(member => member.id === unit.unitId)?.displayName}</th><td>{Math.round(unit.damage).toLocaleString("ja-JP")}</td><td>{Math.round(unit.damageTaken).toLocaleString("ja-JP")}</td><td>{Math.round(unit.healing).toLocaleString("ja-JP")}</td></tr>)}</tbody></table></div></details>}
+    </section>;
+  }
   const { highestStart, startWave, validStart } = v100SurvivalStartChoice(waveInput, progress.highestCompletedWave);
   // A step from a mistyped value goes to the next valid starting point in that direction.
   const stepIndex = (startWave - 1) / SURVIVAL_START_SKIP_WAVES;

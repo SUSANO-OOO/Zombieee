@@ -1187,6 +1187,22 @@
     [
       "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(g.definition.missionConfig.v100StageNumber && (f.kind === \"gate-eater\" || lateBossGroundRadius(f.kind)))) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n",
       "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(g.definition.missionConfig.v100StageNumber && (f.kind === \"gate-eater\" || bossGroundWarningRadius(f.kind)))) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n"
+    ],
+    [
+      "    if (nextRun === g.survivalRun) {",
+      "    if (!nextRun || nextRun.speed !== speed) {"
+    ],
+    [
+      "className={survivalHud.speed === 1 ? \"active\" : \"\"} aria-disabled",
+      "className={survivalHud.speed === 1 ? \"active\" : \"\"} aria-pressed={survivalHud.speed === 1} aria-disabled"
+    ],
+    [
+      "className={survivalHud.speed === 2 ? \"active\" : \"\"} aria-disabled",
+      "className={survivalHud.speed === 2 ? \"active\" : \"\"} aria-pressed={survivalHud.speed === 2} aria-disabled"
+    ],
+    [
+      "{isSurvivalBattle ? \"防衛前線を維持\" : hud.missionType",
+      "{isSurvivalBattle ? `所持物資 ${hud.scrap}` : hud.missionType"
     ]
   ],
   "app/manualAbilities.js": [

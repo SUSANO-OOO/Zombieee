@@ -3,6 +3,7 @@ import { V177_JOINT_ATLASES, drawV177JointPose, v177CaptureJointPose,
 import { v177RangerLowerPose } from './v177RangerLowerMotion.js';
 import { PLAYABLE_COMBAT_KINDS } from './combatPresentation.js';
 import { v102PaisenFallProgress } from './v102CorpsePose.js';
+import { isColorFilter } from './v100FilteredImageLayer.js';
 
 // Retain each ally's actual last painted body, including repainted heads.
 // Mayo survives through its protected knockdown owner.
@@ -107,7 +108,7 @@ export function createV177HumanCorpsePaint(live,createCanvas=()=>live.image.owne
       if(last>=0)points.push(...box((left+x)/scale,(top+first)/scale,1/scale,(last-first+1)/scale));
     }
     if(points.length<4)return null;
-    return {...paint,outline:hull(points),outlinePixels:width*height,alphaThreshold:8};
+    return {...paint,bounds,outline:hull(points),outlinePixels:width*height,alphaThreshold:8};
   } catch { return null; }
   finally {if(canvas){canvas.width=1;canvas.height=1;}}
 }
@@ -134,5 +135,28 @@ export function v177HumanCorpsePresentation(world,corpse,kind,options) {
 
 export function drawV177HumanCorpsePaint(ctx,sample) {
   if(!sample)return false;
-  ctx.save();ctx.transform(...sample.matrix);const drawn=drawPaint(ctx,sample.paint,sample.drawReceipt);ctx.restore();return drawn;
+  ctx.save();
+  try {
+    ctx.transform(...sample.matrix);
+    const bounds=sample.paint.bounds;
+    if(bounds && typeof Path2D==='function' && isColorFilter(ctx.filter)) {
+      // These color-only tints cannot spread outside the painted body. Limit the
+      // browser's filter surface to its actual sprite geometry plus a pixel fringe.
+      const m=ctx.getTransform();
+      const corners=box(bounds.left,bounds.top,bounds.right-bounds.left,bounds.bottom-bounds.top)
+        .map(([x,y])=>[m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f]);
+      const left=Math.floor(Math.min(...corners.map(p=>p[0])))-3;
+      const top=Math.floor(Math.min(...corners.map(p=>p[1])))-3;
+      const right=Math.ceil(Math.max(...corners.map(p=>p[0])))+3;
+      const bottom=Math.ceil(Math.max(...corners.map(p=>p[1])))+3;
+      const area=new Path2D();
+      area.rect(left,top,right-left,bottom-top);
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clip(area);
+      ctx.setTransform(m);
+    }
+    return drawPaint(ctx,sample.paint,sample.drawReceipt);
+  } finally {
+    ctx.restore();
+  }
 }

@@ -576,6 +576,20 @@ function paintPoolInput(painter,phase,size=96,offscreen=false){
   const receipt=paintV177RangerLower(painter,target.ctx,phase,.6,-size/2,-size*.8,size,size*448/480);
   return {receipt,call:target.calls[0]};
 }
+test('splitting the four cloth samples across tiles keeps every pixel and coverage count',()=>{
+  const reference=observedPainter({legacy:false}).painter;
+  const tiled=observedPainter({legacy:false}).painter;
+  // Warm the allocation, then force horizontal and vertical tile edges
+  // through a different pose at a smaller draw size.
+  paintPoolInput(reference,.19,120);
+  paintPoolInput(tiled,.19,120);
+  tiled.visits=tiled.visits.subarray(0,36);
+  const actual=paintPoolInput(tiled,.371,96);
+  const expected=paintPoolInput(reference,.371,96);
+  assert.ok(actual.receipt.width>9 && actual.receipt.height>1);
+  assert.deepEqual(actual.receipt,expected.receipt);
+  assertSameActiveLower(actual,expected);
+});
 test('eight alternating Ranger owners preserve exact pixels and stop uploading unchanged poses',()=>{
   const {painter,observation}=observedPainter();
   paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);
