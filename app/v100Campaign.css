@@ -729,6 +729,18 @@
 .v100-shell[data-v100-phase="name"]::after,
 .v100-shell[data-v100-phase="event"]::after,
 .v100-shell[data-v100-phase="result"]::after { display: none; }
+/* The active battlefield is opaque. Its full-screen frame clips the outer
+   shadow, while the visible vignette and controls sit above the canvas. */
+.v100-shell[data-v100-phase="battle"]:has(canvas.battlefield.active),
+.v100-shell[data-v100-phase="battle"] .game-shell:has(canvas.battlefield.active) {
+  background-image: none;
+}
+.v100-shell[data-v100-phase="battle"]:has(canvas.battlefield.active)::before {
+  content: none;
+}
+.v100-shell[data-v100-phase="battle"] .game-frame:has(> canvas.battlefield.active) {
+  box-shadow: none;
+}
 .v100-topbar > div:first-child,
 .v100-panel-heading > div,
 .v100-section-heading > div { min-width: 0; }
