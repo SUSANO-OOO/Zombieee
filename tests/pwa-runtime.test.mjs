@@ -293,7 +293,7 @@ test("a pack with nothing stored is treated as a first install", () => {
 });
 
 test("an active download outranks every other phase", () => {
-  for (const downloadState of ["running", "paused"]) {
+  for (const downloadState of ["running", "paused", "checking-download"]) {
     assert.equal(
       derivePwaPhase({ supported: true, standalone: true, downloadState }),
       "installing",

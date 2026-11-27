@@ -508,6 +508,7 @@ export function createAssetDownloadSession({
     getFailures: () => [...failures.entries()].map(([path, detail]) => ({ path, ...detail })),
 
     start() {
+      if (state === "cancelled") return this.retryFailed();
       if (state === "running") return runPromise;
       if (state === "paused") {
         this.resume();
@@ -545,6 +546,9 @@ export function createAssetDownloadSession({
     },
 
     retryFailed() {
+      // Cancellation aborts the network immediately. A verified write that
+      // already reached Cache Storage must finish before we decide what is missing.
+      if (cancelled && controller) return Promise.resolve(runPromise).then(() => this.retryFailed());
       // A second tap while a retry round is already draining must join that
       // round. Starting another set of workers here would duplicate bundle
       // transport and could make the same slice race into Cache Storage.

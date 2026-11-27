@@ -62,7 +62,7 @@ export function derivePwaPhase({
 } = {}) {
   if (!supported) return "unsupported";
 
-  if (downloadState === "running" || downloadState === "paused") {
+  if (downloadState === "running" || downloadState === "paused" || downloadState === "checking-download") {
     return "installing";
   }
 
@@ -339,6 +339,7 @@ export function describeProgress(snapshot, categoryLabels) {
   return {
     countLine: `${snapshot.completedCount} / ${snapshot.totalCount}件`,
     byteLine: `${formatBytes(snapshot.completedBytes)} / ${formatBytes(snapshot.totalBytes)}`,
+    remainingLine: snapshot.remainingBytes > 0 ? `残り ${formatBytes(snapshot.remainingBytes)}` : null,
     categoryLine: label ? `${label}を取得中` : null,
     failedLine: snapshot.failedCount > 0 ? `失敗 ${snapshot.failedCount}件` : null,
     percent: Math.round(snapshot.ratio * 100),
@@ -784,7 +785,7 @@ export async function assessPwaState({
     battleActive,
     resultSaving,
     saveMutationPending,
-    downloadActive: downloadState === "running" || downloadState === "paused",
+    downloadActive: phase === "installing" || phase === "committing",
   });
 
   return {
