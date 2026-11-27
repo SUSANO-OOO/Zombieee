@@ -349,6 +349,38 @@ test("an already-stored asset is skipped without any request", async () => {
   assert.deepEqual(calls, ["/b.webp"]);
 });
 
+test("an immediate resume waits for an in-flight cache write after cancellation", async () => {
+  const assets = [asset("/first", 1), asset("/second", 2)];
+  const { fetchAsset, calls } = createFetcher(new Map([["/first", 1], ["/second", 2]]));
+  const store = createStore();
+  const writing = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  const put = store.put;
+  store.put = async (file, body) => {
+    if (file === assets[0]) {
+      writing.resolve();
+      await release.promise;
+    }
+    await put(file, body);
+  };
+  const session = createAssetDownloadSession({ assets, store, fetchAsset, digest, concurrency: 1 });
+  const first = session.start();
+  await writing.promise;
+  assert.equal(session.cancel(), true);
+  const resumed = session.retryFailed();
+  const secondTap = session.retryFailed();
+  await new Promise(resolve => setImmediate(resolve));
+  const beforeRelease = [...calls];
+  release.resolve();
+  const [stopped, finished, joined] = await Promise.all([first, resumed, secondTap]);
+  assert.deepEqual(beforeRelease, ["/first"]);
+  assert.equal(stopped.state, "cancelled");
+  assert.equal(finished.state, "complete");
+  assert.deepEqual(joined, finished);
+  assert.deepEqual(calls, ["/first", "/second"]);
+  assert.equal(finished.maxObservedConcurrency, 1);
+});
+
 test("an empty queue completes immediately", async () => {
   const session = createAssetDownloadSession({
     assets: [], fetchAsset: async () => ({ ok: true, body: bodyFor(1) }), store: createStore(), digest,
