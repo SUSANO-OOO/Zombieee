@@ -1127,6 +1127,10 @@
     [
       "        for (const pendingCue of dueBattleAudioCues) {\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            priority: pendingCue.priority ?? 88,\n",
       "        for (const pendingCue of dueBattleAudioCues) {\n          playProductionCue(pendingCue.cueId, pendingCue.x, {\n            hurtVoiceCueId: pendingCue.hurtVoiceCueId,\n            priority: pendingCue.priority ?? 88,\n"
+    ],
+    [
+      "              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);\n              playManualAbilityTimelineCue(owner, \"release\", owner.x, \"release\", {\n                priority: 88,\n                cooldownMs: 200,\n                maxInstances: 1,\n              });\n              playManualAbilityTimelineCue(owner, \"impact\", event.target.x, \"impact\", {\n                priority: 86,\n                cooldownMs: 80,\n                maxInstances: 2,\n              });\n",
+      "              playManualAbilityTimelineCue(owner, \"release\", owner.x, \"release\", {\n                priority: 88,\n                cooldownMs: 200,\n                maxInstances: 1,\n              });\n              const firstHit = affected[0];\n              if (firstHit) {\n                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);\n                playManualAbilityTimelineCue(owner, \"impact\", firstHit.x, \"impact\", {\n                  priority: 86,\n                  cooldownMs: 80,\n                  maxInstances: 2,\n                });\n              }\n"
     ]
   ],
   "app/manualAbilities.js": [

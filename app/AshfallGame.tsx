@@ -20618,17 +20618,20 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               }
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               if (g.definition.missionConfig.v100StageNumber) queueAdvancedAbilityPendingOrigin(g, owner, { type: "tky-lightblade", targetId: affected[0]?.id, x: originX, y: originY, direction: direction < 0 ? -1 : 1, duration: .24 });
-              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
               playManualAbilityTimelineCue(owner, "release", owner.x, "release", {
                 priority: 88,
                 cooldownMs: 200,
                 maxInstances: 1,
               });
-              playManualAbilityTimelineCue(owner, "impact", event.target.x, "impact", {
-                priority: 86,
-                cooldownMs: 80,
-                maxInstances: 2,
-              });
+              const firstHit = affected[0];
+              if (firstHit) {
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                playManualAbilityTimelineCue(owner, "impact", firstHit.x, "impact", {
+                  priority: 86,
+                  cooldownMs: 80,
+                  maxInstances: 2,
+                });
+              }
               continue;
             }
             if (event.kind === "mrs-chiha") {
