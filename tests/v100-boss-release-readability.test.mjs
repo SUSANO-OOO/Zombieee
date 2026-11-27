@@ -5,7 +5,7 @@ import {execFileSync} from 'node:child_process';
 import {restorePreMusashiManualSource} from './helpers/guard-spectacle-source.mjs';
 import {drawV100BossAftermath,drawV100BossReleaseFields} from '../app/v100BossAftermath.js';
 import {V100_BOSS_ATTACK_ART as ART} from '../app/v100BossAttackArt.js';
-import {advanceBossAnomalyAbility,beginBossAnomalyAbility,BOSS_ANOMALY_TUNING} from '../app/bossAnomalies.js';
+import {advanceBossAnomalyAbility,beginBossAnomalyAbility,bossAnomalyAreaTargetIds,BOSS_ANOMALY_TUNING} from '../app/bossAnomalies.js';
 const kinds=['mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega'];
 function fixture(kind,elapsed=.22){
  const calls=[],stack=[],ctx={globalAlpha:.7,globalCompositeOperation:'screen',shadowBlur:3,tx:0,ty:0,sx:1,
@@ -21,6 +21,47 @@ function fixture(kind,elapsed=.22){
 }
 const viewport={viewportWidth:844,viewportHeight:340,worldScale:.88};
 function assertState(f){assert.equal(f.ctx.globalAlpha,.7);assert.equal(f.ctx.globalCompositeOperation,'screen');assert.equal(f.ctx.shadowBlur,3);assert.equal(f.ctx.tx,0);assert.equal(f.ctx.ty,0);assert.equal(f.ctx.sx,1);assert.equal(f.stack.length,0);}
+
+test('the late bosses warn everywhere their hit lands, from the start to the end of the windup',()=>{
+ for(const kind of ['mugarian-president-mutated','takuya-omega']){
+  const f=fixture(kind);
+  f.owner.side='zombie';
+  const ally={id:31,side:'human',hp:100,x:405,y:260};
+  const windup=beginBossAnomalyAbility({boss:f.owner,candidates:[ally]});
+  assert.equal(windup.ok,true);
+  for(const remainingSeconds of [windup.runtime.remainingSeconds,.02]){
+   let ellipse,gradient,depthScale;
+   let clipped=false,filled=false;
+   f.owner.stationAbility={...windup.runtime,remainingSeconds};
+   Object.assign(f.ctx,{
+    beginPath(){},ellipse(x,y,rx,ry,rotation,start,end){ellipse={x:this.tx+x,y:this.ty+y,rx,ry,rotation,start,end};},
+    clip(){clipped=Boolean(ellipse);},scale(sx,sy){this.sx*=sx;if(sy!==1)depthScale=sy;},
+    createRadialGradient(x0,y0,r0,x1,y1,r1){gradient=[x0,y0,r0,x1,y1,r1];return {addColorStop(){}};},
+    fillRect(x,y,w,h){assert.ok(clipped);assert.deepEqual([x,y,w,h],[-ellipse.rx,-ellipse.rx,2*ellipse.rx,2*ellipse.rx]);filled=true;},
+   });
+   f.calls.length=0;
+   drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport);
+   assert.ok(filled);
+   assert.deepEqual([ellipse.x,ellipse.y,ellipse.start,ellipse.end,ellipse.rotation],[f.owner.x,f.owner.y,0,Math.PI*2,0]);
+   assert.deepEqual(gradient,[0,0,0,0,0,ellipse.rx]);
+   assert.equal(depthScale*ellipse.rx,ellipse.ry);
+   assert.ok(f.calls.some(({args})=>args[0]===f.objects['v100-dust']));
+   for(let bearing=0;bearing<8;bearing++) {
+    const angle=bearing*Math.PI/4;
+    for(const fraction of [.99,1.01]){
+     const candidate={...ally,x:ellipse.x+Math.cos(angle)*ellipse.rx*fraction,y:ellipse.y+Math.sin(angle)*ellipse.ry*fraction};
+     assert.deepEqual(bossAnomalyAreaTargetIds({kind,boss:f.owner,candidates:[candidate]}),fraction<1?[String(ally.id)]:[]);
+    }
+   }
+   assertState(f);
+  }
+  for(const override of [{hp:0},{contained:true},{side:'human'},{combatReady:false}]){
+   f.calls.length=0;
+   drawV100BossReleaseFields(f.ctx,f.objects,{...f.world,fighters:[{...f.owner,...override}]},viewport);
+   assert.equal(f.calls.length,0);
+  }
+ }
+});
 
 test('six boss ground releases retain the square camera and bound their whole spread on phone screens',()=>{
  for(const kind of kinds)for(const [w,h,scale]of [[844,340,.88],[844,390,.88],[740,340,.77]]){

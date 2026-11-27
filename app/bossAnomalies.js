@@ -241,6 +241,14 @@ export function ooguchiChargeStep({
   });
 }
 
+// World Y is compressed relative to X in both the combat and ground views.
+export const BOSS_AREA_DEPTH_SCALE = 1.5;
+
+export function lateBossGroundRadius(kind) {
+  if (kind !== "mugarian-president-mutated" && kind !== "takuya-omega") return 0;
+  return BOSS_ANOMALY_TUNING[kind].controlRadius;
+}
+
 export function bossAnomalyAreaTargetIds({
   kind,
   boss,
@@ -278,7 +286,7 @@ export function bossAnomalyAreaTargetIds({
               && Math.abs(across) <= tuning.crossStrikeHalfWidth;
           });
       }
-      return Math.hypot(dx, dy * 1.5) <= radius;
+      return Math.hypot(dx, dy * BOSS_AREA_DEPTH_SCALE) <= radius;
     })
     .map(({ id }) => String(id)));
 }

@@ -1139,6 +1139,14 @@
     [
       "          ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))\n            .map((fighter) => {\n              const target = selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) });\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available: target !== null,\n                ...(fighter.kind === \"brute\" && target ? { targetIds: target.targetIds } : {}),\n                x: fighter.x,\n                y: fighter.y,\n",
       "          ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))\n            .map((fighter) => {\n              const candidates = manualAbilityTargetCandidates(g, fighter);\n              const stomp = fighter.kind === \"brute\" ? selectManualAbilityTarget({ owner: fighter, fighters: candidates }) : null;\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available: fighter.kind === \"brute\" ? stomp !== null : canActivateManualAbility({ fighter, fighters: candidates }),\n                ...(stomp ? { targetIds: stomp.targetIds } : {}),\n                x: fighter.x,\n                y: fighter.y,\n"
+    ],
+    [
+      "  beginBossAnomalyAbility,\n  bossAnomalyAreaTargetIds,\n  createBossAnomalyRuntime,\n  gairenIncomingDamageMultiplier,\n",
+      "  beginBossAnomalyAbility,\n  bossAnomalyAreaTargetIds,\n  lateBossGroundRadius,\n  createBossAnomalyRuntime,\n  gairenIncomingDamageMultiplier,\n"
+    ],
+    [
+      "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(f.kind === \"gate-eater\" && g.definition.missionConfig.v100StageNumber)) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n",
+      "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(g.definition.missionConfig.v100StageNumber && (f.kind === \"gate-eater\" || lateBossGroundRadius(f.kind)))) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n"
     ]
   ],
   "app/manualAbilities.js": [
@@ -1477,6 +1485,10 @@
     [
       "// V1 players command deployment, support and character abilities. Free movement\n// is not an input; Kurome alone accepts a tap on the tracked ally to evade.\n// Keep the older mode's geometric counterplay contract separate from this help.\nconst V100_BOSS_ACTION_GUIDANCE = deepFreeze({\n  \"boss-takuya\": \"防御技で備え、被弾後は回復\",\n  \"boss-gate-eater\": \"防御技で備え、停止中に攻撃技\",\n  \"boss-kurome-prototype\": \"狙われたユニットをタップで回避\",\n  \"boss-mother\": \"召喚体へ範囲技や火炎支援\",\n  \"boss-ooguchi\": \"防御技で備え、停止中に攻撃技\",\n  \"boss-gairen\": \"外殻展開中に攻撃技や砲撃\",\n  \"boss-futago\": \"防御技で備え、被弾後は回復\",\n  \"boss-mugarian-president-mutated\": \"防御技で備え、攻撃後に砲撃\",\n  \"boss-takuya-omega\": \"防御技で備え、攻撃後に砲撃\",\n});\n\nexport function v100BossActionGuidanceFor(bossId) {\n  return V100_BOSS_ACTION_GUIDANCE[bossId === \"boss-kurome\" ? \"boss-kurome-prototype\" : bossId] ?? null;\n}",
       "// The story and its rematches share these encounters. The legacy twins split\n// mid-fight, while the two V1 bodies enter the fight together.\nconst V100_BOSS_OBSERVATIONS = deepFreeze({\n  \"boss-takuya\": \"地面を叩き、周りの仲間をまとめて吹き飛ばす。追い詰められると衝撃が遠くまで届く。\",\n  \"boss-gate-eater\": \"改札機を巻き込んだ巨体が、同じ列を突っ切る。突進の直後は足が止まる。\",\n  \"boss-kurome\": \"一人に狙いを定めて光線を放つ。照準がついた仲間をタップすると、射線から飛びのく。\",\n  \"boss-mother\": \"歩く増殖室。体から次々と感染体を吐き出す。\",\n  \"boss-ooguchi\": \"四枚の顎を突き出して突進する。止まった直後だけ、顎の奥の中枢がむき出しになる。\",\n  \"boss-gairen\": \"五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。\",\n  \"boss-futago\": \"二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。\",\n  \"boss-mugarian-president-mutated\": \"医療機器と一体になった社長。四本の腕を振り下ろし、前方をまとめて叩き潰す。\",\n  \"boss-takuya-omega\": \"背中に何本も投薬管をつないだTAKUYA。巨大な刃のひと振りで、前にいる仲間をなぎ払う。\",\n});\n\nexport function v100BossObservationFor(bossId) {\n  return V100_BOSS_OBSERVATIONS[bossId] ?? null;\n}"
+    ],
+    [
+      "  \"boss-gairen\": \"五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。\",\n  \"boss-futago\": \"二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。\",\n  \"boss-mugarian-president-mutated\": \"医療機器と一体になった社長。四本の腕を振り下ろし、前方をまとめて叩き潰す。\",\n  \"boss-takuya-omega\": \"背中に何本も投薬管をつないだTAKUYA。巨大な刃のひと振りで、前にいる仲間をなぎ払う。\",\n});\n\n",
+      "  \"boss-gairen\": \"五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。\",\n  \"boss-futago\": \"二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。\",\n  \"boss-mugarian-president-mutated\": \"医療機器と一体になった社長。四本の腕を床に叩きつけると、周りの足場まで揺れる。\",\n  \"boss-takuya-omega\": \"背中に何本も投薬管をつないだTAKUYA。巨大な刃を振り抜くと、足元から衝撃が広がる。\",\n});\n\n"
     ]
   ],
   "app/v105AbilityNames.js": [

@@ -1,6 +1,6 @@
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
 import {V100_BOSS_ATTACK_ART} from './v100BossAttackArt.js';
-import {BOSS_ANOMALY_TUNING} from './bossAnomalies.js';
+import {BOSS_ANOMALY_TUNING, BOSS_AREA_DEPTH_SCALE, lateBossGroundRadius} from './bossAnomalies.js';
 
 // Simulation ticks clone fighters. Keep the art stable for this strike and
 // sample the available sheets again when the boss activates its next attack.
@@ -88,7 +88,55 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
  return true;
 }
 
-// Ground releases are painted before actors, hazard warnings and health.
+function drawGroundWarning(ctx, objects, fighter, radius) {
+ const {kind, x, y, stationAbility} = fighter;
+ const remaining = stationAbility.remainingSeconds;
+ if (![x, y, remaining].every(Number.isFinite)) return;
+ const progress = Math.max(0, Math.min(1, 1 - remaining / BOSS_ANOMALY_TUNING[kind].warningSeconds));
+ const president = kind === 'mugarian-president-mutated';
+ const depth = radius / BOSS_AREA_DEPTH_SCALE;
+ const pigment = president ? '227,73,61' : '255,155,53';
+
+ ctx.save();
+ ctx.translate(x, y);
+ ctx.beginPath();
+ ctx.ellipse(0, 0, radius, depth, 0, 0, 2 * Math.PI);
+ ctx.clip();
+ ctx.globalCompositeOperation = 'source-over';
+ ctx.shadowBlur = 0;
+ ctx.globalAlpha = .72 + progress * .28;
+ ctx.save();
+ ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
+ const wash = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+ wash.addColorStop(0, `rgba(${pigment},.29)`);
+ wash.addColorStop(.66, `rgba(${pigment},.20)`);
+ wash.addColorStop(.89, `rgba(${pigment},.38)`);
+ wash.addColorStop(.97, `rgba(${pigment},.61)`);
+ wash.addColorStop(1, `rgba(${pigment},0)`);
+ ctx.fillStyle = wash;
+ ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+ ctx.restore();
+
+ // Four patches of floor dust jump under the president's arms. The blade
+ // lifts a single travelling wake through the dust at Omega's feet.
+ const direction = stationAbility.targetX > x ? 1 : -1;
+ for (let i = 0; i < 4; i++) {
+  const beat = Math.max(0, (progress - i * .07) / (1 - i * .07));
+  const angle = president ? .54 + i * Math.PI / 2 : -2.7 + beat * 3.5 - i * .28;
+  const distance = president ? .38 + beat * .39 : .78 - i * .10;
+  drawRasterPlume(ctx, objects?.['v100-dust'], {
+   x: Math.cos(angle) * radius * distance * (president ? 1 : direction),
+   y: Math.sin(angle) * depth * distance,
+   width: radius * (president ? .30 + .27 * beat : .63 - .06 * i),
+   height: depth * (president ? .15 + .18 * beat : .24 - .03 * i),
+   alpha: .16 + .30 * beat, rotation: president ? .08 * Math.sin(angle) : direction * .24 * Math.cos(angle),
+   flip: i % 2 === 1,
+  });
+ }
+ ctx.restore();
+}
+
+// Ground releases and warnings are painted before actors and health.
 // Their clocks are read from the real active phase; no new event or hit is made.
 export function drawV100BossReleaseFields(ctx,objects,world,viewport={}){
  if(!world?.definition?.missionConfig?.v100StageNumber||!Array.isArray(world.fighters))return 0;
@@ -98,7 +146,13 @@ export function drawV100BossReleaseFields(ctx,objects,world,viewport={}){
  let drawn=0;
  for(const f of world.fighters){
   const tuning=BOSS_ANOMALY_TUNING[f.kind];
-  if(!RELEASES[f.kind]||!tuning||!f.combatReady||!(f.hp>0)||f.stationAbility?.phase!=='active')continue;
+  if(!RELEASES[f.kind]||!tuning||!f.combatReady||!(f.hp>0))continue;
+  if(f.stationAbility?.phase==='warning'){
+   const radius=lateBossGroundRadius(f.kind);
+   if(radius && f.side==='zombie' && !f.contained)drawGroundWarning(ctx,objects,f,radius);
+   continue;
+  }
+  if(f.stationAbility?.phase!=='active')continue;
   const elapsed=tuning.activeSeconds-f.stationAbility.remainingSeconds;
   // Futago damages the locked crossing point. Its darker movement dust still
   // follows the fighters' feet in the actor pass.
