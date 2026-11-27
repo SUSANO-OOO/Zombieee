@@ -58,6 +58,7 @@ import {V100_UI_MATERIAL_ART} from "./v100PreparationArt.js";
 import {V100_BOSS_DOSSIER_ART} from "./v100BossDossierArt.js";
 import {V100_BOSS_DEFEAT_ART} from "./v100BossDefeatArt.js";
 import {V100_BOSS_ATTACK_ART} from "./v100BossAttackArt.js";
+import {V100_BOSS_FLOOR_ART} from "./v100BossFloorArt.js";
 import {V100_MANUAL_IMPACT_ART} from "./v100ManualImpactArt.js";
 import {V100_PARTICLE_MATERIAL_ART} from "./v100ParticleMaterialArt.js";
 import {V100_KING_EXHAUST_ART} from "./v100KingExhaustArt.js";
@@ -945,7 +946,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     artworks: V100_BALLISTIC_MATERIAL_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
-  const verifiedBattleArtworkPaths = [verifiedBossDefeatPaths,verifiedBossAttackPaths,verifiedManualImpactPaths,verifiedParticleMaterialPaths,verifiedKingExhaustPaths,verifiedGuardImpactPaths,verifiedGroundFirePaths,verifiedBallisticMaterialPaths,verifiedGuardActivationPaths].filter(Boolean).join('\n');
+  const verifiedBossFloorPaths = canUseVerifiedPwaArtwork({
+    artwork: V100_BOSS_FLOOR_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
+  }) ? V100_BOSS_FLOOR_ART.path : "";
+  const verifiedBattleArtworkPaths = [verifiedBossDefeatPaths,verifiedBossAttackPaths,verifiedBossFloorPaths,verifiedManualImpactPaths,verifiedParticleMaterialPaths,verifiedKingExhaustPaths,verifiedGuardImpactPaths,verifiedGroundFirePaths,verifiedBallisticMaterialPaths,verifiedGuardActivationPaths].filter(Boolean).join('\n');
   const verifiedManualFoleyPaths = verifiedPwaArtworkPaths({
     artworks: { ...PWA_MANUAL_FOLEY_FILES, [PWA_PAN_GUARD_FILE.id]: PWA_PAN_GUARD_FILE }, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),

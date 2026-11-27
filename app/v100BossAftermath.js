@@ -1,5 +1,6 @@
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
 import {V100_BOSS_ATTACK_ART} from './v100BossAttackArt.js';
+import {V100_BOSS_FLOOR_ART} from './v100BossFloorArt.js';
 import {BOSS_ANOMALY_TUNING, BOSS_AREA_DEPTH_SCALE, bossGroundWarningRadius} from './bossAnomalies.js';
 
 // Simulation ticks clone fighters. Keep the art stable for this strike and
@@ -123,6 +124,49 @@ function drawBroodSeepage(ctx, objects, radius, progress, intensity = 1) {
  ctx.restore();
 }
 
+// The four planted strikes share the floor, but land at different bearings.
+const PRESIDENT_FLOOR_CONTACTS = [
+ [-.43, -.42, -.64, .94], [.34, -.35, 1.04, .81],
+ [-.40, .36, 2.30, 1.05], [.40, .40, -.23, .91],
+];
+
+function bossFloorImage(objects, kind) {
+ if (kind !== 'mugarian-president-mutated' && kind !== 'takuya-omega') return null;
+ const image = objects?.[V100_BOSS_FLOOR_ART.id];
+ const cell = V100_BOSS_FLOOR_ART.cellSize;
+ return image?.complete && image.naturalWidth === 2 * cell && image.naturalHeight === cell ? image : null;
+}
+
+function drawPresidentFractures(ctx, image, radius, progress, opacity) {
+ const cell = V100_BOSS_FLOOR_ART.cellSize;
+ ctx.save();
+ ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
+ for (const [index, [x, y, angle, spread]] of PRESIDENT_FLOOR_CONTACTS.entries()) {
+  const growth = Math.max(0, Math.min(1, (progress - index * .12) / .62));
+  if (growth <= 0) continue;
+  const width = radius * spread * (.32 + growth * .85);
+  ctx.save();
+  ctx.translate(radius * x, radius * y);
+  ctx.rotate(angle);
+  ctx.globalAlpha = opacity * Math.min(1, growth * 3);
+  ctx.drawImage(image, 0, 0, cell, cell, -width / 2, -width / 2, width, width);
+  ctx.restore();
+ }
+ ctx.restore();
+}
+
+function drawBladeGouge(ctx, image, radius, direction, elapsed) {
+ const cell = V100_BOSS_FLOOR_ART.cellSize;
+ // Reveal the trench along the swing. Moving the full texture would slide the
+ // stones across the street after they had already broken.
+ const reveal = Math.min(1, elapsed / .18);
+ if (reveal <= 0) return;
+ const width = 1.62 * radius, height = .88 * radius / BOSS_AREA_DEPTH_SCALE;
+ ctx.scale(direction, 1);
+ ctx.drawImage(image, cell, 0, cell * reveal, cell,
+  -radius * .64, -height * .55, width * reveal, height);
+}
+
 function drawGroundWarning(ctx, objects, fighter, radius) {
  const {kind, x, y, stationAbility} = fighter;
  const remaining = stationAbility.remainingSeconds;
@@ -131,6 +175,7 @@ function drawGroundWarning(ctx, objects, fighter, radius) {
  const president = kind === 'mugarian-president-mutated';
  const depth = radius / BOSS_AREA_DEPTH_SCALE;
  const brood = kind === 'mother';
+ const material = bossFloorImage(objects, kind);
  const pigment = brood ? '173,95,62' : president ? '227,73,61' : '255,155,53';
 
  ctx.save();
@@ -140,7 +185,7 @@ function drawGroundWarning(ctx, objects, fighter, radius) {
  ctx.clip();
  ctx.globalCompositeOperation = 'source-over';
  ctx.shadowBlur = 0;
- ctx.globalAlpha = brood ? .40 + progress * .13 : .72 + progress * .28;
+ ctx.globalAlpha = brood ? .40 + progress * .13 : material ? .48 + progress * .16 : .72 + progress * .28;
  ctx.save();
  ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
  const wash = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
@@ -158,6 +203,8 @@ function drawGroundWarning(ctx, objects, fighter, radius) {
   ctx.restore();
   return;
  }
+
+ if (president && material) drawPresidentFractures(ctx, material, radius, progress, .79);
 
  // Four patches of floor dust jump under the president's arms. The blade
  // lifts a single travelling wake through the dust at Omega's feet.
@@ -196,6 +243,22 @@ export function drawV100BossReleaseFields(ctx,objects,world,viewport={}){
   }
   if(f.stationAbility?.phase!=='active')continue;
   const elapsed=tuning.activeSeconds-f.stationAbility.remainingSeconds;
+  const material = bossFloorImage(objects, f.kind);
+  if (material && elapsed >= 0 && elapsed < tuning.activeSeconds && Number.isFinite(f.x) && Number.isFinite(f.y)) {
+   const radius = bossGroundWarningRadius(f.kind);
+   const opacity = Math.min(1, (tuning.activeSeconds - elapsed) / .36);
+   ctx.save();
+   ctx.globalCompositeOperation = 'source-over';
+   ctx.shadowBlur = 0;
+   ctx.translate(f.x, f.y);
+   ctx.globalAlpha = opacity;
+   if (f.kind === 'takuya-omega') {
+    drawBladeGouge(ctx, material, radius, f.stationAbility.targetX > f.x ? 1 : -1, elapsed);
+   } else {
+    drawPresidentFractures(ctx, material, radius, 1, opacity);
+   }
+   ctx.restore();
+  }
   if(f.kind==='mother' && elapsed>=0 && elapsed<.42 && Number.isFinite(f.x) && Number.isFinite(f.y)
    && (objects?.['v102-ground-stains']?.naturalWidth || objects?.['v104-organic']?.naturalWidth)){
    const radius=bossGroundWarningRadius('mother');
