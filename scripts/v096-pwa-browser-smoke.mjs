@@ -282,7 +282,7 @@ record("an update downloads only changed assets and re-downloads nothing else", 
 
 // --- 8. Worker state, commit, and rollback retention ------------------------
 
-const workerCase = await page.evaluate(async () => {
+const workerCase = await page.evaluate(async ({ base, verifiedPaths }) => {
   const registration = await navigator.serviceWorker.ready;
   const ask = (message) => new Promise((resolve) => {
     const channel = new MessageChannel();
@@ -291,25 +291,27 @@ const workerCase = await page.evaluate(async () => {
     registration.active.postMessage(message, [channel.port2]);
   });
 
-  const asset = (seed) => ({
-    path: `/synthetic/${seed}.webp`,
-    bytes: 16,
-    hash: `sha256-${String(seed).repeat(64).slice(0, 64)}`,
-    pack: "units",
-    category: "unit",
-    criticality: "critical",
-  });
-
-  const first = { schema: "zombieee-asset-manifest/1", version: "0.9.6", releaseSha: "aaa", assets: [asset(1)] };
-  const second = { schema: "zombieee-asset-manifest/1", version: "0.9.7", releaseSha: "bbb", assets: [asset(2)] };
+  const manifest = await (await fetch(new URL("asset-manifest.json", base))).json();
+  const assets = verifiedPaths.map(assetPath => manifest.assets.find(asset => asset.path === assetPath));
+  // Exercise two different packs served by this one shell. The first owns both
+  // assets. The second drops one, which rollback must still be able to serve.
+  const first = { ...manifest, version: "0.9.6", assets: assets.slice(0, 2) };
+  const second = { ...manifest, version: "0.9.7", assets: assets.slice(1, 2) };
+  const missing = { ...first, assets: [{ ...assets[0], hash: "sha256-" + "0".repeat(64) }] };
+  const rejected = await ask({ type: "pwa:commit-manifest", manifest: missing });
 
   const committedFirst = await ask({ type: "pwa:commit-manifest", manifest: first });
   const committedSecond = await ask({ type: "pwa:commit-manifest", manifest: second });
   const stateAfter = await ask({ type: "pwa:get-state" });
   const rolledBack = await ask({ type: "pwa:rollback" });
   const stateRolled = await ask({ type: "pwa:get-state" });
+  const cache = await caches.open("zombieee-assets-v1");
+  const restored = await cache.match(new URL("__pwa-asset__/" + assets[0].hash, base));
 
   return {
+    rejectedReason: rejected?.reason,
+    restoredHash: restored && await window.__pwaQa.sha256(await restored.arrayBuffer()),
+    expectedHash: assets[0].hash,
     committedFirst: committedFirst?.type,
     committedSecond: committedSecond?.type,
     activeAfter: stateAfter?.active,
@@ -317,14 +319,16 @@ const workerCase = await page.evaluate(async () => {
     rolledBack: rolledBack?.type,
     activeAfterRollback: stateRolled?.active,
   };
-});
+}, { base: baseUrl, verifiedPaths: downloadCase.stored.filter(item => item.verified).map(item => item.path) });
+record("a missing asset prevents a release from being committed", workerCase.rejectedReason === "asset-missing", workerCase);
 record("committing a release retains the previous generation for rollback", (
-  workerCase.committedSecond === "pwa:committed"
+  workerCase.committedFirst === "pwa:committed" && workerCase.committedSecond === "pwa:committed"
   && workerCase.activeAfter?.version === "0.9.7"
   && workerCase.previousAfter?.version === "0.9.6"
 ), workerCase);
 record("an explicit rollback restores the retained generation", (
   workerCase.rolledBack === "pwa:rolled-back" && workerCase.activeAfterRollback?.version === "0.9.6"
+  && workerCase.restoredHash === workerCase.expectedHash
 ), { rolledBack: workerCase.rolledBack, active: workerCase.activeAfterRollback });
 
 // --- 9. Asset deletion does not touch saves ---------------------------------
@@ -573,6 +577,7 @@ const offlineVisualCase = await appPage.evaluate(async (canObserveWorker) => {
     .map((asset) => asset.path)
     .filter((assetPath) => (
       /\/abilities\/.*-ready-r1\.svg$/.test(assetPath)
+      || assetPath === "/art/v105/abilities/paisen-fist-wave-ready.svg"
       || assetPath.endsWith("/maintenance-cart-v1.png")
       || /\/bosses\/(kurome|mother|ooguchi|gairen|futago)-compendium.*\.(?:png|webp)$/.test(assetPath)
     ));
@@ -682,7 +687,7 @@ const recoverySetup = await appPage.evaluate(async (base) => {
   const old = {
     schema: manifest.schema,
     version: "commit-recovery-old",
-    releaseSha: "old-generation",
+    releaseSha: manifest.releaseSha,
     // A valid but deliberately different active generation; `commit-manifest`
     // retains the complete shipped generation as `previous`.
     assets: [manifest.assets[0]],
@@ -708,7 +713,9 @@ record("a complete pack with a mismatched worker generation is blocked pending c
   recoverySetup.committedOld === "pwa:committed"
   && recoveryBlockedCase.gateVisible
   && !recoveryBlockedCase.gameMounted
-  && recoveryBlockedCase.text.includes("データ本体は再取得しません")
+  && recoveryBlockedCase.text.includes("「保存済みデータを反映」を押してください。")
+  && recoveryBlockedCase.text.includes("再ダウンロードは不要です。")
+  && !recoveryBlockedCase.text.includes("お待ちください")
 ), { recoverySetup, recoveryBlockedCase });
 
 const recoveryRequestStart = appAssetRequests.length;

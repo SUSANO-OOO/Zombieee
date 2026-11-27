@@ -1147,21 +1147,17 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {(phase === "commit-required" || phase === "committing") && (
+            {phase === "commit-required" && (
+              <>
+                <h2>ダウンロードは完了しています</h2>
+                <p>「保存済みデータを反映」を押してください。再ダウンロードは不要です。</p>
+                <button type="button" className="pwa-primary" onClick={recoverCommittedPack}>保存済みデータを反映</button>
+              </>
+            )}
+            {phase === "committing" && (
               <>
                 <h2>保存済みデータを反映しています</h2>
-                <p className="pwa-progress-line">
-                  ダウンロードしたゲームデータを、この端末で使えるように保存しています。
-                </p>
-                <p className="pwa-hint">
-                  保存が終わるまで、この画面でお待ちください。
-                </p>
-                {phase === "commit-required" && (
-                  <button type="button" className="pwa-primary" onClick={recoverCommittedPack}>
-                    保存済みデータを反映
-                  </button>
-                )}
-                {phase === "committing" && <p className="pwa-hint" role="status">反映を確認しています…</p>}
+                <p className="pwa-hint" role="status">保存が終わるまで、この画面でお待ちください。</p>
               </>
             )}
 

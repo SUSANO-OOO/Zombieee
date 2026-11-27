@@ -204,6 +204,8 @@ try {
     }
     assert.doesNotMatch(beforeCommit, /ダウンロードが完了しました|ゲームを始める/);
     assert.match(beforeCommit, /保存済みデータを反映しています/);
+    assert.match(beforeCommit, /この画面でお待ちください/);
+    assert.equal(await page.getByRole("button", { name: "保存済みデータを反映", exact: true }).count(), 0);
     assert.deepEqual(await page.evaluate(() => window.__pwaStorageRequests), [true]);
     await page.evaluate(() => { window.__pwaReleaseFinalVerification(); });
     await page.getByRole("heading", { name: "ダウンロードが完了しました", exact: true }).waitFor({ timeout: 60000 });
