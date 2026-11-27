@@ -5699,7 +5699,7 @@
       "category": "audio",
       "criticality": "optional",
       "audioChannel": "se",
-      "audioId": "ability-ranger-precision-impact",
+      "audioId": "manual-strike-ability-ranger-precision-impact",
       "audioType": "audio/mpeg"
     },
     {
@@ -5710,7 +5710,7 @@
       "category": "audio",
       "criticality": "optional",
       "audioChannel": "se",
-      "audioId": "ability-ranger-precision-shot",
+      "audioId": "manual-strike-ability-ranger-precision-shot",
       "audioType": "audio/mpeg"
     },
     {
@@ -5721,7 +5721,7 @@
       "category": "audio",
       "criticality": "optional",
       "audioChannel": "se",
-      "audioId": "ability-scout-intercept-impact",
+      "audioId": "manual-strike-ability-scout-intercept-impact",
       "audioType": "audio/mpeg"
     },
     {

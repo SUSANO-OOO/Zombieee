@@ -6488,6 +6488,39 @@
       "audioChannel": "se",
       "audioId": "chiha-salvo-launch-b",
       "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-impact.mp3",
+      "bytes": 5059,
+      "hash": "sha256-e8cae52b9403b17a192783b2327d5e0cce638ac43e7a07cd03d6021f13f05e99",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "manual-strike-ability-ranger-precision-impact",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-shot.mp3",
+      "bytes": 11328,
+      "hash": "sha256-56f6b15a34cce67a47abd9458250ad66f6dd72af1189353cf713bd0e1bdcb80c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "manual-strike-ability-ranger-precision-shot",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/manual-strikes/ability-scout-intercept-impact.mp3",
+      "bytes": 7149,
+      "hash": "sha256-b11428ef662821c3a06b2f3dbf9c071dc61c2e249fe07668e61832f2991a28a2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "manual-strike-ability-scout-intercept-impact",
+      "audioType": "audio/mpeg"
     }
   ],
   "retired": [
