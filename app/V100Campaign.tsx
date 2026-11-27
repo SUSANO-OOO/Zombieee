@@ -13,6 +13,8 @@ import { V100EventBackdrop } from "./V100EventBackdrop";
 import { V100StoryInsert } from "./V100StoryInsert";
 import { v100EventPortraitPath, v100StoryExpressionFor, v100StoryListenerFor } from "./v100StoryDirection.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
+import { v100SurvivalStartChoice } from "./v100Survival.js";
+import { v100DiscoveredBosses } from "./v100BossProgress.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { V100_PREPARATION_ART } from "./v100PreparationArt.js";
 
@@ -1201,7 +1203,7 @@ export function V100Campaign() {
         <DataManagementView save={save} notice={notice} onBack={() => openSurface(dataReturnSurfaceRef.current)} onBackup={downloadBackup} onNewGameBackup={downloadNewGameBackup} onImport={importBackup} onLegacyHistory={importLegacyHistory} />
       )}
 
-      {flow.phase === "map" && surface === "mode-formation" && <FormationView save={save} stageId={null} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={() => openSurface("modes")} onBack={() => openSurface("modes")} onLoadout={() => openSurface("support-vehicle")} onPersonnel={id => openSurface("personnel", id)} modePreparation={modeTab === "survival" ? "survival" : "outbreak"} />}
+      {flow.phase === "map" && surface === "mode-formation" && <FormationView save={save} stageId={null} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={() => openSurface("modes")} onBack={() => openSurface("modes")} onLoadout={() => openSurface("support-vehicle")} onPersonnel={id => openSurface("personnel", id)} modePreparation={modeTab === "survival" ? "survival" : "outbreak"} waveInput={survivalWaveInput} />}
 
       {flow.phase === "formation" && surface === "campaign" && (
         <FormationView save={save} stageId={flow.stageId} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={startBattle} onBack={leavePreparation} onLoadout={() => openSurface("support-vehicle")} onPersonnel={(unitId) => openSurface("personnel", unitId)} />
@@ -1419,13 +1421,19 @@ function V100StageStars({ stars, label = "獲得した星" }: { stars: number; l
   </span>;
 }
 
-function FormationView({ save, stageId, requestedUnitId = null, onCancelRequested, onSlotChange, onStart, onBack, onLoadout, onPersonnel, modePreparation }: { save: Save; stageId: string | null; requestedUnitId?: string | null; onCancelRequested: () => void; onSlotChange: (slot: number, value: string) => void; onStart: () => void; onBack: () => void; onLoadout: () => void; onPersonnel: (unitId: string | null) => void; modePreparation?: "survival" | "outbreak" }) {
+function FormationView({ save, stageId, requestedUnitId = null, onCancelRequested, onSlotChange, onStart, onBack, onLoadout, onPersonnel, modePreparation, waveInput }: { save: Save; stageId: string | null; requestedUnitId?: string | null; onCancelRequested: () => void; onSlotChange: (slot: number, value: string) => void; onStart: () => void; onBack: () => void; onLoadout: () => void; onPersonnel: (unitId: string | null) => void; modePreparation?: "survival" | "outbreak"; waveInput?: string }) {
   const [activeSlot, setActiveSlot] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [briefingOpen, setBriefingOpen] = useState(false);
   const stage = stageId ? V100_STAGE_BY_ID[stageId] : null;
   const basePresentation = v100BasePresentationFor(stage?.number);
   const threats = v100MissionThreatsFor(stageId);
+  const modeBosses = modePreparation ? v100DiscoveredBosses(save.receipts) : [];
+  const survivalStart = modePreparation === "survival" ? v100SurvivalStartChoice(waveInput, save.survival.highestCompletedWave) : null;
+  const modeTitle = modePreparation === "survival" ? "サバイバル" : "異常発生";
+  const modeObjective = survivalStart
+    ? survivalStart.validStart ? `第${survivalStart.startWave}波から迎撃` : "開始地点を選び直してください"
+    : `再戦できるボス　${modeBosses.length}体`;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
   const absenceDescriptionId = useId();
@@ -1444,8 +1452,8 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
       <div className="v100-slot-rail" aria-label="7枠の編成">
         <aside className="v100-field-map-card" aria-label="作戦と選択中の仲間">
           <div className="v100-field-map-pane" tabIndex={0}>
-            <span className="v100-field-map-title"><strong>{stage ? "S" + String(stage.number).padStart(2, "0") + " / " + stageDisplayNameFor(stage) : "異常発生・サバイバル / 出撃準備"}</strong></span>
-            <div className="v100-field-map-intel"><strong>{modePreparation ? "仲間を選び、次の迎撃に備える" : objectiveLabelFor(stage)}</strong></div>
+            <span className="v100-field-map-title"><strong>{stage ? "S" + String(stage.number).padStart(2, "0") + " / " + stageDisplayNameFor(stage) : modeTitle}</strong></span>
+            <div className="v100-field-map-intel"><strong>{modePreparation ? modeObjective : objectiveLabelFor(stage)}</strong></div>
             {absence && <p id={absenceDescriptionId} className="v100-stage-absence" role="note">{absence}</p>}
             {activeUnit && activePresentation ? <div className="v100-briefing-person" data-v100-focused-unit={activeUnit.id}>
               <CrewPortrait unitId={activeUnit.id} label={activeUnit.displayName} />
@@ -1470,10 +1478,11 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
               initiallyShowControls={stage?.number === 1 && !modePreparation}
               onClose={() => setBriefingOpen(false)}
             >
-              <div className="v100-briefing-plan">
+              <div className="v100-briefing-plan" data-mode-briefing={modePreparation} style={modePreparation ? { "--v100-briefing-scene": `url("${modePreparation === "survival" ? PRODUCTION_VISUALS.stages["stage-nishijin-shopping-street"] : PRODUCTION_VISUALS.command}")` } as CSSProperties : undefined}>
                 <section>
-                  <h3>{stage ? stageDisplayNameFor(stage) : "次の迎撃に備える"}</h3>
-                  <strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>
+                  <h3>{stage ? stageDisplayNameFor(stage) : modeTitle}</h3>
+                  <strong>{modePreparation ? modeObjective : objectiveLabelFor(stage)}</strong>
+                  {modePreparation === "survival" && <p>装甲車を守り、押し寄せる敵を迎え撃つ。5波ごとにボスが出現。</p>}
                   {stage && <>
                     <MissionBriefingDiagram stageId={stageId} />
                     <p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage.enemyPack, stage.number)}</p>
@@ -1481,13 +1490,17 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                   {!modePreparation && <StarCriteria maxHp={save.vehicle.maxHp} stageNumber={stage?.number} />}
                 </section>
                 <section>
-                  <h3>敵の動き</h3>
-                  {threats.length > 0 ? (
+                  <h3>{modePreparation === "survival" ? "出現するボス" : modePreparation === "outbreak" ? "再戦相手" : "敵の動き"}</h3>
+                  {modePreparation ? (
+                    modeBosses.length ? <ul className="v100-briefing-boss-list">{modeBosses.map(boss =>
+                      <li key={boss.id}><img src={V100_BOSS_DOSSIER_ART[boss.id].path} alt="" width={52} height={60} /><span>{boss.displayName}</span></li>
+                    )}</ul> : <p>物語でボスを倒すと解放されます。</p>
+                  ) : threats.length > 0 ? (
                     <ul aria-label="出現候補の行動">
                       {threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}
                     </ul>
                   ) : <p>ステージを選ぶと、出現する敵を確認できます。</p>}
-                  <p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p>
+                  <p>同じ仲間を複数の枠に入れても、再出撃までの待ち時間は共通です。</p>
                 </section>
               </div>
             </V100BattleBriefing>
@@ -1740,6 +1753,7 @@ function ResultView({ busy, result, previousResult, previousBestStars, alreadyCo
   const report = normalizeV100BattleReport(result?.battleReport);
   const merits = v100BattleMeritsFor(result, previousResult);
   const recordedSeconds = typeof result?.elapsedSeconds === "number" && Number.isFinite(result.elapsedSeconds) && result.elapsedSeconds >= 0 && result.elapsedSeconds <= Number.MAX_SAFE_INTEGER ? Math.round(result.elapsedSeconds) : null;
+  const battleTime = recordedSeconds === null ? "記録なし" : recordedSeconds < 60 ? `${recordedSeconds}秒` : `${Math.floor(recordedSeconds / 60)}分${recordedSeconds % 60}秒`;
   const recordedDeaths = typeof result?.unitDeaths === "number" && Number.isSafeInteger(result.unitDeaths) && result.unitDeaths >= 0 ? result.unitDeaths : null;
   const nextStar = runStars === 1 ? 2 : runStars === 2 ? 3 : null;
   const maxHp = Math.max(0, Number(result?.vehicleMaxHp) || 0);
@@ -1796,14 +1810,14 @@ function ResultView({ busy, result, previousResult, previousBestStars, alreadyCo
           {deviceResult?.detail && <span>{deviceResult.detail}</span>}
           {boss?.state === "active" && <span>{bossRemainingHpText}</span>}
           <small className="v100-defeat-facts">
-            <span>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</span>
+            <span>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}</span>
           </small>
           {lastVehicleHit && <small className="v100-result-last-hit"><b>直前の被害</b> {lastVehicleHit}</small>}
         </div>}
       {merits[0] && <p><span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}</small></span></p>}
       {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}
       <div className="v100-result-feedback">
-        <dl className="v100-result-extra-records"><div><dt>経過時間</dt><dd>{recordedSeconds === null ? "記録なし" : `${recordedSeconds}秒`}</dd></div><div><dt>戦闘不能</dt><dd>{recordedDeaths === null ? "記録なし" : `${recordedDeaths}回`}</dd></div></dl>
+        <dl className="v100-result-extra-records"><div><dt>戦闘時間</dt><dd>{battleTime}</dd></div><div><dt>戦闘不能</dt><dd>{recordedDeaths === null ? "記録なし" : `${recordedDeaths}回`}</dd></div></dl>
         {won && <><div className="v100-vehicle-hp-meter" role="meter" aria-label={basePresentation.healthLabel} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
           <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />
         </div>

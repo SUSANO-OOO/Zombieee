@@ -7,7 +7,7 @@ import { createCommandRecoveryRuntime, armCommandRecovery, advanceCommandRecover
 import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
 import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';
-import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
+import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105AbilityNamePainted, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
 import { drawV100StationMud } from "./v100StationMudVfx.js";
 import {queueV100GuardActivation} from './v100GuardActivationVfx.js';
 import {drawV100KingExhaust} from './v100KingExhaustVfx.js';
@@ -1560,6 +1560,7 @@ type Hud = {
   bossTwins?: { part: string; hp: number; maxHp: number; arriving: boolean }[];
   bossWorldX: number | null;
   bossTelegraphWarning: string | null;
+  paintedBossWarningName?: string;
   takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
   threat: number;
@@ -10171,7 +10172,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return icons.some((icon, index) => icon !== current.manualAbilityIcons[index])
         ? { ...current, manualAbilityIcons: icons } : current;
     });
-  }, [hud.bossTelegraphWarning]);
+  }, [hud.bossTelegraphWarning, hud.paintedBossWarningName]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -10182,7 +10183,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const rect = element.getBoundingClientRect();
         return {ownerId:null,x:rect.left-bounds.left,y:rect.top-bounds.top,width:rect.width,height:rect.height};
       })];
-  }, [hud.manualAbilityIcons, hud.bossTelegraphWarning]);
+  }, [hud.manualAbilityIcons, hud.bossTelegraphWarning, hud.paintedBossWarningName]);
 
   // All battle operations must re-check the save boundary at handler time.
   // React state can lag one render behind a save effect, so this ref is also
@@ -25681,6 +25682,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         lastHudRef.current = now;
         const bossHud = bossBattleHudSnapshot(g);
         let bossTelegraphWarning: string | null = null;
+        let paintedBossWarningName: string | undefined;
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         const canvasRect = canvas.getBoundingClientRect();
         const transform = canvasTransformRef.current;
@@ -25711,6 +25713,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (!telegraph) continue;
             bossTelegraphWarning = v100BossWarningText({ boss: fighter, telegraph, fighters: g.fighters,
               laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });
+            if (v105AbilityNamePainted(g, fighter.id, telegraph.displayName)) paintedBossWarningName = telegraph.displayName;
             break;
           }
         }
@@ -25757,7 +25760,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           deployQueue: g.deployQueue.length,
           summonedCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
-          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null, bossTelegraphWarning,
+          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null, bossTelegraphWarning, paintedBossWarningName,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
@@ -26115,7 +26118,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
             </div>
           </div>
-          {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
+          {hud.bossTelegraphWarning && !end && <div className={hud.bossTelegraphWarning === hud.paintedBossWarningName ? "v100-announcement-only" : "v100-boss-telegraph-warning"} role="alert" data-boss-telegraph-warning="true">
+            {hud.paintedBossWarningName ? <><span className="v100-announcement-only">{formatBattleText(hud.paintedBossWarningName)}</span>{formatBattleText(hud.bossTelegraphWarning.slice(hud.paintedBossWarningName.length))}</> : formatBattleText(hud.bossTelegraphWarning)}
+          </div>}
 
           {armoryKeyStatus ? (!end && <section className="health-hud barrier-health v100-control-health archive-objective"
             data-armory-key-status={armoryKeyStatus} aria-label={enemyBaseLabel}>

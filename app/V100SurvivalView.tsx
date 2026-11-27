@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { AshfallGame, type UnitKind, type AshfallExternalSession } from "./AshfallGame";
 import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
-import { v100SurvivalBossPool, v100SurvivalSession } from "./v100Survival.js";
+import { v100SurvivalBossPool, v100SurvivalSession, v100SurvivalStartChoice } from "./v100Survival.js";
 import { beginV100Survival, checkpointV100Survival, selectV100SurvivalUpgrade, settleV100Survival, dismissV100SurvivalResult } from "./v100SurvivalTransactions.js";
 import { v100EquipmentFor } from "./v100Equipment.js";
 import { V100_UNITS } from "./v100Registry.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
-import { isUnlockedSurvivalStartWave, survivalHighestStartWave, SURVIVAL_START_SKIP_WAVES } from "./survival.js";
+import { SURVIVAL_START_SKIP_WAVES } from "./survival.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Props = { save: Save; waveInput: string; onWaveInput: (value: string) => void; onLoadout?: () => void; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
@@ -44,9 +44,7 @@ export function V100SurvivalView({ save, waveInput, onWaveInput, onSave, onLoado
     <button type="button" onClick={() => void onSave(dismissV100SurvivalResult(save))}>サバイバルへ戻る</button>
     {onLoadout && <button type="button" onClick={() => { void onSave(dismissV100SurvivalResult(save)).then(accepted => { if (accepted) onLoadout(); }); }}>編成を見直す</button>}
   </section>;
-  const highestStart = survivalHighestStartWave(progress.highestCompletedWave);
-  const startWave = highestStart === 1 ? 1 : Number(waveInput);
-  const validStart = isUnlockedSurvivalStartWave(startWave, progress.highestCompletedWave);
+  const { highestStart, startWave, validStart } = v100SurvivalStartChoice(waveInput, progress.highestCompletedWave);
   // A step from a mistyped value goes to the next valid starting point in that direction.
   const stepIndex = (startWave - 1) / SURVIVAL_START_SKIP_WAVES;
   const previousStart = Math.max(1, Math.min(highestStart, 1 + (Math.ceil(stepIndex) - 1) * SURVIVAL_START_SKIP_WAVES));

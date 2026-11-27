@@ -58,3 +58,17 @@ html[data-pwa-ui-materials="ready"] .v100-battle-briefing { --v100-briefing-mate
 }
 @media (max-width:700px) { .v100-battle-briefing h2 { font-size:18px; } .v100-battle-briefing > header { gap:7px; } .v100-battle-briefing button { min-width:68px; padding:8px; } .v100-briefing-plan { gap:8px; } }
 @media (max-width:640px) { .v100-battle-briefing > header { grid-template-columns:minmax(0,1fr) auto; } .v100-battle-briefing nav { grid-row:2; grid-column:1/-1; } .v100-battle-briefing nav button { flex:1; } .v100-battle-briefing > header > button { grid-column:2; grid-row:1; } .v100-battle-instructions,.v100-briefing-plan { grid-template-columns:1fr; } }
+.v100-briefing-plan[data-mode-briefing] { grid-template-columns: 1fr; }
+.v100-briefing-plan[data-mode-briefing] > section:first-child {
+  padding: 11px 15px; border-left: 4px solid #bf9259; color: #f5ead1;
+  background: linear-gradient(90deg, #171d1dfc, #202120eb 42%, #181c1c50), var(--v100-briefing-scene) center 48% / cover;
+}
+.v100-briefing-plan[data-mode-briefing] > section:first-child :is(h3, strong, p) { color: inherit; }
+.v100-briefing-plan ul.v100-briefing-boss-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr)); gap: 5px 10px;
+}
+.v100-briefing-plan .v100-briefing-boss-list li {
+  display: flex; align-items: center; gap: 8px; padding: 0; border: 0;
+  border-bottom: 1px solid #796b4c66; background: transparent; font-weight: 700;
+}
+.v100-briefing-boss-list img { flex: none; width: 52px; height: 60px; object-fit: contain; background: #383b32; }

@@ -1147,6 +1147,38 @@
     [
       "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(f.kind === \"gate-eater\" && g.definition.missionConfig.v100StageNumber)) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n",
       "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(g.definition.missionConfig.v100StageNumber && (f.kind === \"gate-eater\" || lateBossGroundRadius(f.kind)))) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n"
+    ],
+    [
+      "import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';\nimport { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';\nimport { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';\nimport { drawV100StationMud } from \"./v100StationMudVfx.js\";\nimport {queueV100GuardActivation} from './v100GuardActivationVfx.js';\n",
+      "import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';\nimport { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';\nimport { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105AbilityNamePainted, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';\nimport { drawV100StationMud } from \"./v100StationMudVfx.js\";\nimport {queueV100GuardActivation} from './v100GuardActivationVfx.js';\n"
+    ],
+    [
+      "  bossWorldX: number | null;\n  bossTelegraphWarning: string | null;\n  takuyaEntranceAudioActive: boolean;\n  crawlerHitFlash: number;\n",
+      "  bossWorldX: number | null;\n  bossTelegraphWarning: string | null;\n  paintedBossWarningName?: string;\n  takuyaEntranceAudioActive: boolean;\n  crawlerHitFlash: number;\n"
+    ],
+    [
+      "        ? { ...current, manualAbilityIcons: icons } : current;\n    });\n  }, [hud.bossTelegraphWarning]);\n\n  useLayoutEffect(() => {\n",
+      "        ? { ...current, manualAbilityIcons: icons } : current;\n    });\n  }, [hud.bossTelegraphWarning, hud.paintedBossWarningName]);\n\n  useLayoutEffect(() => {\n"
+    ],
+    [
+      "        return {ownerId:null,x:rect.left-bounds.left,y:rect.top-bounds.top,width:rect.width,height:rect.height};\n      })];\n  }, [hud.manualAbilityIcons, hud.bossTelegraphWarning]);\n\n  // All battle operations must re-check the save boundary at handler time.\n",
+      "        return {ownerId:null,x:rect.left-bounds.left,y:rect.top-bounds.top,width:rect.width,height:rect.height};\n      })];\n  }, [hud.manualAbilityIcons, hud.bossTelegraphWarning, hud.paintedBossWarningName]);\n\n  // All battle operations must re-check the save boundary at handler time.\n"
+    ],
+    [
+      "        const bossHud = bossBattleHudSnapshot(g);\n        let bossTelegraphWarning: string | null = null;\n        const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === \"zombie\" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);\n        const canvasRect = canvas.getBoundingClientRect();\n",
+      "        const bossHud = bossBattleHudSnapshot(g);\n        let bossTelegraphWarning: string | null = null;\n        let paintedBossWarningName: string | undefined;\n        const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === \"zombie\" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);\n        const canvasRect = canvas.getBoundingClientRect();\n"
+    ],
+    [
+      "            bossTelegraphWarning = v100BossWarningText({ boss: fighter, telegraph, fighters: g.fighters,\n              laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });\n            break;\n          }\n",
+      "            bossTelegraphWarning = v100BossWarningText({ boss: fighter, telegraph, fighters: g.fighters,\n              laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });\n            if (v105AbilityNamePainted(g, fighter.id, telegraph.displayName)) paintedBossWarningName = telegraph.displayName;\n            break;\n          }\n"
+    ],
+    [
+      "          summonedCount: g.fighters.filter((fighter) => fighter.side === \"human\" && fighter.hp > 0).length,\n          airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,\n          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null, bossTelegraphWarning,\n          takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,\n          crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),\n",
+      "          summonedCount: g.fighters.filter((fighter) => fighter.side === \"human\" && fighter.hp > 0).length,\n          airstrikePhase: g.airstrike.phase, airstrikeCooldownRemaining: g.airstrike.cooldownRemaining ?? 0, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,\n          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossPhase: bossHud?.phase, bossTwins: bossHud?.twins, bossWorldX: bossHud?.worldX ?? null, bossTelegraphWarning, paintedBossWarningName,\n          takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,\n          crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),\n"
+    ],
+    [
+      "            </div>\n          </div>\n          {hud.bossTelegraphWarning && !end && <div className=\"v100-boss-telegraph-warning\" role=\"alert\" data-boss-telegraph-warning=\"true\">{formatBattleText(hud.bossTelegraphWarning)}</div>}\n\n          {armoryKeyStatus ? (!end && <section className=\"health-hud barrier-health v100-control-health archive-objective\"\n",
+      "            </div>\n          </div>\n          {hud.bossTelegraphWarning && !end && <div className={hud.bossTelegraphWarning === hud.paintedBossWarningName ? \"v100-announcement-only\" : \"v100-boss-telegraph-warning\"} role=\"alert\" data-boss-telegraph-warning=\"true\">\n            {hud.paintedBossWarningName ? <><span className=\"v100-announcement-only\">{formatBattleText(hud.paintedBossWarningName)}</span>{formatBattleText(hud.bossTelegraphWarning.slice(hud.paintedBossWarningName.length))}</> : formatBattleText(hud.bossTelegraphWarning)}\n          </div>}\n\n          {armoryKeyStatus ? (!end && <section className=\"health-hud barrier-health v100-control-health archive-objective\"\n"
     ]
   ],
   "app/manualAbilities.js": [
@@ -1519,6 +1551,14 @@
     [
       "    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time};",
       "    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time,anchorX:row.anchorX,anchorY:row.anchorY};"
+    ],
+    [
+      "  return state?{active:state.active.map(row=>({...row,ownerX:liveOwner(world,row)?.x,ownerY:liveOwner(world,row)?.y})),\n    starts:state.receipts.map(row=>({...row}))}:{active:[],starts:[]};\n}\n\n",
+      "  return state?{active:state.active.map(row=>({...row,ownerX:liveOwner(world,row)?.x,ownerY:liveOwner(world,row)?.y})),\n    starts:state.receipts.map(row=>({...row}))}:{active:[],starts:[]};\n}\n\nexport function v105AbilityNamePainted(world, ownerId, name) {\n  return battles.get(world)?.active.some(row => row.ownerId === ownerId && row.name === name\n    && row.lastPaint?.at === world.time && row.lastPaint.opacity >= .35) ?? false;\n}\n\n"
+    ],
+    [
+      "    ctx[V105_ABILITY_NAME_PAINT]={ownerId:row.ownerId,activationId:row.activationId,name:row.name,key:row.key,startedAt:row.startedAt};\n    try{ctx.fillText(row.name,row.x,row.y);}finally{delete ctx[V105_ABILITY_NAME_PAINT];}\n    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time,anchorX:row.anchorX,anchorY:row.anchorY};\n    const active=state.active.find(entry=>entry.key===row.key);if(active)active.lastPaint=row.lastPaint;\n  }\n",
+      "    ctx[V105_ABILITY_NAME_PAINT]={ownerId:row.ownerId,activationId:row.activationId,name:row.name,key:row.key,startedAt:row.startedAt};\n    try{ctx.fillText(row.name,row.x,row.y);}finally{delete ctx[V105_ABILITY_NAME_PAINT];}\n    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time,opacity:ctx.globalAlpha,anchorX:row.anchorX,anchorY:row.anchorY};\n    const active=state.active.find(entry=>entry.key===row.key);if(active)active.lastPaint=row.lastPaint;\n  }\n"
     ]
   ],
   "app/productionAudio.js": [
