@@ -66,7 +66,7 @@ import {
 } from "./v100StoryFlow.js";
 import { V100_STORY_POST_CREDITS_FILM, v100StoryEventFor, v100StoryEventView, v100StoryEventIdsForStage } from "./v100StoryEvents.js";
 import { v100MissionObjectiveFor, v100ProductionSessionFor } from "./v100BattleAdapter.js";
-import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
+import { v100AvailableFormation, v100SortieBlockReason, v100StageAbsenceReason } from "./v100StageParticipation.js";
 import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
@@ -870,8 +870,9 @@ export function V100Campaign() {
   };
 
   const startBattle = () => {
-    if (!v100AvailableFormation(flow.stageId, save.formationSlots).length) {
-      setNotice("この作戦に出撃できる仲間を編成してください。");
+    const blocked = v100SortieBlockReason(flow.stageId, save.formationSlots);
+    if (blocked) {
+      setNotice(blocked);
       return;
     }
     const entered = enterV100Battle(flow);
@@ -915,8 +916,9 @@ export function V100Campaign() {
   };
   const retryDefeat = () => {
     if (saveBusyRef.current) return;
-    if (!v100AvailableFormation(flow.stageId, save.formationSlots).length) {
-      setNotice("この編成では出撃できません。「編成を見直す」から仲間を選んでください。");
+    const blocked = v100SortieBlockReason(flow.stageId, save.formationSlots);
+    if (blocked) {
+      setNotice(blocked);
       return;
     }
     const next = retryV100Battle(flow);
@@ -1205,7 +1207,11 @@ export function V100Campaign() {
       {flow.phase === "battle" && productionSession && (
         productionSession.formationKinds.length > 0
           ? <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction, onSettingsChange: handleProductionSettingsChange }} key={productionSession.resultId} />
-          : <section className="v100-panel"><h2>出撃できる仲間がいません</h2><p>{v100StageAbsenceReason(flow.stageId, "unit-paisen") ?? "出撃する仲間が編成されていません。"} 編成画面で別の仲間を選んでください。</p><button type="button" onClick={() => { const next = leaveV100Battle(flow, "loadout"); if (next.accepted) void updateFlow(next.state); }}>編成を見直す</button></section>
+          : <section className="v100-panel">
+            <h2>出撃不可</h2>
+            <p>{v100SortieBlockReason(flow.stageId, save.formationSlots)}</p>
+            <button type="button" onClick={() => { const next = leaveV100Battle(flow, "loadout"); if (next.accepted) void updateFlow(next.state); }}>編成を見直す</button>
+          </section>
       )}
 
       {flow.phase === "result" && (
@@ -1419,7 +1425,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
   const absenceDescriptionId = useId();
-  const absence = v100StageAbsenceReason(stageId, "unit-paisen");
+  const absence = availableSlots.length ? v100StageAbsenceReason(stageId, "unit-paisen") : v100SortieBlockReason(stageId, save.formationSlots);
   const requestedUnit = requestedUnitId && save.ownedUnitIds.includes(requestedUnitId) && !save.formationSlots.includes(requestedUnitId) ? UNIT_BY_ID.get(requestedUnitId) ?? null : null;
   const requestedAbsence = requestedUnit ? v100StageAbsenceReason(stageId, requestedUnit.id) : null;
   const placingUnit = requestedAbsence ? null : requestedUnit;
