@@ -1673,6 +1673,30 @@
     [
       "\nexport function humanVoiceCueForUnit(kind, event) {\n  if (kind === \"medic\" && (event === \"hurt\" || event === \"death\")) return \"voice-nao-\" + event;\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n",
       "\nexport function humanVoiceCueForUnit(kind, event) {\n  const fieldRole = ownValue(fieldVoiceRoles, kind);\n  if (fieldRole && (event === \"hurt\" || event === \"death\")) return \"voice-\" + fieldRole.voice + \"-\" + event;\n  if (kind === \"medic\" && (event === \"hurt\" || event === \"death\")) return \"voice-nao-\" + event;\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n"
+    ],
+    [
+      "const fieldTakes = [\"human-female-hurt-01\", \"human-female-hurt-02\", fieldReaction.id];\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n",
+      "const fieldTakes = [\"human-female-hurt-01\", \"human-female-hurt-02\", fieldReaction.id];\n\n// Keep each fighter's established voice family, with two personal exit takes.\nconst crewExitRoles = Object.freeze({\n  scout: \"hachi\", brawler: \"paisen\", engineer: \"monkey\", brute: \"tatara\",\n  guardian: \"gantetsu\", zakimiya: \"zakimiya\", tky: \"tky\", \"miyamoto-musashi\": \"miyamoto-musashi\",\n});\nconst crewExitPools = Object.values(crewExitRoles).map(role =>\n  variationPool(\"voice-\" + role + \"-death\", \"humanVoices\", { priority: 86, cooldownMs: 260, maxInstances: 3 }));\nconst crewExitAssets = crewExitPools.flatMap(pool => pool.assetIds.map(id => ({\n  ...sfxAsset(id, pool.category, { gain: 0.8, priority: pool.priority, cooldownMs: pool.cooldownMs, maxInstances: pool.maxInstances }),\n  sources: [{ src: \"/audio/quality-20261127/crew-exits/\" + id.slice(\"voice-\".length) + \".mp3\", type: \"audio/mpeg\" }],\n})));\nconst crewExitPaths = new Set(crewExitAssets.map(asset => asset.sources[0].src));\nconst directVoicePaths = new Set([\n  ...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles, ...NAO_REACTION_PATHS,\n  ...V104_MELEE_ATTACK_PATHS, FIELD_REACTION_PATH, ...crewExitPaths,\n]);\nexport const isDirectVoiceDownload = src => directVoicePaths.has(src);\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n"
+    ],
+    [
+      "  ...naoReactions,\n  fieldReaction,\n];\n\n",
+      "  ...naoReactions,\n  fieldReaction,\n  ...crewExitAssets,\n];\n\n"
+    ],
+    [
+      "  }),\n  ...humanVoicePools,\n  ...enemyVoicePools,\n  variationPool(\"voice-nao-hurt\", \"humanVoices\", { priority: 66, cooldownMs: 260, maxInstances: 3 }),\n",
+      "  }),\n  ...humanVoicePools,\n  ...crewExitPools,\n  ...enemyVoicePools,\n  variationPool(\"voice-nao-hurt\", \"humanVoices\", { priority: 66, cooldownMs: 260, maxInstances: 3 }),\n"
+    ],
+    [
+      "// New standalone recordings follow the existing physical download order.\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([\n  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src) && asset.sources[0].src !== FIELD_REACTION_PATH),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n  ...V104_MELEE_ATTACK_PATHS.map(src => ({\n",
+      "// New standalone recordings follow the existing physical download order.\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([\n  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)\n    && asset.sources[0].src !== FIELD_REACTION_PATH && !crewExitPaths.has(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n  ...V104_MELEE_ATTACK_PATHS.map(src => ({\n"
+    ],
+    [
+      "  })),\n  PRODUCTION_AUDIO_MANIFEST.assetById[fieldReaction.id],\n]);\n\n",
+      "  })),\n  PRODUCTION_AUDIO_MANIFEST.assetById[fieldReaction.id],\n  ...crewExitAssets,\n]);\n\n"
+    ],
+    [
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  const fieldRole = ownValue(fieldVoiceRoles, kind);\n  if (fieldRole && (event === \"hurt\" || event === \"death\")) return \"voice-\" + fieldRole.voice + \"-\" + event;\n",
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  const exitRole = ownValue(crewExitRoles, kind);\n  if (event === \"death\" && exitRole) return \"voice-\" + exitRole + \"-death\";\n  const fieldRole = ownValue(fieldVoiceRoles, kind);\n  if (fieldRole && (event === \"hurt\" || event === \"death\")) return \"voice-\" + fieldRole.voice + \"-\" + event;\n"
     ]
   ]
 }

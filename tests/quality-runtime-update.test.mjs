@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {evaluateUpdate,verifyUpdatePayload} from '../app/pwaUpdatePlanner.js';
+import {crewExitTakes} from './fixtures/crew-exit-voices.mjs';
 
 const contract=JSON.parse(await readFile(new URL('./fixtures/quality-20261028-runtime-delta.json',import.meta.url)));
 const baseline=JSON.parse(execFileSync('git',['show',contract.base+':public/asset-manifest.json'],{maxBuffer:4*1024*1024}));
@@ -24,9 +25,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, audio and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,546);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,562);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54728566);
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),54960813);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -80,6 +81,7 @@ test('every bundled audio range still contains its exact encoded content after t
   '/audio/quality-20261127/melee-effort/kumaverson-attack-02.mp3',
   '/audio/quality-20261127/melee-effort/kumaverson-attack-03.mp3',
   '/audio/quality-20261127/voices/field-reaction-03.mp3',
+  ...crewExitTakes.map(take=>take.path).sort(),
  ]);
  assert.deepEqual(ordered(directAudio(candidate)),ordered([...directAudio(baseline),...alternateFiles]));
 });
@@ -100,7 +102,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,547);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,563);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
@@ -142,6 +144,7 @@ test('late effects and recordings append without moving or replacing older files
     '/audio/quality-20261127/chiha/chiha-salvo-impact.mp3',
     '/audio/quality-20261127/chiha/chiha-salvo-launch-a.mp3',
     '/audio/quality-20261127/chiha/chiha-salvo-launch-b.mp3',
+    ...crewExitTakes.map(take=>take.path).sort(),
     '/audio/quality-20261127/firearms/handgun-02.mp3',
     '/audio/quality-20261127/firearms/handgun-03.mp3',
     '/audio/quality-20261127/firearms/suppressed-pistol-02.mp3',
