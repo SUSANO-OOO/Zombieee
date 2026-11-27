@@ -39,7 +39,7 @@ function fixture(change={}){
   setTimeout:(fn,ms)=>setTimeout(()=>{clock++;fn();},ms),clearTimeout,
   JSON:{stringify:value=>{if(change.slowValidation&&gets===2)clock=601;return JSON.stringify(value);}},
   gameRef:{current:snapshot},selectedActionRef:{current:null},rejectBattleSaveBoundary:()=>false,
-  manualAbilityTargetCandidates:()=>[],canActivateManualAbility:()=>false,
+  manualAbilityTargetCandidates:()=>[],isManualAbilityReady:()=>false,
   requestCrawlerBarrage,v100BasePresentationFor:()=>({onFoot:false}),playCue:()=>{},emitBattleBark:()=>{},
   playUiOperationCue:(action,dedupeKey)=>{assert.equal(action,'reject');rejectRequests.push({cueId:'v100-ui-reject',dedupeKey,at:clock});},
   phaseGPointerFailure:(code,evidence)=>Object.assign(new Error(code),{code,evidence,phaseGTerminalInputFailure:true})});

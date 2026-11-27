@@ -4,6 +4,35 @@ import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, getV10
 
 const world = () => ({ time: 10, definition: { missionConfig: { v100StageNumber: 3 } } });
 
+test('whisky impact spreads painted fire while an ordinary grenade retains its own explosion',()=>{
+  const fire={complete:true,naturalWidth:768,naturalHeight:512};
+  const grenade={complete:true,naturalWidth:768,naturalHeight:512};
+  const plume={complete:true,naturalWidth:128,naturalHeight:128};
+  const grenadeArt={'v100-explosion':grenade,'v100-dust':plume,'v100-smoke-a':plume,'v100-smoke-b':plume};
+  const objects={...grenadeArt,'v100-ground-fire-bed':fire};
+  function render(type,assets) {
+    const game=world(),draws=[],shifts=[],alpha=[];
+    const ctx={globalAlpha:1,save(){alpha.push(this.globalAlpha);},restore(){this.globalAlpha=alpha.pop();},
+      scale(){},rotate(){},translate(x,y){shifts.push([x,y]);},drawImage(image){draws.push(image);}};
+    queueV100AdvancedAbilityEffect(game,{type,ownerId:2,activationId:4,x:220,y:180,duration:.6});
+    game.time+=.16;
+    drawV100AdvancedAbilityEffects(ctx,assets,game);
+    assert.equal(ctx.globalAlpha,1);assert.equal(alpha.length,0);
+    const atContact=draws.slice();
+    game.time+=.6;
+    drawV100AdvancedAbilityEffects(ctx,assets,game);
+    assert.deepEqual(draws,atContact);
+    return {draws,shifts};
+  }
+  const whisky=render('zakimiya-impact',objects);
+  assert.deepEqual(whisky.shifts[0],[220,180]);
+  assert.ok(whisky.shifts[1][0]<0&&whisky.shifts[2][0]>0);
+  assert.ok(whisky.draws.length>=2&&whisky.draws.every(image=>image===fire));
+  const grenadeDraws=render('mrs-grenade-impact',objects).draws;
+  assert.ok(grenadeDraws.includes(grenade)&&!grenadeDraws.includes(fire));
+  assert.deepEqual(render('zakimiya-impact',grenadeArt).draws,grenadeDraws);
+});
+
 test('current-rig advanced releases resolve only the live activation actual painted phase and socket',()=>{
   for(const [type,kind]of [['tky-lightblade','tky'],['mrs-grenade-flight','mrs-chiha'],['zakimiya-bottle','zakimiya']]){
     const game=world(),owner={id:4,kind,hp:100,manualAbility:{activationId:2}};game.fighters=[owner];

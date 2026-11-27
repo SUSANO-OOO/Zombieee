@@ -1,4 +1,4 @@
-import {MANUAL_ABILITY_REGISTRY, canActivateManualAbility, selectManualAbilityTarget, manualAbilityCheckpointCooldown} from './manualAbilities.js';
+import {MANUAL_ABILITY_REGISTRY, isManualAbilityReady, selectManualAbilityTarget, manualAbilityCheckpointCooldown} from './manualAbilities.js';
 import {V100_UNIT_BY_ID} from './v100Registry.js';
 import {ENEMY_CONTENT} from './content/enemyCatalog.js';
 
@@ -13,18 +13,18 @@ function nameFor(fighter) {
 export function manualAbilityTacticalView({owner, fighters=[], actionSelected=false}={}) {
  const ability=MANUAL_ABILITY_REGISTRY[owner?.kind];
  if(!ability || owner?.side!=='human' || !owner.manualAbility)return null;
- const available=!actionSelected && canActivateManualAbility({fighter:owner,fighters});
+ const target=!actionSelected && isManualAbilityReady(owner) ? selectManualAbilityTarget({owner,fighters}) : null;
+ const available=target!==null;
  const remaining=Math.ceil(manualAbilityCheckpointCooldown(owner.manualAbility));
- let status='再開後に使える';
+ let status='再開後に発動可';
  if(Number(owner.hp)<=0)status='戦闘不能';
- else if(owner.contained===true)status='捕らわれている';
+ else if(owner.contained===true)status='拘束中';
  else if(owner.gateEntering===true || owner.combatReady!==true)status='戦場へ移動中';
  else if(Number(owner.stunned)>0)status='ひるみ中';
  else if(owner.manualAbility.phase==='cooldown')status='あと'+remaining+'秒';
  else if(owner.manualAbility.phase!=='ready')status='発動中';
- else if(actionSelected)status='先に支援の狙いを取り消す';
- else if(!available)status=owner.kind==='medic'?'近くに負傷者がいない':'届く相手を待っている';
- const target=available?selectManualAbilityTarget({owner,fighters}):null;
+ else if(actionSelected)status='支援先を選択中';
+ else if(!available)status=owner.kind==='medic'?'治療対象なし':'狙える敵なし';
  let targetLabel=null;
  if(target){
   const ids=target.points?target.points.map(p=>p.targetId):target.targetIds??[target.targetId];
@@ -36,8 +36,7 @@ export function manualAbilityTacticalView({owner, fighters=[], actionSelected=fa
   else if(owner.kind==='gunner')targetLabel='前方の敵'+targets.length+'体を掃射';
   else {
    const primary=fighters.find(f=>f.id===(target.targetId??target.points?.[0]?.targetId));
-   targetLabel='いまの狙い：'+nameFor(primary);
-   if(target.points)targetLabel+='周辺';
+   targetLabel=(target.points?'初弾の標的：':'標的：')+nameFor(primary);
   }
  }
  return Object.freeze({ownerId:owner.id,kind:owner.kind,name:nameFor(owner),abilityName:ability.displayName,

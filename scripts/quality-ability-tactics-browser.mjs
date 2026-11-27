@@ -36,7 +36,7 @@ try{for(const [index,kinds] of (before?groups.slice(0,1):groups).entries()){
    const owner=row.paused.fighters.find(f=>f.id===id),available=canActivateManualAbility({fighter:owner,fighters:row.paused.fighters});
    const resumeRect=await page.getByRole('button',{name:'戦闘を再開',exact:true}).boundingBox();assert.ok(resumeRect&&resumeRect.y>=0&&resumeRect.y+resumeRect.height<=viewport.height);assert.ok(resumeRect.height>=44);
    assert.equal(observed.kind,owner.kind);assert.ok(observed.text.includes(MANUAL_ABILITY_REGISTRY[owner.kind].summary));assert.equal(observed.overflow,false);assert.ok(observed.rect.x>=0&&observed.rect.x+observed.rect.width<=viewport.width);
-   if(available)assert.ok(observed.text.includes('再開後に使える'));row.rows.push({id,kind:owner.kind,text:observed.text,available,target:selectManualAbilityTarget({owner,fighters:row.paused.fighters}),rect:observed.rect});
+   if(available)assert.ok(observed.text.includes('再開後に発動可'));row.rows.push({id,kind:owner.kind,text:observed.text,available,target:selectManualAbilityTarget({owner,fighters:row.paused.fighters}),rect:observed.rect});
    await page.screenshot({path:out+'/'+index+'-'+owner.kind+'-inspection.png'});
   }
   const later=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__.getSnapshot();return{time:s.time,receipts:s.manualAbilityReceipts};});assert.equal(later.time,row.paused.time);assert.deepEqual(later.receipts,row.paused.receipts);
@@ -44,7 +44,7 @@ try{for(const [index,kinds] of (before?groups.slice(0,1):groups).entries()){
   const ownerId=row.setup.ownerIds[0];await page.locator('.manual-ability-ready[data-fighter-id="'+ownerId+'"]').click();
   await page.waitForFunction(id=>window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===id)?.manualAbility?.activationId>0,ownerId);
   await page.waitForTimeout(900);await page.getByRole('button',{name:'一時停止',exact:true}).click();await page.locator('.manual-tactics > summary').click();
-  const actor=page.locator('[data-tactics-owner="'+ownerId+'"]');await actor.scrollIntoViewIfNeeded();row.afterUse=await actor.innerText();assert.match(row.afterUse,/あと\d+秒|発動中/);assert.ok(!row.afterUse.includes('再開後に使える'));
+  const actor=page.locator('[data-tactics-owner="'+ownerId+'"]');await actor.scrollIntoViewIfNeeded();row.afterUse=await actor.innerText();assert.match(row.afterUse,/あと\d+秒|発動中/);assert.ok(!row.afterUse.includes('再開後に発動可'));
   await page.screenshot({path:out+'/'+index+'-after-use.png'});
   if(index===0){
    await page.getByRole('button',{name:'戦闘を再開',exact:true}).click();
@@ -59,12 +59,12 @@ try{for(const [index,kinds] of (before?groups.slice(0,1):groups).entries()){
    assert.equal(await page.evaluate(({x,y}) => document.elementFromPoint(x,y)?.matches('canvas.battlefield'), skillCenter), true,
      'Aiming must accept the touch where the skill button was');
    await page.getByRole('button',{name:'一時停止',exact:true}).click();await page.locator('.manual-tactics > summary').click();
-   const scout=page.locator('[data-tactics-kind="scout"]');await scout.scrollIntoViewIfNeeded();row.supportSelected=await scout.innerText();assert.ok(row.supportSelected.includes('先に支援の狙いを取り消す'));assert.equal(await page.locator('.manual-tactics .ready').count(),0);
+   const scout=page.locator('[data-tactics-kind="scout"]');await scout.scrollIntoViewIfNeeded();row.supportSelected=await scout.innerText();assert.ok(row.supportSelected.includes('支援先を選択中'));assert.equal(await page.locator('.manual-tactics .ready').count(),0);
    await page.screenshot({path:out+'/support-selected.png'});
    await page.getByRole('button',{name:'戦闘を再開',exact:true}).click();await page.locator('.support-btn.airstrike').click();
    await skillButton.waitFor({state:'visible'});
    await page.getByRole('button',{name:'一時停止',exact:true}).click();await page.locator('.manual-tactics > summary').click();
-   await scout.scrollIntoViewIfNeeded();row.supportCancelled=await scout.innerText();assert.ok(row.supportCancelled.includes('再開後に使える'));await page.screenshot({path:out+'/support-cancelled.png'});
+   await scout.scrollIntoViewIfNeeded();row.supportCancelled=await scout.innerText();assert.ok(row.supportCancelled.includes('再開後に発動可'));await page.screenshot({path:out+'/support-cancelled.png'});
   }
  }
  assert.equal(await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100')),row.saveBefore);assert.deepEqual(row.requests,[]);row.status='passed';

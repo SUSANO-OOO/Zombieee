@@ -54,6 +54,34 @@ const enemy = (id, x, y = 280, hp = 100) => ({
   contained: false,
 });
 
+test("throw buttons match live aim at both range edges and react to targets leaving play", () => {
+  for (const kind of ["zakimiya", "mrs-chiha"]) {
+    const fighter = owner(1, kind);
+    const ability = MANUAL_ABILITY_REGISTRY[kind];
+    const min = ability.minRange ?? 0, max = ability.throwRange ?? ability.maxRange;
+    for (const [range, expected] of [[min, true], [max, true], [max + .01, false]]) {
+      const fighters = [enemy("edge", fighter.x + range, fighter.y)];
+      assert.equal(canActivateManualAbility({ fighter, fighters }), expected);
+      assert.equal(Boolean(selectManualAbilityTarget({ owner: fighter, fighters })), expected);
+    }
+    if (min > 0) {
+      assert.equal(canActivateManualAbility({ fighter, fighters: [enemy("near", fighter.x + min - .01)] }), false);
+    }
+    const target = enemy("in-range", fighter.x + max, fighter.y), fighters = [fighter, target];
+    for (const excluded of [{hp:0}, {side:"human"}, {contained:true}, {targetable:false}, {combatReady:false}]) {
+      const mixed = [fighter, {...target,...excluded}];
+      assert.equal(canActivateManualAbility({fighter,fighters:mixed}), false);
+      assert.equal(selectManualAbilityTarget({owner:fighter,fighters:mixed}), null);
+    }
+    assert.equal(canActivateManualAbility({fighter,fighters}), true);
+    target.x += 10;
+    assert.equal(canActivateManualAbility({fighter,fighters}), false);
+    assert.equal(selectManualAbilityTarget({owner:fighter,fighters}), null);
+    target.x -= 10;
+    assert.equal(canActivateManualAbility({fighter:{...fighter,stunned:1},fighters}), false);
+  }
+});
+
 test("all sixteen canonical manual abilities retain exact player-facing names", () => {
   assert.equal(Object.keys(MANUAL_ABILITY_REGISTRY).length, 16);
   assert.equal(MANUAL_ABILITY_REGISTRY.tky.displayName, "光刃解放");

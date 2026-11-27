@@ -2,6 +2,7 @@ import {clearV100GuardActivations,drawV100GuardActivations,getV100GuardActivatio
 import { drawV100Explosion } from "./v100CombatVfx.js";
 import {drawV100ChihaFinalBurst,v100ChihaFinalPaintScale,V100_CHIHA_FINAL_BURST_DURATION} from "./v100ChihaFinalBurstVfx.js";
 import {drawV100MusashiImpact} from './v100ManualImpactVfx.js';
+import {drawV100FireWhiskyImpact} from './v100GroundFireBedVfx.js';
 export {V100_CHIHA_FINAL_BURST_DURATION};
 
 const MAX_ADVANCED_EFFECTS = 64;
@@ -138,6 +139,7 @@ export function drawV100AdvancedAbilityEffects(ctx, objects, world, {includeGuar
       }
       continue;
     }
+    if (effect.type === "zakimiya-impact" && drawV100FireWhiskyImpact(ctx, objects, effect, progress)) continue;
     const id = effect.type === "tky-lightblade" ? "v100-lightblade" : effect.type === "mayo-dust" ? "v100-dust" : "v100-explosion"; const source = image(objects, id); if (!source) continue;
     const size = effect.type === "tky-lightblade" ? 180 : effect.type === "mayo-dust" ? 36 : effect.size ?? 64; if (effect.type === "tky-lightblade") drawCell(ctx, source, renderEffect, size, size); else if (effect.type === "zakimiya-impact" || effect.type === "mrs-grenade-impact") drawV100Explosion(ctx, objects, { ...renderEffect, scale: effect.finalRound ? "medium" : "small" }, effect.x, effect.y, .6, 1); else if (effect.type === "mayo-dust") { const progress = Math.max(0, Math.min(1, elapsed / effect.duration)); const width = 36 * (.7 + .6 * progress); const height = 12 * (1 + .5 * progress); ctx.save(); ctx.globalAlpha = .28 * (1 - progress) ** 2; ctx.drawImage(source, effect.x - width / 2, effect.y - height * .55, width, height); ctx.restore(); } else ctx.drawImage(source, effect.x - size / 2, effect.y - size, size, size);
   }
