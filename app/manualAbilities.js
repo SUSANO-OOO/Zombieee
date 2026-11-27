@@ -681,6 +681,12 @@ export function selectEngineerAbilityTarget({
   });
 }
 
+function livingEnemyInRange(owner, candidate, minRange, maxRange) {
+  if (!livingTarget(candidate)) return false;
+  const range = distance(owner, candidate);
+  return range >= minRange && range <= maxRange;
+}
+
 export function selectZakimiyaAbilityTarget({
   owner,
   fighters = [],
@@ -688,9 +694,7 @@ export function selectZakimiyaAbilityTarget({
   effectRadius = MANUAL_ABILITY_REGISTRY.zakimiya.effectRadius,
 } = {}) {
   if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
-  const candidates = fighters
-    .filter(livingTarget)
-    .filter((candidate) => distance(owner, candidate) <= throwRange);
+  const candidates = fighters.filter(candidate => livingEnemyInRange(owner, candidate, 0, throwRange));
   if (candidates.length === 0) return null;
   const ranked = candidates.map((candidate) => {
     const hits = candidates.filter((other) => distance(candidate, other) <= effectRadius);
@@ -753,12 +757,7 @@ export function selectMrsChihaAbilityTarget({
   salvoCount = MANUAL_ABILITY_REGISTRY["mrs-chiha"].salvoCount,
 } = {}) {
   if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
-  const candidates = fighters
-    .filter(livingTarget)
-    .filter((candidate) => {
-      const range = distance(owner, candidate);
-      return range >= minRange && range <= maxRange;
-    });
+  const candidates = fighters.filter(candidate => livingEnemyInRange(owner, candidate, minRange, maxRange));
   if (candidates.length === 0) return null;
   const ranked = candidates.map((candidate) => {
     const hits = candidates.filter((other) => distance(candidate, other) <= effectRadius);
@@ -862,6 +861,13 @@ export function selectManualAbilityTarget({ owner, fighters = [] } = {}) {
 
 export function canActivateManualAbility({ fighter, fighters = [] } = {}) {
   if (!isManualAbilityReady(fighter)) return false;
+  // For these two throws, any enemy in range can start the ability. Ranking
+  // blast locations and choosing salvo points is only needed when aiming.
+  if (fighter.kind === "zakimiya" || fighter.kind === "mrs-chiha") {
+    const ability = MANUAL_ABILITY_REGISTRY[fighter.kind];
+    return fighters.some(candidate =>
+      livingEnemyInRange(fighter, candidate, ability.minRange ?? 0, ability.throwRange ?? ability.maxRange));
+  }
   return selectManualAbilityTarget({ owner: fighter, fighters }) !== null;
 }
 

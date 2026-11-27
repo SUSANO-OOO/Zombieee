@@ -16691,14 +16691,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       && candidate.side === "human"
       && candidate.hp > 0
     ));
-    const targetCandidates = fighter ? manualAbilityTargetCandidates(g, fighter) : g.fighters;
-    if (!fighter?.manualAbility || !canActivateManualAbility({ fighter, fighters: targetCandidates })) {
+    const target = fighter?.manualAbility && isManualAbilityReady(fighter)
+      ? selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) })
+      : null;
+    if (!fighter?.manualAbility || !target) {
       playUiOperationCue("reject", `ability:${fighterId}:unavailable`);
       return false;
     }
-    const target = selectManualAbilityTarget({ owner: fighter, fighters: targetCandidates });
     const startedAbility = beginManualAbility(fighter.manualAbility, target);
-    if (!startedAbility.ok || !target) {
+    if (!startedAbility.ok) {
       playUiOperationCue("reject", `ability:${fighterId}:no-target`);
       return false;
     }
@@ -25689,12 +25690,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const readyAbilityFighters = g.running && !g.over
           ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))
             .map((fighter) => {
-              const target = selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) });
+              const candidates = manualAbilityTargetCandidates(g, fighter);
+              const stomp = fighter.kind === "brute" ? selectManualAbilityTarget({ owner: fighter, fighters: candidates }) : null;
               return {
                 id: fighter.id,
                 kind: fighter.kind,
-                available: target !== null,
-                ...(fighter.kind === "brute" && target ? { targetIds: target.targetIds } : {}),
+                available: fighter.kind === "brute" ? stomp !== null : canActivateManualAbility({ fighter, fighters: candidates }),
+                ...(stomp ? { targetIds: stomp.targetIds } : {}),
                 x: fighter.x,
                 y: fighter.y,
                 screenX: transform.offsetX + fighter.x * transform.scale,

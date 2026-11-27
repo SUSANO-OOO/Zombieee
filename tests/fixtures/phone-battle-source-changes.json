@@ -1131,6 +1131,14 @@
     [
       "              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);\n              playManualAbilityTimelineCue(owner, \"release\", owner.x, \"release\", {\n                priority: 88,\n                cooldownMs: 200,\n                maxInstances: 1,\n              });\n              playManualAbilityTimelineCue(owner, \"impact\", event.target.x, \"impact\", {\n                priority: 86,\n                cooldownMs: 80,\n                maxInstances: 2,\n              });\n",
       "              playManualAbilityTimelineCue(owner, \"release\", owner.x, \"release\", {\n                priority: 88,\n                cooldownMs: 200,\n                maxInstances: 1,\n              });\n              const firstHit = affected[0];\n              if (firstHit) {\n                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);\n                playManualAbilityTimelineCue(owner, \"impact\", firstHit.x, \"impact\", {\n                  priority: 86,\n                  cooldownMs: 80,\n                  maxInstances: 2,\n                });\n              }\n"
+    ],
+    [
+      "      && candidate.hp > 0\n    ));\n    const targetCandidates = fighter ? manualAbilityTargetCandidates(g, fighter) : g.fighters;\n    if (!fighter?.manualAbility || !canActivateManualAbility({ fighter, fighters: targetCandidates })) {\n      playUiOperationCue(\"reject\", `ability:${fighterId}:unavailable`);\n      return false;\n    }\n    const target = selectManualAbilityTarget({ owner: fighter, fighters: targetCandidates });\n    const startedAbility = beginManualAbility(fighter.manualAbility, target);\n    if (!startedAbility.ok || !target) {\n      playUiOperationCue(\"reject\", `ability:${fighterId}:no-target`);\n      return false;\n",
+      "      && candidate.hp > 0\n    ));\n    const target = fighter?.manualAbility && isManualAbilityReady(fighter)\n      ? selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) })\n      : null;\n    if (!fighter?.manualAbility || !target) {\n      playUiOperationCue(\"reject\", `ability:${fighterId}:unavailable`);\n      return false;\n    }\n    const startedAbility = beginManualAbility(fighter.manualAbility, target);\n    if (!startedAbility.ok) {\n      playUiOperationCue(\"reject\", `ability:${fighterId}:no-target`);\n      return false;\n"
+    ],
+    [
+      "          ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))\n            .map((fighter) => {\n              const target = selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) });\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available: target !== null,\n                ...(fighter.kind === \"brute\" && target ? { targetIds: target.targetIds } : {}),\n                x: fighter.x,\n                y: fighter.y,\n",
+      "          ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))\n            .map((fighter) => {\n              const candidates = manualAbilityTargetCandidates(g, fighter);\n              const stomp = fighter.kind === \"brute\" ? selectManualAbilityTarget({ owner: fighter, fighters: candidates }) : null;\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available: fighter.kind === \"brute\" ? stomp !== null : canActivateManualAbility({ fighter, fighters: candidates }),\n                ...(stomp ? { targetIds: stomp.targetIds } : {}),\n                x: fighter.x,\n                y: fighter.y,\n"
     ]
   ],
   "app/manualAbilities.js": [
@@ -1141,6 +1149,22 @@
     [
       "  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;\n}\n\nexport function selectRangerAbilityTarget({",
       "  if (!candidates.length) return null;\n  const dashOrigin = Object.freeze({ x: owner.x, y: owner.y });\n  return Object.freeze({ ...candidates[0], dashOrigin });\n}\n\nexport function selectRangerAbilityTarget({"
+    ],
+    [
+      "}\n\nexport function selectZakimiyaAbilityTarget({\n  owner,\n",
+      "}\n\nfunction livingEnemyInRange(owner, candidate, minRange, maxRange) {\n  if (!livingTarget(candidate)) return false;\n  const range = distance(owner, candidate);\n  return range >= minRange && range <= maxRange;\n}\n\nexport function selectZakimiyaAbilityTarget({\n  owner,\n"
+    ],
+    [
+      "} = {}) {\n  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;\n  const candidates = fighters\n    .filter(livingTarget)\n    .filter((candidate) => distance(owner, candidate) <= throwRange);\n  if (candidates.length === 0) return null;\n  const ranked = candidates.map((candidate) => {\n",
+      "} = {}) {\n  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;\n  const candidates = fighters.filter(candidate => livingEnemyInRange(owner, candidate, 0, throwRange));\n  if (candidates.length === 0) return null;\n  const ranked = candidates.map((candidate) => {\n"
+    ],
+    [
+      "} = {}) {\n  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;\n  const candidates = fighters\n    .filter(livingTarget)\n    .filter((candidate) => {\n      const range = distance(owner, candidate);\n      return range >= minRange && range <= maxRange;\n    });\n  if (candidates.length === 0) return null;\n  const ranked = candidates.map((candidate) => {\n",
+      "} = {}) {\n  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;\n  const candidates = fighters.filter(candidate => livingEnemyInRange(owner, candidate, minRange, maxRange));\n  if (candidates.length === 0) return null;\n  const ranked = candidates.map((candidate) => {\n"
+    ],
+    [
+      "export function canActivateManualAbility({ fighter, fighters = [] } = {}) {\n  if (!isManualAbilityReady(fighter)) return false;\n  return selectManualAbilityTarget({ owner: fighter, fighters }) !== null;\n}\n",
+      "export function canActivateManualAbility({ fighter, fighters = [] } = {}) {\n  if (!isManualAbilityReady(fighter)) return false;\n  // For these two throws, any enemy in range can start the ability. Ranking\n  // blast locations and choosing salvo points is only needed when aiming.\n  if (fighter.kind === \"zakimiya\" || fighter.kind === \"mrs-chiha\") {\n    const ability = MANUAL_ABILITY_REGISTRY[fighter.kind];\n    return fighters.some(candidate =>\n      livingEnemyInRange(fighter, candidate, ability.minRange ?? 0, ability.throwRange ?? ability.maxRange));\n  }\n  return selectManualAbilityTarget({ owner: fighter, fighters }) !== null;\n}\n"
     ]
   ],
   "app/v105CurrentAbilityPose.js": [
