@@ -123,8 +123,9 @@ test("unlocks starts at wave 11, 21, and later without granting skipped rewards"
 
 test("resets a boss wave to 1x and allows 2x only after the entrance finishes", () => {
   let run = createSurvivalRun({ runId: "speed-gate" });
-  run = beginSurvivalWave(run);
   run = setSurvivalRunSpeed(run, 2);
+  assert.equal(run.speed, 2);
+  run = beginSurvivalWave(run);
   assert.equal(run.speed, 2);
   run = completeSurvivalWave(run, { kills: 1 });
   run = playWave(run, { kills: 2 });
@@ -145,6 +146,7 @@ test("resets a boss wave to 1x and allows 2x only after the entrance finishes", 
   run = completeSurvivalWave(run, { kills: 5, reward: { caps: 25 } });
   assert.equal(run.phase, SURVIVAL_RUN_PHASES.UPGRADE_SELECTION);
   assert.equal(run.speed, 1);
+  assert.equal(setSurvivalRunSpeed(run, 2).speed, 1);
   assert.equal(run.pendingUpgradeChoices.length, 3);
   assert.equal(new Set(run.pendingUpgradeChoices).size, 3);
 });

@@ -19369,7 +19369,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     }
     if (rejectBattleSaveBoundary(`speed:${speed}:save-pending`)) return;
     const nextRun = setSurvivalRunSpeed(g.survivalRun, speed);
-    if (nextRun === g.survivalRun) {
+    if (!nextRun || nextRun.speed !== speed) {
       playUiOperationCue("reject", `speed:${speed}:locked`);
       return;
     }
@@ -26089,8 +26089,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <i><em style={{ width: `${healthPct}%` }} /></i>
           </div>
           <div className="survival-speed" aria-label="戦闘速度">
-            <button className={survivalHud.speed === 1 ? "active" : ""} aria-disabled={paused || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
-            <button className={survivalHud.speed === 2 ? "active" : ""} aria-disabled={paused || survivalHud.speedLocked || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
+            <button className={survivalHud.speed === 1 ? "active" : ""} aria-pressed={survivalHud.speed === 1} aria-disabled={paused || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
+            <button className={survivalHud.speed === 2 ? "active" : ""} aria-pressed={survivalHud.speed === 2} aria-disabled={paused || survivalHud.speedLocked || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
           </div>
           <button className="survival-pause" onClick={togglePause} aria-disabled={survivalUpgradeOpen || survivalSavePending || battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           </div>
@@ -26321,7 +26321,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div className="battle-objective objective">
               {bayHud && <span className="bay-evacuation-objective" data-bay-evacuation={bayHud.phase}
                 data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>避難 {bayHud.count}/{bayHud.total}</span>}
-              {isSurvivalBattle ? "防衛前線を維持" : hud.missionType === "escort" ? formatBattleText(hud.objective) : `目標：${formatBattleText(hud.objective)}`}
+              {isSurvivalBattle ? `所持物資 ${hud.scrap}` : hud.missionType === "escort" ? formatBattleText(hud.objective) : `目標：${formatBattleText(hud.objective)}`}
             </div>
           </div>
         </div>
