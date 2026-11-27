@@ -113,7 +113,9 @@ export function V100EquipmentView({ save, notice, saving, onBack, onPurchase, on
           </button>;
         })}</div>
         <small>{item.slotType === "tactical" && "部隊全員に有効。数値は選んだ仲間のものです。"} 手動技の威力は含みません。</small></div>
-        <div className="v100-fitting-result"><p className="v100-fitting-replacement">{comparison.replacedName} → {item.displayName}</p>
+        <div className="v100-fitting-result"><p className="v100-fitting-replacement">
+          {comparison.alreadyEquipped || comparison.otherSlot ? equipmentEffectSummary(item.id, level) : `${comparison.replacedName} → ${item.displayName}`}
+        </p>
         <dl className="v100-fitting-changes">{comparison.changes.map(change=><div key={change.key} data-stat={change.key} data-improved={change.improved}><dt>{change.label}</dt><dd><span>{change.beforeLabel}</span><span aria-hidden="true">→</span><strong>{change.afterLabel}</strong></dd></div>)}</dl>
         {comparison.changes.length === 0 && !comparison.alreadyEquipped && !comparison.otherSlot && <p>{noStatChange}</p>}
         {needsCopy && quantity > 0 && <p>{comparison.reason}</p>}
@@ -121,7 +123,7 @@ export function V100EquipmentView({ save, notice, saving, onBack, onPurchase, on
         {notice && <p role="status">{notice}</p>}
         </div></div>
         <footer>
-          <span aria-live="polite">所持金 {save.caps} CAPS<br />所持 {quantity}個 / 予備 {comparison.spare}個</span>
+          <span aria-live="polite">所持金 {save.caps} CAPS<br />{quantity > 0 ? `所持 ${quantity}個（予備 ${comparison.spare}個）` : "未所持"}</span>
           {needsCopy && canBuyHere ? purchaseButton : <button type="button" disabled={saving || !comparison.canEquip}
             onClick={() => onEquip(item.slotType === "personal" ? selectedUnit : null, previewSlot, item.id)}>
             {comparison.reason ?? `枠${previewSlot + 1}に装備する`}
