@@ -64,7 +64,7 @@ try{
      window.__BOSS_LABEL_PAINTS__.push({name:text,ownerId:name.ownerId,at:performance.now(),rect:paintedRect(this,args[0]-w/2,args[1]-h/2,w,h)});
      if(window.__BOSS_LABEL_PAINTS__.length>128)window.__BOSS_LABEL_PAINTS__.shift();
     }
-    if(typeof text==='string'&&(text.includes('！')||text.includes(' // '))){
+    if(typeof text==='string'&&((name&&this.globalAlpha>=.35)||text.includes('！')||text.includes(' // '))){
      window.__BOSS_HINT_PAINTS__.push({text,at:performance.now()});
      if(window.__BOSS_HINT_PAINTS__.length>100)window.__BOSS_HINT_PAINTS__.shift();
     }

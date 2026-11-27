@@ -1,4 +1,4 @@
-import { normalizeSurvivalRun, SURVIVAL_RUN_PHASES } from './survival.js';
+import { normalizeSurvivalRun, SURVIVAL_RUN_PHASES, isUnlockedSurvivalStartWave, survivalHighestStartWave } from './survival.js';
 import { v100DiscoveredBosses } from './v100BossProgress.js';
 import { V100_BATTLE_ADAPTER, v100FormationCombatKinds, v100SupportSupplyFor } from './v100BattleAdapter.js';
 import { V100_STAGE_IDS, V100_UNITS, v100SupportFor } from './v100Registry.js';
@@ -15,6 +15,12 @@ export const v100SurvivalRunIdValid = id => typeof id === 'string' && id.length 
 export const v100SurvivalBossPool = receipts => v100DiscoveredBosses(receipts).map(boss => kinds[boss.id]);
 export const v100SurvivalBossForKind = (receipts, kind) => v100DiscoveredBosses(receipts).find(boss => kinds[boss.id] === kind) ?? null;
 export const v100SurvivalReceipt = (runId, suffix) => `v100:survival:${runId}:${suffix}`;
+
+export function v100SurvivalStartChoice(waveInput, highestCompletedWave) {
+  const highestStart = survivalHighestStartWave(highestCompletedWave);
+  const startWave = highestStart === 1 ? 1 : Number(waveInput);
+  return { highestStart, startWave, validStart: isUnlockedSurvivalStartWave(startWave, highestCompletedWave) };
+}
 
 function validSnapshot(run, receipts, ownedUnitIds) {
   if (!run || run.modePolicy !== 'v100' || !v100SurvivalRunIdValid(run.runId)) return false;

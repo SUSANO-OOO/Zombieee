@@ -50,6 +50,11 @@ export function v105AbilityNameSnapshot(world){
     starts:state.receipts.map(row=>({...row}))}:{active:[],starts:[]};
 }
 
+export function v105AbilityNamePainted(world, ownerId, name) {
+  return battles.get(world)?.active.some(row => row.ownerId === ownerId && row.name === name
+    && row.lastPaint?.at === world.time && row.lastPaint.opacity >= .35) ?? false;
+}
+
 export function layoutV105AbilityNames(rows,{width,height,fontSize,measure,obstacles=[],occupied=[],bounds={left:0,top:0,right:width,bottom:height}}={}){
   const {left,top,right,bottom}=bounds;
   const placed=[],gap=5,lineHeight=fontSize+10;
@@ -112,7 +117,7 @@ export function drawV105AbilityNames(ctx,world,options={}){
     ctx.fillStyle=color;
     ctx[V105_ABILITY_NAME_PAINT]={ownerId:row.ownerId,activationId:row.activationId,name:row.name,key:row.key,startedAt:row.startedAt};
     try{ctx.fillText(row.name,row.x,row.y);}finally{delete ctx[V105_ABILITY_NAME_PAINT];}
-    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time,anchorX:row.anchorX,anchorY:row.anchorY};
+    row.lastPaint={x:row.x,y:row.y,width:row.width,height:row.height,at:world.time,opacity:ctx.globalAlpha,anchorX:row.anchorX,anchorY:row.anchorY};
     const active=state.active.find(entry=>entry.key===row.key);if(active)active.lastPaint=row.lastPaint;
   }
   ctx.restore();return layout.map(row=>({ownerId:row.ownerId,key:row.key,name:row.name,x:row.x,y:row.y,width:row.width,height:row.height}));

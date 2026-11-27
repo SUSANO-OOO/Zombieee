@@ -448,6 +448,24 @@ const fieldVoiceRoles = {
 };
 const fieldTakes = ["human-female-hurt-01", "human-female-hurt-02", fieldReaction.id];
 
+// Keep each fighter's established voice family, with two personal exit takes.
+const crewExitRoles = Object.freeze({
+  scout: "hachi", brawler: "paisen", engineer: "monkey", brute: "tatara",
+  guardian: "gantetsu", zakimiya: "zakimiya", tky: "tky", "miyamoto-musashi": "miyamoto-musashi",
+});
+const crewExitPools = Object.values(crewExitRoles).map(role =>
+  variationPool("voice-" + role + "-death", "humanVoices", { priority: 86, cooldownMs: 260, maxInstances: 3 }));
+const crewExitAssets = crewExitPools.flatMap(pool => pool.assetIds.map(id => ({
+  ...sfxAsset(id, pool.category, { gain: 0.8, priority: pool.priority, cooldownMs: pool.cooldownMs, maxInstances: pool.maxInstances }),
+  sources: [{ src: "/audio/quality-20261127/crew-exits/" + id.slice("voice-".length) + ".mp3", type: "audio/mpeg" }],
+})));
+const crewExitPaths = new Set(crewExitAssets.map(asset => asset.sources[0].src));
+const directVoicePaths = new Set([
+  ...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles, ...NAO_REACTION_PATHS,
+  ...V104_MELEE_ATTACK_PATHS, FIELD_REACTION_PATH, ...crewExitPaths,
+]);
+export const isDirectVoiceDownload = src => directVoicePaths.has(src);
+
 const enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(
   `enemy-${kind}-${event}`,
   "monsters",
@@ -504,6 +522,7 @@ const assets = [
   ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),
   ...naoReactions,
   fieldReaction,
+  ...crewExitAssets,
 ];
 
 const pools = [
@@ -514,6 +533,7 @@ const pools = [
     maxInstances: 5,
   }),
   ...humanVoicePools,
+  ...crewExitPools,
   ...enemyVoicePools,
   variationPool("voice-nao-hurt", "humanVoices", { priority: 66, cooldownMs: 260, maxInstances: 3 }),
   ...Object.values(fieldVoiceRoles).map(({ voice, exit }) => ({
@@ -850,7 +870,8 @@ for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets,
 }
 // New standalone recordings follow the existing physical download order.
 export const INSTALL_AUDIO_ASSETS = Object.freeze([
-  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src) && asset.sources[0].src !== FIELD_REACTION_PATH),
+  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)
+    && asset.sources[0].src !== FIELD_REACTION_PATH && !crewExitPaths.has(asset.sources[0].src)),
   ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),
   ...V104_MELEE_ATTACK_PATHS.map(src => ({
     ...V100_AUDIO_MANIFEST.assets.find(asset => asset.sources[0].src === src),
@@ -858,6 +879,7 @@ export const INSTALL_AUDIO_ASSETS = Object.freeze([
     sources: [{src, type:"audio/mpeg"}],
   })),
   PRODUCTION_AUDIO_MANIFEST.assetById[fieldReaction.id],
+  ...crewExitAssets,
 ]);
 
 export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
@@ -1135,6 +1157,8 @@ export function weaponCueForUnit(kind) {
 }
 
 export function humanVoiceCueForUnit(kind, event) {
+  const exitRole = ownValue(crewExitRoles, kind);
+  if (event === "death" && exitRole) return "voice-" + exitRole + "-death";
   const fieldRole = ownValue(fieldVoiceRoles, kind);
   if (fieldRole && (event === "hurt" || event === "death")) return "voice-" + fieldRole.voice + "-" + event;
   if (kind === "medic" && (event === "hurt" || event === "death")) return "voice-nao-" + event;

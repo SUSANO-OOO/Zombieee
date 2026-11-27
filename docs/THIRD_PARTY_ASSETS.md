@@ -560,3 +560,7 @@ HaelDB「Male Grunt/Yelling sounds」（CC0 1.0）から、二人の従来の掛
 ### ミズチ・レイダー・Mrs.チハの負傷と退場（2026-11-27）
 
 3人の戦闘音声には、cicifyre「Female RPG Voice Starter Pack」（CC0 1.0）の Type 3 を使う。既存の負傷声2本に、同じ演者の3本目を追加した。ミズチの退場には damaged1、レイダーには damaged3、Mrs.チハには damaged2 を割り当て、それぞれ残る2本を負傷時に使う。追加の音声は6,731バイト。[原音と加工の記録](../assets/source/quality-20261127/field-reactions/provenance.json)
+
+### ハチ・パイセンら8人の戦闘不能時の声（2026-11-27）
+
+HaelDB「Male Grunt/Yelling sounds」（CC0 1.0）の実録を使用。従来と同じ収録シリーズから、ハチ、パイセン、モンキー、タタラ、ガンテツ、ザキミヤ、TKY、宮本武蔵に各2本を配役した。元の声の高さと速さを保ち、無音の長さと音量を整えた。[配役・原音・加工の記録](../assets/source/quality-20261127/crew-exits/provenance.json)

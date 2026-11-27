@@ -6576,6 +6576,182 @@
       "audioChannel": "voice",
       "audioId": "human-female-hurt-03",
       "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/gantetsu-death-01.mp3",
+      "bytes": 25957,
+      "hash": "sha256-72eb04439cd6f8658b885c807f3efa09a82ad79e1bc9526b90ef8964d55c1b57",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-gantetsu-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/gantetsu-death-02.mp3",
+      "bytes": 16762,
+      "hash": "sha256-6c2c9db687bbf8d2930c9a669fd4a4425dde1b6cad3c810dba2e7e96e05e4214",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-gantetsu-death-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/hachi-death-01.mp3",
+      "bytes": 10911,
+      "hash": "sha256-6587475cffb5a6ba83ceda4448da9d2c181879449b3a021255f61e3127aa8c2b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-hachi-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/hachi-death-02.mp3",
+      "bytes": 17598,
+      "hash": "sha256-04ca05a54b3946e50a292a7885e1d264205c9fab45518d0aacd02e4e72c6edee",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-hachi-death-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/miyamoto-musashi-death-01.mp3",
+      "bytes": 22195,
+      "hash": "sha256-7a8ab79beb2d2af8f9500b05d7290db10f94c832758fee4f2ea7ff35924597fa",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-miyamoto-musashi-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/miyamoto-musashi-death-02.mp3",
+      "bytes": 16344,
+      "hash": "sha256-9c220bdfd820914e50be799d349db0d4041c69f127b83d654e7fab905ff19d74",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-miyamoto-musashi-death-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/monkey-death-01.mp3",
+      "bytes": 9657,
+      "hash": "sha256-dc8d95ed99e2695fc69970cef68be1d25815e4fab0b48507e71ff98bf0ee8794",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-monkey-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/monkey-death-02.mp3",
+      "bytes": 7567,
+      "hash": "sha256-6ac76c4ef52c1460f58039f99e401ac76af1729fe769743d8e12ffdc0717a0e5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-monkey-death-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/paisen-death-01.mp3",
+      "bytes": 13418,
+      "hash": "sha256-0e0cc6b9404678d41c741ca31a6d0d64c041c5095472dfc972dbdf722f26660f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-paisen-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/paisen-death-02.mp3",
+      "bytes": 15508,
+      "hash": "sha256-4af36bf676035b200d5d152e34e86dce20a3e98a202e30af26ccc5290f07c8ec",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-paisen-death-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/tatara-death-01.mp3",
+      "bytes": 21359,
+      "hash": "sha256-0606e60fd51ce4c17c1ded3252126b17d9ea1285262f7d02b24660de5ef1220d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-tatara-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/tatara-death-02.mp3",
+      "bytes": 14672,
+      "hash": "sha256-c52ad348f80206799af40822c050b6a485c636553472a8a5b83a64b65dfe2465",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-tatara-death-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/tky-death-01.mp3",
+      "bytes": 10493,
+      "hash": "sha256-bd0a34b1f20e0ade9673690c93046682ad626959ff0f92c6570085e002cf2c81",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-tky-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/tky-death-02.mp3",
+      "bytes": 7985,
+      "hash": "sha256-2f7af3713df122cb65a4584a4984d7931a2ce2b15bdccf33627221c47ba143e2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-tky-death-02",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/zakimiya-death-01.mp3",
+      "bytes": 9657,
+      "hash": "sha256-4036c8a1fa6db1325a169e7ce90eac41f022f99da386e6d19e363cf8525d89f4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-zakimiya-death-01",
+      "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/crew-exits/zakimiya-death-02.mp3",
+      "bytes": 12164,
+      "hash": "sha256-f3afb3c66da728fdb8bf9cd2bc3ef30c29b6501d8205de9ba7fd3764a728cb7d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "voice-zakimiya-death-02",
+      "audioType": "audio/mpeg"
     }
   ],
   "retired": [
