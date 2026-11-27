@@ -17,10 +17,10 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 type Save = ReturnType<typeof normalizeV100Save>;
 type Encounter = { id: string; displayName: string; stageNumber: number; stageId: string; rewardCaps: number; rewardEquipment: { id: string; displayName: string } | null };
 type ModeTab = "overview" | "outbreak" | "survival" | "compendium" | "records";
-type Props = { save: Save; onBack: () => void; onLoadout: (tab?: ModeTab) => void; initialTab?: ModeTab; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
+type Props = { save: Save; waveInput: string; onWaveInput: (value: string) => void; onBack: () => void; onLoadout: (tab?: ModeTab) => void; initialTab?: ModeTab; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
 const runId = () => `v100-outbreak:${crypto.randomUUID()}`;
 
-export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "overview" }: Props) {
+export function V100ModesView({ save, waveInput, onWaveInput, onBack, onLoadout, onSave, initialTab = "overview" }: Props) {
   const [tab, setTab] = useState<ModeTab>(() => {
     // A restored battle or result should return to its own mode when closed.
     if (save.survival.view !== "hub") return "survival";
@@ -38,7 +38,8 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     if (!change.applied || !await onSave(change)) { setUnsaved(result); return; }
     setUnsaved(null);
   };
-  if (save.survival.view !== "hub") return <V100SurvivalView save={save} onSave={onSave} onLoadout={() => onLoadout("survival")} />;
+  const survivalView = <V100SurvivalView save={save} waveInput={waveInput} onWaveInput={onWaveInput} onSave={onSave} onLoadout={() => onLoadout("survival")} />;
+  if (save.survival.view !== "hub") return survivalView;
   if (session && active) return <>
     <AshfallGame key={active.runId} externalSession={{ ...session,
       onBattleResult: settle,
@@ -83,12 +84,12 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     {tab === "overview" && <>
       <div className="v100-mode-catalog">
         <button type="button" className="v100-mode-entry v100-mode-outbreak" onClick={() => setTab("outbreak")}><span className="v100-mode-entry-copy"><strong>異常発生</strong><span>撃破済みのボスと再戦</span><small>ボスを倒すとCAPSを獲得。初回クリアでは装備も手に入ります。</small><b>{bosses.length ? `${bosses.length}体と再戦可能` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
-        <button type="button" className="v100-mode-entry v100-mode-survival" onClick={() => setTab("survival")}><span className="v100-mode-entry-copy"><strong>サバイバル</strong><span>強化を選び、押し寄せる敵を迎撃</span><small>5波ごとにボス戦・報酬・中間セーブ。</small><b>{bosses.length ? (save.survival.highestCompletedWave > 0 ? `最高記録：第${save.survival.highestCompletedWave}波クリア` : "クリア記録なし") : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
+        <button type="button" className="v100-mode-entry v100-mode-survival" onClick={() => { onWaveInput("1"); setTab("survival"); }}><span className="v100-mode-entry-copy"><strong>サバイバル</strong><span>強化を選び、押し寄せる敵を迎撃</span><small>5波ごとにボス戦・報酬・中間セーブ。</small><b>{bosses.length ? (save.survival.highestCompletedWave > 0 ? `最高記録：第${save.survival.highestCompletedWave}波クリア` : "クリア記録なし") : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
       </div>
       <nav className="v100-mode-record-links" aria-label="プレイ記録"><button type="button" onClick={() => setTab("compendium")}>ボス図鑑</button><button type="button" onClick={() => setTab("records")}>戦績</button></nav>
     </>}
     {(tab === "outbreak" || tab === "survival") && <aside className="v100-mode-loadout" aria-label="今回の出撃編成"><div><strong>{save.formationSlots.filter(Boolean).map((id: string) => V100_UNITS.find(unit => unit.id === id)?.displayName).join("・") || "ユニットを選んでください"}</strong><p>支援：{V100_SUPPORTS.find(support => support.id === save.equippedSupportId)?.displayName ?? "未選択"} / 装甲車両 耐久 {save.vehicle.maxHp}</p></div><button type="button" onClick={() => onLoadout(tab)}>出撃編成を変更</button></aside>}
-    {tab === "survival" && <V100SurvivalView save={save} onSave={onSave} onLoadout={() => onLoadout("survival")} />}
+    {tab === "survival" && survivalView}
     {tab === "outbreak" && <p className="v100-outbreak-purpose">物語で撃破した異常個体との再戦です。現在の編成・装備で出撃します。</p>}
 {tab === "outbreak" && <div className="v100-outbreak-board">
   {bosses.map(boss => {

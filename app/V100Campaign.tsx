@@ -406,6 +406,7 @@ export function V100Campaign() {
   const [newGameConfirm, setNewGameConfirm] = useState(false);
   const dataReturnSurfaceRef = useRef<CampaignSurface>("campaign");
   const [modePreparation, setModePreparation] = useState(false);
+  const [survivalWaveInput, setSurvivalWaveInput] = useState("1");
   const [modeTab, setModeTab] = useState<"overview" | "outbreak" | "survival" | "compendium" | "records">("overview");
   const [replayEventId, setReplayEventId] = useState<string | null>(null);
   const [replayNodeIndex, setReplayNodeIndex] = useState(0);
@@ -723,6 +724,7 @@ export function V100Campaign() {
   const openSurface = useCallback((next: CampaignSurface, unitId: string | null = null, preserveNotice = false) => {
     if (next !== "campaign" && next !== "mode-formation" && next !== "personnel") setFormationRequestedUnitId(null);
     if (next === "data") dataReturnSurfaceRef.current = surface;
+    if (next === "modes" && surface !== "mode-formation") setSurvivalWaveInput("1");
     if (next === "mode-formation") setModePreparation(true);
     if (next === "modes" || next === "campaign") setModePreparation(false);
     setSurface(next);
@@ -1178,7 +1180,7 @@ export function V100Campaign() {
         />
       )}
 
-      {flow.phase === "map" && surface === "modes" && <V100ModesView save={save}
+      {flow.phase === "map" && surface === "modes" && <V100ModesView save={save} waveInput={survivalWaveInput} onWaveInput={setSurvivalWaveInput}
         initialTab={modeTab} onBack={() => openSurface("campaign")} onLoadout={(tab = "outbreak") => { setModeTab(tab); openSurface("mode-formation"); }}
         onSave={async result => {
           if (!result.applied) { setNotice(formatReason(result.reason)); return false; }
@@ -1197,7 +1199,7 @@ export function V100Campaign() {
         <DataManagementView save={save} notice={notice} onBack={() => openSurface(dataReturnSurfaceRef.current)} onBackup={downloadBackup} onNewGameBackup={downloadNewGameBackup} onImport={importBackup} onLegacyHistory={importLegacyHistory} />
       )}
 
-      {flow.phase === "map" && surface === "mode-formation" && <FormationView save={save} stageId={null} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={() => openSurface("modes")} onBack={() => openSurface("modes")} onLoadout={() => openSurface("support-vehicle")} onPersonnel={id => openSurface("personnel", id)} modePreparation />}
+      {flow.phase === "map" && surface === "mode-formation" && <FormationView save={save} stageId={null} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={() => openSurface("modes")} onBack={() => openSurface("modes")} onLoadout={() => openSurface("support-vehicle")} onPersonnel={id => openSurface("personnel", id)} modePreparation={modeTab === "survival" ? "survival" : "outbreak"} />}
 
       {flow.phase === "formation" && surface === "campaign" && (
         <FormationView save={save} stageId={flow.stageId} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={startBattle} onBack={leavePreparation} onLoadout={() => openSurface("support-vehicle")} onPersonnel={(unitId) => openSurface("personnel", unitId)} />
@@ -1410,7 +1412,7 @@ function V100StageStars({ stars, label = "獲得した星" }: { stars: number; l
   </span>;
 }
 
-function FormationView({ save, stageId, requestedUnitId = null, onCancelRequested, onSlotChange, onStart, onBack, onLoadout, onPersonnel, modePreparation = false }: { save: Save; stageId: string | null; requestedUnitId?: string | null; onCancelRequested: () => void; onSlotChange: (slot: number, value: string) => void; onStart: () => void; onBack: () => void; onLoadout: () => void; onPersonnel: (unitId: string | null) => void; modePreparation?: boolean }) {
+function FormationView({ save, stageId, requestedUnitId = null, onCancelRequested, onSlotChange, onStart, onBack, onLoadout, onPersonnel, modePreparation }: { save: Save; stageId: string | null; requestedUnitId?: string | null; onCancelRequested: () => void; onSlotChange: (slot: number, value: string) => void; onStart: () => void; onBack: () => void; onLoadout: () => void; onPersonnel: (unitId: string | null) => void; modePreparation?: "survival" | "outbreak" }) {
   const [activeSlot, setActiveSlot] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [briefingOpen, setBriefingOpen] = useState(false);
@@ -1514,7 +1516,13 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
       <button type="button" className="v100-sortie-selected" aria-label="ユニットの育成" onClick={() => onPersonnel(activeUnitId)}><strong>ユニットの育成</strong><small>{activeUnit ? `${activeUnit.displayName}の能力・強化効果を確認` : "仲間の能力・強化効果を確認"}</small></button>
       <button type="button" className="v100-sortie-loadout" onClick={onLoadout}><strong>支援：{support?.displayName ?? "未選択"}</strong><small>{basePresentation.label} 耐久 {save.vehicle.maxHp} / 装備を確認</small></button>
     </div>
-    <div className="v100-formation-footer"><button type="button" onClick={onBack}>{modePreparation ? "ステージ一覧へ" : "ステージ選択へ"}</button><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" aria-label={modePreparation ? "この編成でステージを選ぶ" : "戦闘へ"} disabled={!availableSlots.length} onClick={onStart}>{modePreparation ? "この編成でステージを選ぶ" : "出撃"}</button></div>
+    <div className="v100-formation-footer" data-mode={modePreparation}>
+      {!modePreparation && <button type="button" onClick={onBack}>ステージ選択へ</button>}
+      <button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button>
+      {modePreparation
+        ? <button className="v100-primary" type="button" onClick={onBack}>{modePreparation === "survival" ? "サバイバルへ戻る" : "異常発生一覧へ"}</button>
+        : <button className="v100-primary" type="button" aria-label="戦闘へ" disabled={!availableSlots.length} onClick={onStart}>出撃</button>}
+    </div>
   </section>;
 }
 
