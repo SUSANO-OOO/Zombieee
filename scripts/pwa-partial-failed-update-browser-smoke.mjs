@@ -1043,8 +1043,7 @@ try {
   markPartialBundleCancelIntent(audioRequests, Date.now());
   await page.getByRole("button", { name: "中断" }).click();
   await page.getByRole("heading", { name: "ダウンロードを中断しました" }).waitFor({ state: "visible", timeout: 15_000 });
-  // The cancelled heading is synchronous; the diagnostic list is published
-  // after the held requests acknowledge AbortSignal and finalization finishes.
+  await page.getByText("ダウンロードの詳細", { exact: true }).click();
   await page.locator(".pwa-failure-list li").first().waitFor({ state: "visible", timeout: 15_000 });
   const cancelledFailureCount = Number(/^失敗 (\d+)件$/u.exec(
     await page.evaluate(() => window.__PWA_PARTIAL_CANCEL_FAILURE_LINE__) ?? "",

@@ -6565,6 +6565,17 @@
       "audioChannel": "voice",
       "audioId": "install-melee-effort-kumaverson-attack-03",
       "audioType": "audio/mpeg"
+    },
+    {
+      "path": "/audio/quality-20261127/voices/field-reaction-03.mp3",
+      "bytes": 6731,
+      "hash": "sha256-e274dfbb4ed14bf4ffb11c9da45efbcac376bd939fbcbcbf916806cc06db8023",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "human-female-hurt-03",
+      "audioType": "audio/mpeg"
     }
   ],
   "retired": [

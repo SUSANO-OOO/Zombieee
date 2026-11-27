@@ -26,6 +26,7 @@ import { useGameModalScope } from "./useGameModalScope";
 
 import {
   ASSET_CATEGORY_LABELS,
+  distinctDownloadBytes,
   formatBytes,
   planInstall,
 } from "./pwaAssetManifest.js";
@@ -416,8 +417,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // progress callbacks by definition, so the only way to notice one is to look
   // at the clock on our own schedule rather than waiting to be told.
   useEffect(() => {
-    const running = downloadState === "running" || downloadState === "paused";
-    if (stalledSince == null || !running) return undefined;
+    if (stalledSince == null || downloadState !== "running") return undefined;
     const timer = setInterval(
       () => setStalledSeconds(Math.round((Date.now() - stalledSince) / 1000)),
       1000,
@@ -513,7 +513,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     commitRecoveryBusy,
   });
 
-  const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" || downloadState === "committing" });
+  const downloadActive = phase === "installing" || phase === "committing";
+  const activation = evaluateActivationSafety({ ...safety, downloadActive });
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -535,6 +536,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     const startedAt = Date.now();
     let lastProgressAt = startedAt;
     let lastCompleted = -1;
+    let wasPaused = false;
 
     // An update must not run under a worker that answers asset requests from
     // the generation it is replacing. Promoting the waiting worker first is what
@@ -549,13 +551,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       store,
       fetchAsset: createAssetFetcher({ baseUrl }),
       onProgress: (snapshot) => {
-        if (snapshot.completedCount !== lastCompleted) {
+        if (snapshot.completedCount !== lastCompleted || (wasPaused && snapshot.state === "running")) {
           lastCompleted = snapshot.completedCount;
           lastProgressAt = Date.now();
         }
+        wasPaused = snapshot.state === "paused";
         // Transport completion still needs shell warm, durable commit and
         // read-back. Only finalize's onCommitted may announce success.
-        setDownloadState(snapshot.state === "complete" ? "committing" : snapshot.state);
+        if (snapshot.state === "complete") setDownloadState("committing");
+        else if (snapshot.state === "cancelled" || snapshot.state === "failed") setDownloadState("checking-download");
+        else setDownloadState(snapshot.state);
         setProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
         setStalledSince(lastProgressAt);
       },
@@ -789,7 +794,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     void (async () => {
       const session = sessionRef.current;
       const finalize = finalizeSessionRef.current;
-      if (!session || !finalize) return;
+      if (!session || !finalize) {
+        // After reopening, only the verified inventory survives the previous download.
+        startInstall();
+        return;
+      }
       setError(null);
       setDiagnostics(null);
       try {
@@ -800,7 +809,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         setDownloadState("failed");
       }
     })();
-  }, [commitRecovery.required, recoverCommittedPack]);
+  }, [commitRecovery.required, recoverCommittedPack, startInstall]);
 
   const readMaintenancePack = useCallback(async () => {
     const local = await readPwaBootState({
@@ -811,7 +820,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     setStoredHashes(local.hashes);
   }, []);
   const clearAssets = useCallback(async () => {
-    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive: downloadState === "running" || downloadState === "committing" }).safe) return;
+    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive }).safe) return;
     document.documentElement.dataset.pwaMaintenancePending = "true";
     setMaintenance("clearing");
     try {
@@ -834,7 +843,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       setMaintenance("failed");
       setError(`アセットの削除を確認できませんでした: ${String((cause as Error)?.message ?? cause)}`);
     }
-  }, [readMaintenancePack, downloadState]);
+  }, [readMaintenancePack, downloadActive]);
   const confirmMaintenance = useCallback(async () => {
     setMaintenance("clearing");
     try {
@@ -979,7 +988,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const hasGameScreen = Boolean(document.documentElement.dataset.pwaScreen);
       const currentSafety = evaluateActivationSafety({
         ...readSafetyFromDocument(),
-        downloadActive: downloadState === "running" || downloadState === "committing",
+        downloadActive,
       });
       if (!blocking && (!hasGameScreen || !currentSafety.safe)) return;
       setPublishedManifest(deferredPublishedManifest);
@@ -987,7 +996,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       setPublishedManifestState("ready");
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [blocking, deferredPublishedManifest, downloadState, safety]);
+  }, [blocking, deferredPublishedManifest, downloadActive, safety]);
 
   const errorMessage = !error ? null
     : error.startsWith("アセットの削除を確認できませんでした:")
@@ -999,6 +1008,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           : "ゲームデータの取得・保存が完了しませんでした。通信環境と空き容量を確認し、取得をやり直してください。";
 
   const homeLaunchHint = "ホーム画面のアイコンを開き、「ダウンロードを開始」をタップしてください。";
+  const downloadLostConnection = downloadState === "failed" && diagnostics?.failures.length
+    && diagnostics.failures.every(({ reason }) => ["network", "timeout", "stall"].includes(reason));
   const storagePanel = <aside onClickCapture={onPwaControlClick} className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
     <h3>アプリの容量・更新</h3>
     {!standalone && guidance && <details className="pwa-return-install-help">
@@ -1108,10 +1119,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 <h2>ダウンロードが完了しました</h2>
                 <p className="pwa-progress-line">
                   {installedManifest?.assets?.length ?? storedHashes.size}件・
-                  {formatBytes(
-                    ((installedManifest?.assets ?? []) as Array<{ bytes: number }>)
-                      .reduce((sum, asset) => sum + (Number(asset.bytes) || 0), 0),
-                  )}を保存しました
+                  {formatBytes(distinctDownloadBytes(installedManifest?.assets ?? []))}を保存しました
                 </p>
                 <p className="pwa-hint">次回からはダウンロードなしで起動できます。</p>
                 <button type="button" className="pwa-primary" onClick={() => setDownloadState(null)}>
@@ -1156,11 +1164,14 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {phase === "installing" && progress && (
+            {phase === "installing" && downloadState === "checking-download" && (
+              <h2 role="status">保存できた分を確認しています…</h2>
+            )}
+            {phase === "installing" && downloadState !== "checking-download" && progress && (
               <>
-                <h2>ゲームデータをダウンロード中</h2>
+                <h2>{downloadState === "paused" ? "ダウンロードを一時停止中" : "ゲームデータをダウンロード中"}</h2>
                 <p className="pwa-progress-line"><small>{progress.countLine}・</small><strong>{progress.byteLine}</strong></p>
-                {progress.categoryLine && <p className="pwa-hint">{progress.categoryLine}</p>}
+                {downloadState === "running" && progress.categoryLine && <p className="pwa-hint">{progress.categoryLine}</p>}
                 {progress.failedLine && <p className="pwa-warning">{progress.failedLine}</p>}
                 {/*
                   Large assets take a long time to arrive, verify and store, and
@@ -1168,7 +1179,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                   between "working" and "frozen"; without it the only honest
                   reading of a still screen is that the app has died.
                 */}
-                {stalledSeconds >= 12 && (
+                {downloadState === "running" && stalledSeconds >= 12 && (
                   <p className="pwa-hint" role="status">
                     大きなデータを取得・検証中です（最終進捗から{stalledSeconds}秒）。
                     中断しても続きから再開できます。
@@ -1195,39 +1206,42 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 <h2>
                   {downloadState === "cancelled" ? "ダウンロードを中断しました"
                     : downloadState === "commit-failed" ? "保存はできましたが、切り替えに失敗しました"
-                      : "データを取得できませんでした"}
+                      : downloadLostConnection ? "通信できませんでした" : "ダウンロードが完了しませんでした"}
                 </h2>
                 <p className="pwa-hint">
-                  {downloadState === "commit-failed"
-                    ? "取得したデータは端末に残っています。もう一度お試しください。"
-                    : "完了済みのデータは保持しています。失敗した分だけ取り直せます。"}
+                  {downloadState === "commit-failed" ? "ゲームデータは端末に残っています。もう一度お試しください。"
+                    : downloadLostConnection ? "通信が戻ったら、残りのデータをダウンロードできます。"
+                    : "保存した分はそのまま使えます。続きからダウンロードできます。"}
                 </p>
-                {diagnostics && diagnostics.failures.length > 0 && (
-                  <ul className="pwa-failure-list">
-                    {diagnostics.failures.slice(0, 6).map((failure) => (
-                      <li key={failure.path}>
-                        <code>{failure.path}</code>
-                        <span>{failure.label}{failure.status ? `／HTTP ${failure.status}` : ""}・{failure.attempts}回試行</span>
-                      </li>
-                    ))}
-                    {diagnostics.failures.length > 6 && (
-                      <li><span>ほか {diagnostics.failures.length - 6} 件</span></li>
-                    )}
-                  </ul>
-                )}
+                {downloadState !== "commit-failed" && progress?.remainingLine && <p className="pwa-progress-line">{progress.remainingLine}</p>}
                 <div className="pwa-actions">
                   <button type="button" className="pwa-primary" onClick={retryFailed}>
-                    {commitRecovery.required ? "保存済みデータを反映し直す" : "失敗した項目だけ再試行"}
-                  </button>
-                  <button type="button" onClick={copyDiagnostics}>
-                    {copied ? "コピーしました" : "診断情報をコピー"}
+                    {commitRecovery.required || downloadState === "commit-failed" ? "保存を確認する" : "ダウンロードを再開"}
                   </button>
                 </div>
+                {diagnostics && diagnostics.failures.length > 0 && (
+                  <details>
+                    <summary>ダウンロードの詳細</summary>
+                    <ul className="pwa-failure-list">
+                      {diagnostics.failures.slice(0, 6).map((failure) => (
+                        <li key={failure.path}>
+                          <code>{failure.path}</code>
+                          <span>{failure.label}{failure.status ? `／HTTP ${failure.status}` : ""}・{failure.attempts}回試行</span>
+                        </li>
+                      ))}
+                      {diagnostics.failures.length > 6 && (
+                        <li><span>ほか {diagnostics.failures.length - 6} 件</span></li>
+                      )}
+                    </ul>
+                    <button type="button" onClick={copyDiagnostics}>
+                      {copied ? "コピーしました" : "診断情報をコピー"}
+                    </button>
+                  </details>
+                )}
                 <div className="pwa-actions pwa-secondary-actions">
                   {/* The old version keeps working while an update is unresolved. */}
                   <button type="button" onClick={() => setDownloadState(null)}>あとにする</button>
                 </div>
-                {errorMessage && <p className="pwa-warning" role="alert">{errorMessage}</p>}
               </>
             )}
 

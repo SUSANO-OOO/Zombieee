@@ -14,8 +14,8 @@ const V100_BOSS_OBSERVATIONS = deepFreeze({
   "boss-ooguchi": "四枚の顎を突き出して突進する。止まった直後だけ、顎の奥の中枢がむき出しになる。",
   "boss-gairen": "五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。",
   "boss-futago": "二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。",
-  "boss-mugarian-president-mutated": "医療機器と一体になった社長。四本の腕を振り下ろし、前方をまとめて叩き潰す。",
-  "boss-takuya-omega": "背中に何本も投薬管をつないだTAKUYA。巨大な刃のひと振りで、前にいる仲間をなぎ払う。",
+  "boss-mugarian-president-mutated": "医療機器と一体になった社長。四本の腕を床に叩きつけると、周りの足場まで揺れる。",
+  "boss-takuya-omega": "背中に何本も投薬管をつないだTAKUYA。巨大な刃を振り抜くと、足元から衝撃が広がる。",
 });
 
 export function v100BossObservationFor(bossId) {

@@ -1139,6 +1139,14 @@
     [
       "          ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))\n            .map((fighter) => {\n              const target = selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) });\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available: target !== null,\n                ...(fighter.kind === \"brute\" && target ? { targetIds: target.targetIds } : {}),\n                x: fighter.x,\n                y: fighter.y,\n",
       "          ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))\n            .map((fighter) => {\n              const candidates = manualAbilityTargetCandidates(g, fighter);\n              const stomp = fighter.kind === \"brute\" ? selectManualAbilityTarget({ owner: fighter, fighters: candidates }) : null;\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available: fighter.kind === \"brute\" ? stomp !== null : canActivateManualAbility({ fighter, fighters: candidates }),\n                ...(stomp ? { targetIds: stomp.targetIds } : {}),\n                x: fighter.x,\n                y: fighter.y,\n"
+    ],
+    [
+      "  beginBossAnomalyAbility,\n  bossAnomalyAreaTargetIds,\n  createBossAnomalyRuntime,\n  gairenIncomingDamageMultiplier,\n",
+      "  beginBossAnomalyAbility,\n  bossAnomalyAreaTargetIds,\n  lateBossGroundRadius,\n  createBossAnomalyRuntime,\n  gairenIncomingDamageMultiplier,\n"
+    ],
+    [
+      "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(f.kind === \"gate-eater\" && g.definition.missionConfig.v100StageNumber)) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n",
+      "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(g.definition.missionConfig.v100StageNumber && (f.kind === \"gate-eater\" || lateBossGroundRadius(f.kind)))) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n"
     ]
   ],
   "app/manualAbilities.js": [
@@ -1361,6 +1369,70 @@
     [
       "    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n",
       "    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES,...PWA_MANUAL_STRIKE_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n"
+    ],
+    [
+      "import {\n  ASSET_CATEGORY_LABELS,\n  formatBytes,\n  planInstall,\n",
+      "import {\n  ASSET_CATEGORY_LABELS,\n  distinctDownloadBytes,\n  formatBytes,\n  planInstall,\n"
+    ],
+    [
+      "  // at the clock on our own schedule rather than waiting to be told.\n  useEffect(() => {\n    const running = downloadState === \"running\" || downloadState === \"paused\";\n    if (stalledSince == null || !running) return undefined;\n    const timer = setInterval(\n      () => setStalledSeconds(Math.round((Date.now() - stalledSince) / 1000)),\n",
+      "  // at the clock on our own schedule rather than waiting to be told.\n  useEffect(() => {\n    if (stalledSince == null || downloadState !== \"running\") return undefined;\n    const timer = setInterval(\n      () => setStalledSeconds(Math.round((Date.now() - stalledSince) / 1000)),\n"
+    ],
+    [
+      "  });\n\n  const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === \"running\" || downloadState === \"committing\" });\n\n  const runDownload = useCallback(async (\n",
+      "  });\n\n  const downloadActive = phase === \"installing\" || phase === \"committing\";\n  const activation = evaluateActivationSafety({ ...safety, downloadActive });\n\n  const runDownload = useCallback(async (\n"
+    ],
+    [
+      "    let lastProgressAt = startedAt;\n    let lastCompleted = -1;\n\n    // An update must not run under a worker that answers asset requests from\n",
+      "    let lastProgressAt = startedAt;\n    let lastCompleted = -1;\n    let wasPaused = false;\n\n    // An update must not run under a worker that answers asset requests from\n"
+    ],
+    [
+      "      fetchAsset: createAssetFetcher({ baseUrl }),\n      onProgress: (snapshot) => {\n        if (snapshot.completedCount !== lastCompleted) {\n          lastCompleted = snapshot.completedCount;\n          lastProgressAt = Date.now();\n        }\n        // Transport completion still needs shell warm, durable commit and\n        // read-back. Only finalize's onCommitted may announce success.\n        setDownloadState(snapshot.state === \"complete\" ? \"committing\" : snapshot.state);\n        setProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));\n        setStalledSince(lastProgressAt);\n",
+      "      fetchAsset: createAssetFetcher({ baseUrl }),\n      onProgress: (snapshot) => {\n        if (snapshot.completedCount !== lastCompleted || (wasPaused && snapshot.state === \"running\")) {\n          lastCompleted = snapshot.completedCount;\n          lastProgressAt = Date.now();\n        }\n        wasPaused = snapshot.state === \"paused\";\n        // Transport completion still needs shell warm, durable commit and\n        // read-back. Only finalize's onCommitted may announce success.\n        if (snapshot.state === \"complete\") setDownloadState(\"committing\");\n        else if (snapshot.state === \"cancelled\" || snapshot.state === \"failed\") setDownloadState(\"checking-download\");\n        else setDownloadState(snapshot.state);\n        setProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));\n        setStalledSince(lastProgressAt);\n"
+    ],
+    [
+      "      const session = sessionRef.current;\n      const finalize = finalizeSessionRef.current;\n      if (!session || !finalize) return;\n      setError(null);\n      setDiagnostics(null);\n",
+      "      const session = sessionRef.current;\n      const finalize = finalizeSessionRef.current;\n      if (!session || !finalize) {\n        // After reopening, only the verified inventory survives the previous download.\n        startInstall();\n        return;\n      }\n      setError(null);\n      setDiagnostics(null);\n"
+    ],
+    [
+      "      }\n    })();\n  }, [commitRecovery.required, recoverCommittedPack]);\n\n  const readMaintenancePack = useCallback(async () => {\n",
+      "      }\n    })();\n  }, [commitRecovery.required, recoverCommittedPack, startInstall]);\n\n  const readMaintenancePack = useCallback(async () => {\n"
+    ],
+    [
+      "  }, []);\n  const clearAssets = useCallback(async () => {\n    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive: downloadState === \"running\" || downloadState === \"committing\" }).safe) return;\n    document.documentElement.dataset.pwaMaintenancePending = \"true\";\n    setMaintenance(\"clearing\");\n",
+      "  }, []);\n  const clearAssets = useCallback(async () => {\n    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive }).safe) return;\n    document.documentElement.dataset.pwaMaintenancePending = \"true\";\n    setMaintenance(\"clearing\");\n"
+    ],
+    [
+      "      setError(`アセットの削除を確認できませんでした: ${String((cause as Error)?.message ?? cause)}`);\n    }\n  }, [readMaintenancePack, downloadState]);\n  const confirmMaintenance = useCallback(async () => {\n    setMaintenance(\"clearing\");\n",
+      "      setError(`アセットの削除を確認できませんでした: ${String((cause as Error)?.message ?? cause)}`);\n    }\n  }, [readMaintenancePack, downloadActive]);\n  const confirmMaintenance = useCallback(async () => {\n    setMaintenance(\"clearing\");\n"
+    ],
+    [
+      "      const currentSafety = evaluateActivationSafety({\n        ...readSafetyFromDocument(),\n        downloadActive: downloadState === \"running\" || downloadState === \"committing\",\n      });\n      if (!blocking && (!hasGameScreen || !currentSafety.safe)) return;\n",
+      "      const currentSafety = evaluateActivationSafety({\n        ...readSafetyFromDocument(),\n        downloadActive,\n      });\n      if (!blocking && (!hasGameScreen || !currentSafety.safe)) return;\n"
+    ],
+    [
+      "    }, 0);\n    return () => window.clearTimeout(timer);\n  }, [blocking, deferredPublishedManifest, downloadState, safety]);\n\n  const errorMessage = !error ? null\n",
+      "    }, 0);\n    return () => window.clearTimeout(timer);\n  }, [blocking, deferredPublishedManifest, downloadActive, safety]);\n\n  const errorMessage = !error ? null\n"
+    ],
+    [
+      "\n  const homeLaunchHint = \"ホーム画面のアイコンを開き、「ダウンロードを開始」をタップしてください。\";\n  const storagePanel = <aside onClickCapture={onPwaControlClick} className={storageHost ? \"pwa-storage pwa-storage-inline\" : \"pwa-notice pwa-storage\"} role={storageHost ? \"region\" : \"dialog\"} aria-label={storageHost ? \"アプリのデータ管理\" : \"データ管理\"}>\n    <h3>アプリの容量・更新</h3>\n",
+      "\n  const homeLaunchHint = \"ホーム画面のアイコンを開き、「ダウンロードを開始」をタップしてください。\";\n  const downloadLostConnection = downloadState === \"failed\" && diagnostics?.failures.length\n    && diagnostics.failures.every(({ reason }) => [\"network\", \"timeout\", \"stall\"].includes(reason));\n  const storagePanel = <aside onClickCapture={onPwaControlClick} className={storageHost ? \"pwa-storage pwa-storage-inline\" : \"pwa-notice pwa-storage\"} role={storageHost ? \"region\" : \"dialog\"} aria-label={storageHost ? \"アプリのデータ管理\" : \"データ管理\"}>\n    <h3>アプリの容量・更新</h3>\n"
+    ],
+    [
+      "                <p className=\"pwa-progress-line\">\n                  {installedManifest?.assets?.length ?? storedHashes.size}件・\n                  {formatBytes(\n                    ((installedManifest?.assets ?? []) as Array<{ bytes: number }>)\n                      .reduce((sum, asset) => sum + (Number(asset.bytes) || 0), 0),\n                  )}を保存しました\n                </p>\n                <p className=\"pwa-hint\">次回からはダウンロードなしで起動できます。</p>\n",
+      "                <p className=\"pwa-progress-line\">\n                  {installedManifest?.assets?.length ?? storedHashes.size}件・\n                  {formatBytes(distinctDownloadBytes(installedManifest?.assets ?? []))}を保存しました\n                </p>\n                <p className=\"pwa-hint\">次回からはダウンロードなしで起動できます。</p>\n"
+    ],
+    [
+      "            )}\n\n            {phase === \"installing\" && progress && (\n              <>\n                <h2>ゲームデータをダウンロード中</h2>\n                <p className=\"pwa-progress-line\"><small>{progress.countLine}・</small><strong>{progress.byteLine}</strong></p>\n                {progress.categoryLine && <p className=\"pwa-hint\">{progress.categoryLine}</p>}\n                {progress.failedLine && <p className=\"pwa-warning\">{progress.failedLine}</p>}\n                {/*\n",
+      "            )}\n\n            {phase === \"installing\" && downloadState === \"checking-download\" && (\n              <h2 role=\"status\">保存できた分を確認しています…</h2>\n            )}\n            {phase === \"installing\" && downloadState !== \"checking-download\" && progress && (\n              <>\n                <h2>{downloadState === \"paused\" ? \"ダウンロードを一時停止中\" : \"ゲームデータをダウンロード中\"}</h2>\n                <p className=\"pwa-progress-line\"><small>{progress.countLine}・</small><strong>{progress.byteLine}</strong></p>\n                {downloadState === \"running\" && progress.categoryLine && <p className=\"pwa-hint\">{progress.categoryLine}</p>}\n                {progress.failedLine && <p className=\"pwa-warning\">{progress.failedLine}</p>}\n                {/*\n"
+    ],
+    [
+      "                  reading of a still screen is that the app has died.\n                */}\n                {stalledSeconds >= 12 && (\n                  <p className=\"pwa-hint\" role=\"status\">\n                    大きなデータを取得・検証中です（最終進捗から{stalledSeconds}秒）。\n",
+      "                  reading of a still screen is that the app has died.\n                */}\n                {downloadState === \"running\" && stalledSeconds >= 12 && (\n                  <p className=\"pwa-hint\" role=\"status\">\n                    大きなデータを取得・検証中です（最終進捗から{stalledSeconds}秒）。\n"
+    ],
+    [
+      "                  {downloadState === \"cancelled\" ? \"ダウンロードを中断しました\"\n                    : downloadState === \"commit-failed\" ? \"保存はできましたが、切り替えに失敗しました\"\n                      : \"データを取得できませんでした\"}\n                </h2>\n                <p className=\"pwa-hint\">\n                  {downloadState === \"commit-failed\"\n                    ? \"取得したデータは端末に残っています。もう一度お試しください。\"\n                    : \"完了済みのデータは保持しています。失敗した分だけ取り直せます。\"}\n                </p>\n                {diagnostics && diagnostics.failures.length > 0 && (\n                  <ul className=\"pwa-failure-list\">\n                    {diagnostics.failures.slice(0, 6).map((failure) => (\n                      <li key={failure.path}>\n                        <code>{failure.path}</code>\n                        <span>{failure.label}{failure.status ? `／HTTP ${failure.status}` : \"\"}・{failure.attempts}回試行</span>\n                      </li>\n                    ))}\n                    {diagnostics.failures.length > 6 && (\n                      <li><span>ほか {diagnostics.failures.length - 6} 件</span></li>\n                    )}\n                  </ul>\n                )}\n                <div className=\"pwa-actions\">\n                  <button type=\"button\" className=\"pwa-primary\" onClick={retryFailed}>\n                    {commitRecovery.required ? \"保存済みデータを反映し直す\" : \"失敗した項目だけ再試行\"}\n                  </button>\n                  <button type=\"button\" onClick={copyDiagnostics}>\n                    {copied ? \"コピーしました\" : \"診断情報をコピー\"}\n                  </button>\n                </div>\n                <div className=\"pwa-actions pwa-secondary-actions\">\n                  {/* The old version keeps working while an update is unresolved. */}\n                  <button type=\"button\" onClick={() => setDownloadState(null)}>あとにする</button>\n                </div>\n                {errorMessage && <p className=\"pwa-warning\" role=\"alert\">{errorMessage}</p>}\n              </>\n            )}\n",
+      "                  {downloadState === \"cancelled\" ? \"ダウンロードを中断しました\"\n                    : downloadState === \"commit-failed\" ? \"保存はできましたが、切り替えに失敗しました\"\n                      : downloadLostConnection ? \"通信できませんでした\" : \"ダウンロードが完了しませんでした\"}\n                </h2>\n                <p className=\"pwa-hint\">\n                  {downloadState === \"commit-failed\" ? \"ゲームデータは端末に残っています。もう一度お試しください。\"\n                    : downloadLostConnection ? \"通信が戻ったら、残りのデータをダウンロードできます。\"\n                    : \"保存した分はそのまま使えます。続きからダウンロードできます。\"}\n                </p>\n                {downloadState !== \"commit-failed\" && progress?.remainingLine && <p className=\"pwa-progress-line\">{progress.remainingLine}</p>}\n                <div className=\"pwa-actions\">\n                  <button type=\"button\" className=\"pwa-primary\" onClick={retryFailed}>\n                    {commitRecovery.required || downloadState === \"commit-failed\" ? \"保存を確認する\" : \"ダウンロードを再開\"}\n                  </button>\n                </div>\n                {diagnostics && diagnostics.failures.length > 0 && (\n                  <details>\n                    <summary>ダウンロードの詳細</summary>\n                    <ul className=\"pwa-failure-list\">\n                      {diagnostics.failures.slice(0, 6).map((failure) => (\n                        <li key={failure.path}>\n                          <code>{failure.path}</code>\n                          <span>{failure.label}{failure.status ? `／HTTP ${failure.status}` : \"\"}・{failure.attempts}回試行</span>\n                        </li>\n                      ))}\n                      {diagnostics.failures.length > 6 && (\n                        <li><span>ほか {diagnostics.failures.length - 6} 件</span></li>\n                      )}\n                    </ul>\n                    <button type=\"button\" onClick={copyDiagnostics}>\n                      {copied ? \"コピーしました\" : \"診断情報をコピー\"}\n                    </button>\n                  </details>\n                )}\n                <div className=\"pwa-actions pwa-secondary-actions\">\n                  {/* The old version keeps working while an update is unresolved. */}\n                  <button type=\"button\" onClick={() => setDownloadState(null)}>あとにする</button>\n                </div>\n              </>\n            )}\n"
     ]
   ],
   "app/globals.css": [
@@ -1413,6 +1485,10 @@
     [
       "// V1 players command deployment, support and character abilities. Free movement\n// is not an input; Kurome alone accepts a tap on the tracked ally to evade.\n// Keep the older mode's geometric counterplay contract separate from this help.\nconst V100_BOSS_ACTION_GUIDANCE = deepFreeze({\n  \"boss-takuya\": \"防御技で備え、被弾後は回復\",\n  \"boss-gate-eater\": \"防御技で備え、停止中に攻撃技\",\n  \"boss-kurome-prototype\": \"狙われたユニットをタップで回避\",\n  \"boss-mother\": \"召喚体へ範囲技や火炎支援\",\n  \"boss-ooguchi\": \"防御技で備え、停止中に攻撃技\",\n  \"boss-gairen\": \"外殻展開中に攻撃技や砲撃\",\n  \"boss-futago\": \"防御技で備え、被弾後は回復\",\n  \"boss-mugarian-president-mutated\": \"防御技で備え、攻撃後に砲撃\",\n  \"boss-takuya-omega\": \"防御技で備え、攻撃後に砲撃\",\n});\n\nexport function v100BossActionGuidanceFor(bossId) {\n  return V100_BOSS_ACTION_GUIDANCE[bossId === \"boss-kurome\" ? \"boss-kurome-prototype\" : bossId] ?? null;\n}",
       "// The story and its rematches share these encounters. The legacy twins split\n// mid-fight, while the two V1 bodies enter the fight together.\nconst V100_BOSS_OBSERVATIONS = deepFreeze({\n  \"boss-takuya\": \"地面を叩き、周りの仲間をまとめて吹き飛ばす。追い詰められると衝撃が遠くまで届く。\",\n  \"boss-gate-eater\": \"改札機を巻き込んだ巨体が、同じ列を突っ切る。突進の直後は足が止まる。\",\n  \"boss-kurome\": \"一人に狙いを定めて光線を放つ。照準がついた仲間をタップすると、射線から飛びのく。\",\n  \"boss-mother\": \"歩く増殖室。体から次々と感染体を吐き出す。\",\n  \"boss-ooguchi\": \"四枚の顎を突き出して突進する。止まった直後だけ、顎の奥の中枢がむき出しになる。\",\n  \"boss-gairen\": \"五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。\",\n  \"boss-futago\": \"二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。\",\n  \"boss-mugarian-president-mutated\": \"医療機器と一体になった社長。四本の腕を振り下ろし、前方をまとめて叩き潰す。\",\n  \"boss-takuya-omega\": \"背中に何本も投薬管をつないだTAKUYA。巨大な刃のひと振りで、前にいる仲間をなぎ払う。\",\n});\n\nexport function v100BossObservationFor(bossId) {\n  return V100_BOSS_OBSERVATIONS[bossId] ?? null;\n}"
+    ],
+    [
+      "  \"boss-gairen\": \"五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。\",\n  \"boss-futago\": \"二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。\",\n  \"boss-mugarian-president-mutated\": \"医療機器と一体になった社長。四本の腕を振り下ろし、前方をまとめて叩き潰す。\",\n  \"boss-takuya-omega\": \"背中に何本も投薬管をつないだTAKUYA。巨大な刃のひと振りで、前にいる仲間をなぎ払う。\",\n});\n\n",
+      "  \"boss-gairen\": \"五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。\",\n  \"boss-futago\": \"二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。\",\n  \"boss-mugarian-president-mutated\": \"医療機器と一体になった社長。四本の腕を床に叩きつけると、周りの足場まで揺れる。\",\n  \"boss-takuya-omega\": \"背中に何本も投薬管をつないだTAKUYA。巨大な刃を振り抜くと、足元から衝撃が広がる。\",\n});\n\n"
     ]
   ],
   "app/v105AbilityNames.js": [
@@ -1525,6 +1601,30 @@
     [
       "  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n]);\n\n",
       "  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n  ...V104_MELEE_ATTACK_PATHS.map(src => ({\n    ...V100_AUDIO_MANIFEST.assets.find(asset => asset.sources[0].src === src),\n    id: \"install-melee-effort-\" + src.split(\"/\").pop().replace(/\\.mp3$/, \"\"),\n    sources: [{src, type:\"audio/mpeg\"}],\n  })),\n]);\n\n"
+    ],
+    [
+      "export const NAO_REACTION_PATHS = Object.freeze(naoReactions.map(asset => asset.sources[0].src));\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n",
+      "export const NAO_REACTION_PATHS = Object.freeze(naoReactions.map(asset => asset.sources[0].src));\n\nexport const FIELD_REACTION_PATH = \"/audio/quality-20261127/voices/field-reaction-03.mp3\";\nconst fieldReaction = {\n  ...sfxAsset(\"human-female-hurt-03\", \"humanVoices\", { gain: 0.8, priority: 66, cooldownMs: 260, maxInstances: 3 }),\n  sources: [{ src: FIELD_REACTION_PATH, type: \"audio/mpeg\" }],\n};\n// All three recordings are from the same Type 3 performer. Each fighter\n// reserves one delivery for defeat, so it never doubles as her injury sound.\nconst fieldVoiceRoles = {\n  ranger: { voice: \"mizuchi\", exit: \"human-female-hurt-01\" },\n  gunner: { voice: \"raider\", exit: \"human-female-hurt-03\" },\n  \"mrs-chiha\": { voice: \"mrs-chiha\", exit: \"human-female-hurt-02\" },\n};\nconst fieldTakes = [\"human-female-hurt-01\", \"human-female-hurt-02\", fieldReaction.id];\n\nconst enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(\n  `enemy-${kind}-${event}`,\n"
+    ],
+    [
+      "  ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),\n  ...naoReactions,\n];\n\n",
+      "  ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),\n  ...naoReactions,\n  fieldReaction,\n];\n\n"
+    ],
+    [
+      "  ...enemyVoicePools,\n  variationPool(\"voice-nao-hurt\", \"humanVoices\", { priority: 66, cooldownMs: 260, maxInstances: 3 }),\n];\nconst aliases = [\n  {\n    id: EMPLOYMENT_DOSSIER_REVEAL_CUE_ID,\n",
+      "  ...enemyVoicePools,\n  variationPool(\"voice-nao-hurt\", \"humanVoices\", { priority: 66, cooldownMs: 260, maxInstances: 3 }),\n  ...Object.values(fieldVoiceRoles).map(({ voice, exit }) => ({\n    ...variationPool(\"voice-\" + voice + \"-hurt\", \"humanVoices\", { priority: 66, cooldownMs: 260, maxInstances: 3 }),\n    assetIds: fieldTakes.filter(id => id !== exit),\n  })),\n];\nconst aliases = [\n  ...Object.values(fieldVoiceRoles).map(({ voice, exit }) => ({\n    id: \"voice-\" + voice + \"-death\", targetId: exit, priority: 86, cooldownMs: 260, maxInstances: 3,\n  })),\n  {\n    id: EMPLOYMENT_DOSSIER_REVEAL_CUE_ID,\n"
+    ],
+    [
+      "  }\n}\n// Existing installations keep the same inventory order when Nao's three\n// individual files are added after the previous download set.\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([\n  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n  ...V104_MELEE_ATTACK_PATHS.map(src => ({\n",
+      "  }\n}\n// New standalone recordings follow the existing physical download order.\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([\n  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src) && asset.sources[0].src !== FIELD_REACTION_PATH),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n  ...V104_MELEE_ATTACK_PATHS.map(src => ({\n"
+    ],
+    [
+      "    sources: [{src, type:\"audio/mpeg\"}],\n  })),\n]);\n\n",
+      "    sources: [{src, type:\"audio/mpeg\"}],\n  })),\n  PRODUCTION_AUDIO_MANIFEST.assetById[fieldReaction.id],\n]);\n\n"
+    ],
+    [
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  if (kind === \"medic\" && (event === \"hurt\" || event === \"death\")) return \"voice-nao-\" + event;\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n",
+      "\nexport function humanVoiceCueForUnit(kind, event) {\n  const fieldRole = ownValue(fieldVoiceRoles, kind);\n  if (fieldRole && (event === \"hurt\" || event === \"death\")) return \"voice-\" + fieldRole.voice + \"-\" + event;\n  if (kind === \"medic\" && (event === \"hurt\" || event === \"death\")) return \"voice-nao-\" + event;\n  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];\n"
     ]
   ]
 }

@@ -12,13 +12,14 @@ const out=path.resolve(process.env.QUALITY_PARTICIPATION_OUT ?? 'output/quality-
 const report={scope:'Prepared valid saves and normal UI. Save preservation and sortie availability, not earned stage progression or difficulty acceptance.',build:await productionBuildIdentity(),cases:[],errors:[]};
 const browser=await chromium.launch({headless:true});
 try {
-  for(const config of [{stage:1},{stage:2},{stage:3},{stage:1,onlyPaisen:true},{stage:2,onlyPaisen:true,phase:'battle'}]) {
-    const {stage,onlyPaisen=false,phase='formation'}=config,label=`s${stage}-${onlyPaisen?'only-paisen':'default'}-${phase}`;
+  for(const config of [{stage:1},{stage:2},{stage:3},{stage:1,onlyPaisen:true},{stage:2,onlyPaisen:true,phase:'battle'},{stage:2,empty:true,phase:'battle'}]) {
+    const {stage,onlyPaisen=false,empty=false,phase='formation'}=config;
+    const label=`s${stage}-${empty?'empty':onlyPaisen?'only-paisen':'default'}-${phase}`;
     if(process.env.QUALITY_PARTICIPATION_CASE && process.env.QUALITY_PARTICIPATION_CASE!==label)continue;
     const base=createDefaultV100Save();
     const seed=normalizeV100Save({...base,campaignStarted:true,playerName:'救助担当確認',availableStageIds:V100_STAGE_IDS,
       completedStageIds:V100_STAGE_IDS.slice(0,stage-1),eventCursor:null,
-      ...(onlyPaisen?{formationSlots:['unit-paisen',null,null,null,null,null,null]}:{}),
+      ...(empty || onlyPaisen ? {formationSlots:[onlyPaisen?'unit-paisen':null,null,null,null,null,null,null]} : {}),
       flowState:{phase,stageId:V100_STAGE_IDS[stage-1],stageNumber:stage,destination:phase,nodeIndex:0,firstClear:false,finalized:true}});
     const context=await browser.newContext({viewport:{width:844,height:340},recordVideo:{dir:path.join(out,label),size:{width:844,height:340}}});
     try {
@@ -28,23 +29,30 @@ try {
       await dismissInstallOffer(page,{timeout:20000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
       await enterV100FromTitle(page);
       const stored=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
-      if(await page.getByRole('heading',{name:'出撃できる仲間がいません',exact:true}).isVisible()){
+      if(phase==='battle' && (empty || onlyPaisen)){
+        await page.getByRole('heading',{name:'出撃不可',exact:true}).waitFor();
+        const panel=page.locator('.v100-sortie-recovery');
+        assert.equal(await panel.locator('p').innerText(),
+          empty ? '編成が空です。出撃する仲間を選んでください。' : 'パイセンは庁舎で救助中。ほかの仲間を編成してください。');
+        assert.ok((await panel.locator('.v100-sortie-location').innerText()).trim());
+        const edit=panel.getByRole('button',{name:'編成を見直す',exact:true});
+        assert.ok((await edit.boundingBox()).height>=44);
         await page.screenshot({path:path.join(out,label+'-recovery.png')});
-        await page.getByRole('button',{name:'編成を見直す',exact:true}).click();
+        await edit.click();
       }
       await page.locator('.v100-formation-panel').waitFor();
       const snapshot=await stored();
       assert.deepEqual(snapshot.formationSlots,seed.formationSlots);
       for(const key of ['ownedUnitIds','registeredUnitIds','unitLevels','equipment','caps','receipts'])assert.deepEqual(snapshot[key],seed[key],key);
-      if(stage<3){assert.match(await page.locator('.v100-stage-absence').innerText(),/救助中/u);assert.equal(await page.locator('.v100-sortie-count').innerText(),`${onlyPaisen?0:3}/ 7 呼び出し枠`);}
+      if(stage<3){assert.match(await page.locator('.v100-stage-absence').innerText(),empty ? /編成が空/u : /救助中/u);assert.equal(await page.locator('.v100-sortie-count').innerText(),`${empty||onlyPaisen?0:3}/ 7 呼び出し枠`);}
       await page.screenshot({path:path.join(out,label+'-formation.png')});
       await page.locator('.v100-slot-track button').first().click();
       const candidate=page.locator('.v100-roster-card').filter({hasText:'パイセン'});
       assert.equal(await candidate.isDisabled(),stage<3);
       await page.getByRole('button',{name:'編成に戻る',exact:true}).click();
       const start=page.getByRole('button',{name:'戦闘へ',exact:true});
-      assert.equal(await start.isDisabled(),onlyPaisen);
-      if(onlyPaisen){
+      assert.equal(await start.isDisabled(),empty || onlyPaisen);
+      if(empty || onlyPaisen){
         await page.locator('.v100-slot-track button').first().click();
         await page.getByRole('button',{name:'ハチを枠1へ配置',exact:true}).click();
         await page.waitForFunction(()=>!document.querySelector('.v100-shell[aria-busy="true"]') && JSON.parse(localStorage.getItem('nishijin-campaign-v100')).formationSlots[0]==='unit-hachi');
@@ -57,11 +65,11 @@ try {
       await page.screenshot({path:path.join(out,label+'-battle.png')});
       const final=await stored();
       for(const key of ['ownedUnitIds','registeredUnitIds','unitLevels','equipment','caps','receipts'])assert.deepEqual(final[key],snapshot[key],key);
-      if(!onlyPaisen)assert.deepEqual(final.formationSlots,snapshot.formationSlots);
+      if(!empty && !onlyPaisen)assert.deepEqual(final.formationSlots,snapshot.formationSlots);
       await context.close();report.cases.push({...config,cards,video:await page.video().path(),preserved:true});
     } finally {await context.close();}
   }
-  assert.deepEqual(report.errors,[]);report.status='passed';
+  assert.ok(report.cases.length,'No requested case ran');assert.deepEqual(report.errors,[]);report.status='passed';
 }catch(error){report.status='failed';report.error=String(error);throw error;}
 finally{await browser.close();await writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');}
 console.log(JSON.stringify({status:report.status,cases:report.cases.length,out}));

@@ -813,7 +813,26 @@ test("P5 final-cut keeps simulation and audio live while bounding WebKit present
   assert.match(browserSmokeSource, /result\.finalFifoPresentationSuppression = finalFifoPresentation\.receipt/u);
 });
 
+function playbackTarget(manifest, cueId) {
+  const id = manifest.aliasById[cueId]?.targetId ?? cueId;
+  return manifest.assetById[id] ?? manifest.poolById[id];
+}
+
+test("a battle voice alias must lead to a real voice recording or voice pool", () => {
+  const manifest = {
+    aliasById: { exit: { targetId: "take", category: "humanVoices" } },
+    assetById: {}, poolById: {},
+  };
+  assert.equal(playbackTarget(manifest, "exit"), undefined);
+  manifest.assetById.take = { category: "weapons" };
+  assert.equal(playbackTarget(manifest, "exit").category, "weapons");
+  delete manifest.assetById.take;
+  manifest.poolById.take = { category: "humanVoices" };
+  assert.equal(playbackTarget(manifest, "exit").category, "humanVoices");
+});
+
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {
+  const manifest = productionAudio.PRODUCTION_AUDIO_MANIFEST;
   const wordlessHumanDeploymentKinds = new Set(["crazy-king", "kumaverson", "babayaga"]);
   for (const event of Object.values(story.STORY_EVENTS)) {
     assert.equal(event.presentation.characterVoice, false, `${event.id} disables story dialogue voiceover`);
@@ -827,8 +846,8 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
     const scene = productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById[sceneId];
     const cueIds = [scene.bgm, ...scene.ambience, ...scene.preload].filter(Boolean);
     for (const cueId of cueIds) {
-      const cue = productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById[cueId]
-        ?? productionAudio.PRODUCTION_AUDIO_MANIFEST.poolById[cueId];
+      const cue = playbackTarget(manifest, cueId);
+      assert.ok(cue, `${sceneId} must resolve ${cueId}`);
       assert.notEqual(cue?.category, "humanVoices", `${sceneId} must not bind battle voice cue ${cueId}`);
       assert.doesNotMatch(cueId, /(?:voiceover|speech|tts)/iu, `${sceneId} must not bind dialogue read-aloud cue`);
     }
@@ -854,8 +873,7 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
     for (const event of ["attack", "hurt", "death"]) {
       const cueId = productionAudio.humanVoiceCueForUnit(kind, event);
       assert.ok(cueId, `${kind}/${event} battle voice cue remains`);
-      const cue = productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById[cueId]
-        ?? productionAudio.PRODUCTION_AUDIO_MANIFEST.poolById[cueId];
+      const cue = playbackTarget(manifest, cueId);
       assert.equal(cue?.category, "humanVoices", `${kind}/${event} resolves a battle voice asset or pool`);
     }
     const deployCue = productionAudio.humanVoiceCueForUnit(kind, "deploy");

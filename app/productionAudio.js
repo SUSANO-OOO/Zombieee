@@ -434,6 +434,20 @@ const naoReactions = ["nao-hurt-01", "nao-hurt-02", "nao-death"].map(name => ({
 }));
 export const NAO_REACTION_PATHS = Object.freeze(naoReactions.map(asset => asset.sources[0].src));
 
+export const FIELD_REACTION_PATH = "/audio/quality-20261127/voices/field-reaction-03.mp3";
+const fieldReaction = {
+  ...sfxAsset("human-female-hurt-03", "humanVoices", { gain: 0.8, priority: 66, cooldownMs: 260, maxInstances: 3 }),
+  sources: [{ src: FIELD_REACTION_PATH, type: "audio/mpeg" }],
+};
+// All three recordings are from the same Type 3 performer. Each fighter
+// reserves one delivery for defeat, so it never doubles as her injury sound.
+const fieldVoiceRoles = {
+  ranger: { voice: "mizuchi", exit: "human-female-hurt-01" },
+  gunner: { voice: "raider", exit: "human-female-hurt-03" },
+  "mrs-chiha": { voice: "mrs-chiha", exit: "human-female-hurt-02" },
+};
+const fieldTakes = ["human-female-hurt-01", "human-female-hurt-02", fieldReaction.id];
+
 const enemyVoiceAssets = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.flatMap((event) => variationAssets(
   `enemy-${kind}-${event}`,
   "monsters",
@@ -489,6 +503,7 @@ const assets = [
   ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),
   ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),
   ...naoReactions,
+  fieldReaction,
 ];
 
 const pools = [
@@ -501,8 +516,15 @@ const pools = [
   ...humanVoicePools,
   ...enemyVoicePools,
   variationPool("voice-nao-hurt", "humanVoices", { priority: 66, cooldownMs: 260, maxInstances: 3 }),
+  ...Object.values(fieldVoiceRoles).map(({ voice, exit }) => ({
+    ...variationPool("voice-" + voice + "-hurt", "humanVoices", { priority: 66, cooldownMs: 260, maxInstances: 3 }),
+    assetIds: fieldTakes.filter(id => id !== exit),
+  })),
 ];
 const aliases = [
+  ...Object.values(fieldVoiceRoles).map(({ voice, exit }) => ({
+    id: "voice-" + voice + "-death", targetId: exit, priority: 86, cooldownMs: 260, maxInstances: 3,
+  })),
   {
     id: EMPLOYMENT_DOSSIER_REVEAL_CUE_ID,
     targetId: "sfx-v070-terminal-confirm",
@@ -826,16 +848,16 @@ for (const asset of [...precedingInstallAssets, ...shortHeavyDeathInstallAssets,
     installAudioBySource.set(key, Object.freeze({ ...asset, id: `install-${pathId}` }));
   }
 }
-// Existing installations keep the same inventory order when Nao's three
-// individual files are added after the previous download set.
+// New standalone recordings follow the existing physical download order.
 export const INSTALL_AUDIO_ASSETS = Object.freeze([
-  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),
+  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src) && asset.sources[0].src !== FIELD_REACTION_PATH),
   ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),
   ...V104_MELEE_ATTACK_PATHS.map(src => ({
     ...V100_AUDIO_MANIFEST.assets.find(asset => asset.sources[0].src === src),
     id: "install-melee-effort-" + src.split("/").pop().replace(/\.mp3$/, ""),
     sources: [{src, type:"audio/mpeg"}],
   })),
+  PRODUCTION_AUDIO_MANIFEST.assetById[fieldReaction.id],
 ]);
 
 export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
@@ -1113,6 +1135,8 @@ export function weaponCueForUnit(kind) {
 }
 
 export function humanVoiceCueForUnit(kind, event) {
+  const fieldRole = ownValue(fieldVoiceRoles, kind);
+  if (fieldRole && (event === "hurt" || event === "death")) return "voice-" + fieldRole.voice + "-" + event;
   if (kind === "medic" && (event === "hurt" || event === "death")) return "voice-nao-" + event;
   const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];
   if (contractCue) return contractCue;
