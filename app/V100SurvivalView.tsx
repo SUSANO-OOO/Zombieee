@@ -8,12 +8,13 @@ import { beginV100Survival, checkpointV100Survival, selectV100SurvivalUpgrade, s
 import { v100EquipmentFor } from "./v100Equipment.js";
 import { V100_UNITS } from "./v100Registry.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
+import { isUnlockedSurvivalStartWave, survivalHighestStartWave, SURVIVAL_START_SKIP_WAVES } from "./survival.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Props = { save: Save; onLoadout?: () => void; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
 
 export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
-  const [startWave, setStartWave] = useState(1);
+  const [waveInput, setWaveInput] = useState("1");
   const [unexpected, setUnexpected] = useState(false);
   const progress = save.survival, active = progress.active;
   const session = active ? v100SurvivalSession(active, save.settings) : null;
@@ -44,7 +45,13 @@ export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
     <button type="button" onClick={() => void onSave(dismissV100SurvivalResult(save))}>サバイバルへ戻る</button>
     {onLoadout && <button type="button" onClick={() => { void onSave(dismissV100SurvivalResult(save)).then(accepted => { if (accepted) onLoadout(); }); }}>編成を見直す</button>}
   </section>;
-  const highestStart = Math.floor(progress.highestCompletedWave / 10) * 10 + 1;
+  const highestStart = survivalHighestStartWave(progress.highestCompletedWave);
+  const startWave = highestStart === 1 ? 1 : Number(waveInput);
+  const validStart = isUnlockedSurvivalStartWave(startWave, progress.highestCompletedWave);
+  // A step from a mistyped value goes to the next valid starting point in that direction.
+  const stepIndex = (startWave - 1) / SURVIVAL_START_SKIP_WAVES;
+  const previousStart = Math.max(1, Math.min(highestStart, 1 + (Math.ceil(stepIndex) - 1) * SURVIVAL_START_SKIP_WAVES));
+  const nextStart = Math.max(1, Math.min(highestStart, 1 + (Math.floor(stepIndex) + 1) * SURVIVAL_START_SKIP_WAVES));
   return <section aria-label="サバイバル" className="v100-survival-preparation" data-v100-survival="hub">
   <div className="v100-survival-watch">
     <div className="v100-survival-place" aria-hidden="true">
@@ -63,18 +70,29 @@ export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
       ? <p className="v100-survival-locked">物語で初めてボスを撃破すると出撃できます。</p>
       : <>
         <div className="v100-survival-departure">
-          <label>開始する波 <input type="number" min={1} max={highestStart} step={10} value={startWave} onChange={event => setStartWave(Number(event.target.value))} /></label>
-          <button type="button" onClick={() => void onSave(beginV100Survival(save, { runId: `v100-survival:${crypto.randomUUID()}`, startWave }))}>サバイバルへ出撃</button>
+          {highestStart === 1
+            ? <div className="v100-survival-fixed-start"><span>開始地点</span><strong>第1波</strong></div>
+            : <div className="v100-survival-wave-picker">
+              <label htmlFor="v100-start-wave">開始する波</label>
+              <div className="v100-survival-wave-controls">
+                <button type="button" aria-label="前の開始地点" disabled={startWave === previousStart} onClick={() => setWaveInput(String(previousStart))}>−</button>
+                <input id="v100-start-wave" type="number" inputMode="numeric" min={1} max={highestStart} step={SURVIVAL_START_SKIP_WAVES}
+                  value={waveInput} aria-invalid={!validStart} aria-describedby={validStart ? undefined : "v100-start-wave-hint"} onChange={event => setWaveInput(event.target.value)} />
+                <button type="button" aria-label="次の開始地点" disabled={startWave === nextStart} onClick={() => setWaveInput(String(nextStart))}>＋</button>
+              </div>
+            </div>}
+          <button type="button" disabled={!validStart} onClick={() => void onSave(beginV100Survival(save, { runId: `v100-survival:${crypto.randomUUID()}`, startWave }))}>サバイバルへ出撃</button>
         </div>
-        <p className="v100-survival-start-note">10波クリアするごとに、次の波を開始地点に選べます。飛ばした波の報酬はもらえません。</p>
+        {!validStart && <p id="v100-start-wave-hint" className="v100-survival-wave-hint" role="status">第1波から10波刻みで選べます。現在は第{highestStart}波まで。</p>}
+        <p className="v100-survival-start-note">{highestStart === 1 ? "第10波をクリアすると、第11波からも出撃できます。" : "途中の波から始めると、飛ばした波の報酬はもらえません。"}</p>
       </>}
     <ol className="v100-survival-cycle" aria-label="サバイバルの流れ">
       <li><strong>5波ごとにボスを迎撃</strong><span>物語で撃破したボスだけが出現します。</span></li>
-      <li><strong>ボスを倒すと自動セーブ</strong><span>ゲームを閉じても、最後にセーブしたところから再開できます。</span></li>
-      <li><strong>3つの強化から1つを選ぶ</strong><span>装甲車両を守り続けてください。</span></li>
+      <li><strong>ボスの波をクリアすると自動セーブ</strong><span>ボスと残りの敵をすべて倒すと、報酬が手に入ります。</span></li>
+      <li><strong>3つの強化から1つ選んで、次の波へ</strong></li>
     </ol>
-    {v100SurvivalBossPool(save.receipts).includes("kurome") && <p className="v100-survival-danger">第16波から湾岸の異形も1体ずつ現れます。いつもの感染群に紛れた相手を見逃さないように。</p>}
-    {v100SurvivalBossPool(save.receipts).includes("futago") && <p className="v100-survival-danger">第21波からはRED PANTHER兵も1体ずつ参戦。盾役や射撃兵、離れて撃つ指揮官にも備えましょう。</p>}
+    {v100SurvivalBossPool(save.receipts).includes("kurome") && <p className="v100-survival-danger">第16波から、感染群に湾岸の異形が1体ずつ加わります。</p>}
+    {v100SurvivalBossPool(save.receipts).includes("futago") && <p className="v100-survival-danger">第21波から、RED PANTHERの兵士も1人ずつ現れます。</p>}
   </div>
 </section>;
 }

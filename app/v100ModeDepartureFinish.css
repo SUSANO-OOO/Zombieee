@@ -65,10 +65,18 @@
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-records dd { margin: 3px 0 0; color: #edd19a; font: 800 26px/1.2 var(--v100-numeric-font); overflow-wrap: anywhere; }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-records dd small { font: 400 12px/1.3 var(--v100-reading-font); margin-left: 2px; }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-plan { min-width: 0; }
-#v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-departure { display: grid; grid-template-columns: minmax(96px,.4fr) minmax(0,.6fr); gap: 8px; align-items: end; }
+#v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-departure { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.v100-survival-wave-picker { flex: 1 1 165px; min-width: 0; }
+.v100-survival-wave-controls { display: grid; grid-template-columns: 44px minmax(50px,1fr) 44px; gap: 3px; }
+.v100-survival-fixed-start { flex: 1 1 96px; display: grid; color: #d7dfca; font-size: 12px; }
+.v100-survival-fixed-start strong { color: #f8e1ab; font: 800 26px/1.3 var(--v100-numeric-font); }
+.v100-survival-departure > button { flex: 1 1 115px; }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-departure label { display: grid; gap: 3px; color: #d7dfca; font: 400 12px/1.4 var(--v100-reading-font); }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-departure input { width: 100%; padding: 3px 8px; color: #f8e1ab; background: #09140f; border: 1px solid #a5a283; border-radius: 0; font: 800 26px/1.1 var(--v100-numeric-font); }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-departure button { min-height: 48px; padding: 5px 8px; border: 1px solid #e6bc77; border-bottom: 3px solid #84482c; border-radius: 0; background: #d8ad68; color: #232a1d; font-weight: 800; line-height: 1.35; }
+#v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-wave-controls button { padding: 0; background: #25372a; border-color: #829279; color: #f2dfb9; font-size: 20px; }
+.v100-survival-wave-controls input { text-align: center; }
+.v100-survival-wave-hint { margin: 6px 0; color: #ffce8e; font-size: 13px; }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-start-note { margin: 6px 0 8px; color: #cbd6bf; font: 400 12px/1.5 var(--v100-reading-font); }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-cycle { margin: 0; padding: 0 0 0 24px; }
 #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-cycle li { padding: 5px 0 5px 4px; border-bottom: 1px solid #68765e; color: #deca9d; }

@@ -165,6 +165,21 @@ test("late starts require completed milestones and cannot earn skipped rewards o
   assert.equal(ended.caps, caps); assert.equal(ended.bosses.defeatCounts[V100_BOSSES[0].id], count); assert.equal(ended.survival.lastResult.totalCaps, 0);
 });
 
+test("invalid starting points preserve the save and a completed record only offers playable waves", () => {
+  const save = ready();
+  save.survival.highestCompletedWave = 1_000_000;
+  for (const startWave of [0, 5, 10.5, 1_000_001]) {
+    const result = beginV100Survival(save, { runId: "wrong-point", startWave });
+    assert.equal(result.applied, false);
+    assert.equal(result.reason, "invalid-survival-start");
+    assert.equal(result.save.survival.active, null);
+    assert.deepEqual(result.save.receipts, save.receipts);
+  }
+  const last = beginV100Survival(save, { runId: "last-point", startWave: 999_991 });
+  assert.equal(last.applied, true);
+  assert.equal(last.save.survival.active.run.startWave, 999_991);
+});
+
 test("undiscovered, prototype, competing and substituted runs cannot enter or settle", () => {
   const empty = createDefaultV100Save(); empty.flowState.phase = "map"; empty.bosses.discoveredIds = V100_BOSSES.map(b => b.id);
   assert.deepEqual(v100SurvivalBossPool(empty.receipts), []); assert.equal(beginV100Survival(empty, { runId: "none" }).applied, false);

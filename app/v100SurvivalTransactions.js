@@ -1,5 +1,5 @@
 import { normalizeV100Save, applyV100SaveMutation } from './v100Save.js';
-import { createSurvivalRun, normalizeSurvivalRun, selectSurvivalUpgrade, SURVIVAL_RUN_PHASES } from './survival.js';
+import { createSurvivalRun, isUnlockedSurvivalStartWave, normalizeSurvivalRun, selectSurvivalUpgrade, SURVIVAL_RUN_PHASES } from './survival.js';
 import { selectSurvivalBossKind, survivalWaveReward } from './survivalBattleRuntime.js';
 import { v100EquipmentSnapshot, v100EquipmentQuantityCap } from './v100Equipment.js';
 import { v100SurvivalRunIdValid, v100SurvivalBossPool, v100SurvivalBossForKind, v100SurvivalReceipt } from './v100Survival.js';
@@ -26,12 +26,11 @@ export function beginV100Survival(save, { runId, startWave = 1, now } = {}) {
   if (current.flowState.phase !== 'map' || current.pendingResult || current.outbreak.view !== 'hub' || current.survival.view !== 'hub') return reject(current, 'activity-active');
   const receipt = v100SurvivalReceipt(runId, 'start');
   if (!v100SurvivalRunIdValid(runId) || current.receipts.includes(receipt)) return reject(current);
-  const highestStart = Math.floor(current.survival.highestCompletedWave / 10) * 10 + 1;
-  if (!Number.isInteger(startWave) || startWave < 1 || startWave % 10 !== 1 || startWave > highestStart) return reject(current);
+  if (!isUnlockedSurvivalStartWave(startWave, current.survival.highestCompletedWave)) return reject(current, 'invalid-survival-start');
   const unitIds = current.formationSlots.filter(Boolean);
   if (!unitIds.length) return reject(current, 'formation-empty');
   const run = createSurvivalRun({ runId, modePolicy: 'v100', startedAt: new Date(now ?? Date.now()).toISOString(), startWave,
-    unlockedStartWaves: [1, highestStart], bossPool, crawlerMaxHp: current.vehicle.maxHp,
+    unlockedStartWaves: [startWave], bossPool, crawlerMaxHp: current.vehicle.maxHp,
     formation: { presetId: 'v100-active', unitIds, unitLevelsByUnit: { ...current.unitLevels }, ...v100EquipmentSnapshot(current) } });
   return applyV100SaveMutation(current, next => ({ ...next, receipts: [...next.receipts, receipt],
     survival: { ...next.survival, active: { run, equippedSupportId: next.equippedSupportId,
