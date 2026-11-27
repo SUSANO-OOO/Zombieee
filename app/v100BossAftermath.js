@@ -1,6 +1,6 @@
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
 import {V100_BOSS_ATTACK_ART} from './v100BossAttackArt.js';
-import {BOSS_ANOMALY_TUNING, BOSS_AREA_DEPTH_SCALE, lateBossGroundRadius} from './bossAnomalies.js';
+import {BOSS_ANOMALY_TUNING, BOSS_AREA_DEPTH_SCALE, bossGroundWarningRadius} from './bossAnomalies.js';
 
 // Simulation ticks clone fighters. Keep the art stable for this strike and
 // sample the available sheets again when the boss activates its next attack.
@@ -88,6 +88,34 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
  return true;
 }
 
+// Uneven seams in the brood nest. Positions are fractions of its ground radius.
+const BROOD_SEAMS = [[-.32,.16,-2.82,2], [.43,.29,.46,3], [.21,-.46,-1.12,0]];
+function drawBroodSeepage(ctx, objects, radius, progress) {
+ const stain = objects?.['v102-ground-stains'], secretion = objects?.['v104-organic'];
+ ctx.save();
+ ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
+ for (const [x, y, angle, cell] of BROOD_SEAMS) {
+  const swell = .5 - .5 * Math.cos(progress * Math.PI * 3 - cell * .55);
+  ctx.save();
+  ctx.translate(x * radius, y * radius);
+  ctx.rotate(angle);
+  if (stain?.complete && stain.naturalWidth && stain.naturalHeight) {
+   const cw = stain.naturalWidth / 2, ch = stain.naturalHeight / 2;
+   const width = radius * (1.08 + .4 * progress + .09 * swell);
+   ctx.globalAlpha = .69 + progress * .27;
+   ctx.drawImage(stain, cell % 2 * cw, Math.floor(cell / 2) * ch, cw, ch,
+    -width * .48, -width * .34, width, width * .68);
+  }
+  if (secretion?.complete && secretion.naturalWidth && secretion.naturalHeight) {
+   const reach = radius * (.29 + .65 * progress + .10 * swell);
+   ctx.globalAlpha = .56 + progress * .37;
+   ctx.drawImage(secretion, -radius * .27, -radius * .25, reach, radius * (.47 + .10 * swell));
+  }
+  ctx.restore();
+ }
+ ctx.restore();
+}
+
 function drawGroundWarning(ctx, objects, fighter, radius) {
  const {kind, x, y, stationAbility} = fighter;
  const remaining = stationAbility.remainingSeconds;
@@ -95,7 +123,8 @@ function drawGroundWarning(ctx, objects, fighter, radius) {
  const progress = Math.max(0, Math.min(1, 1 - remaining / BOSS_ANOMALY_TUNING[kind].warningSeconds));
  const president = kind === 'mugarian-president-mutated';
  const depth = radius / BOSS_AREA_DEPTH_SCALE;
- const pigment = president ? '227,73,61' : '255,155,53';
+ const brood = kind === 'mother';
+ const pigment = brood ? '173,95,62' : president ? '227,73,61' : '255,155,53';
 
  ctx.save();
  ctx.translate(x, y);
@@ -116,6 +145,12 @@ function drawGroundWarning(ctx, objects, fighter, radius) {
  ctx.fillStyle = wash;
  ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
  ctx.restore();
+
+ if (brood) {
+  drawBroodSeepage(ctx, objects, radius, progress);
+  ctx.restore();
+  return;
+ }
 
  // Four patches of floor dust jump under the president's arms. The blade
  // lifts a single travelling wake through the dust at Omega's feet.
@@ -148,7 +183,7 @@ export function drawV100BossReleaseFields(ctx,objects,world,viewport={}){
   const tuning=BOSS_ANOMALY_TUNING[f.kind];
   if(!RELEASES[f.kind]||!tuning||!f.combatReady||!(f.hp>0))continue;
   if(f.stationAbility?.phase==='warning'){
-   const radius=lateBossGroundRadius(f.kind);
+   const radius=bossGroundWarningRadius(f.kind);
    if(radius && f.side==='zombie' && !f.contained)drawGroundWarning(ctx,objects,f,radius);
    continue;
   }

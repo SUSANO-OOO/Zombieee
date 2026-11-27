@@ -22,9 +22,11 @@ function fixture(kind,elapsed=.22){
 const viewport={viewportWidth:844,viewportHeight:340,worldScale:.88};
 function assertState(f){assert.equal(f.ctx.globalAlpha,.7);assert.equal(f.ctx.globalCompositeOperation,'screen');assert.equal(f.ctx.shadowBlur,3);assert.equal(f.ctx.tx,0);assert.equal(f.ctx.ty,0);assert.equal(f.ctx.sx,1);assert.equal(f.stack.length,0);}
 
-test('the late bosses warn everywhere their hit lands, from the start to the end of the windup',()=>{
- for(const kind of ['mugarian-president-mutated','takuya-omega']){
+test('radial boss warnings cover the entire actual hit from the start to the end of the windup',()=>{
+ for(const kind of ['mother','mugarian-president-mutated','takuya-omega']){
   const f=fixture(kind);
+  f.objects['v102-ground-stains']={complete:true,naturalWidth:768,naturalHeight:512};
+  f.objects['v104-organic']={complete:true,naturalWidth:512,naturalHeight:512};
   f.owner.side='zombie';
   const ally={id:31,side:'human',hp:100,x:405,y:260};
   const windup=beginBossAnomalyAbility({boss:f.owner,candidates:[ally]});
@@ -45,7 +47,10 @@ test('the late bosses warn everywhere their hit lands, from the start to the end
    assert.deepEqual([ellipse.x,ellipse.y,ellipse.start,ellipse.end,ellipse.rotation],[f.owner.x,f.owner.y,0,Math.PI*2,0]);
    assert.deepEqual(gradient,[0,0,0,0,0,ellipse.rx]);
    assert.equal(depthScale*ellipse.rx,ellipse.ry);
-   assert.ok(f.calls.some(({args})=>args[0]===f.objects['v100-dust']));
+   if(kind==='mother'){
+    assert.equal(f.calls.filter(({args})=>args[0]===f.objects['v102-ground-stains']).length,3);
+    assert.equal(f.calls.filter(({args})=>args[0]===f.objects['v104-organic']).length,3);
+   }else assert.ok(f.calls.some(({args})=>args[0]===f.objects['v100-dust']));
    for(let bearing=0;bearing<8;bearing++) {
     const angle=bearing*Math.PI/4;
     for(const fraction of [.99,1.01]){

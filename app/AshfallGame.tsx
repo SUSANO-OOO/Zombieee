@@ -290,7 +290,7 @@ import {
   advanceBossAnomalyAbility,
   beginBossAnomalyAbility,
   bossAnomalyAreaTargetIds,
-  lateBossGroundRadius,
+  bossGroundWarningRadius,
   createBossAnomalyRuntime,
   gairenIncomingDamageMultiplier,
   isBossAnomalyKind,
@@ -9440,7 +9440,7 @@ function drawWorld(
     if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites, allowDiagnosticFallback); continue; }
     const f = renderable.fighter;
     if (f.combatReady && f.kind !== "kurome"
-      && !(g.definition.missionConfig.v100StageNumber && (f.kind === "gate-eater" || lateBossGroundRadius(f.kind)))) drawBossTelegraph(ctx, f, g);
+      && !(g.definition.missionConfig.v100StageNumber && (f.kind === "gate-eater" || bossGroundWarningRadius(f.kind)))) drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);
     if (f.kind === "scout" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);
     drawSpriteFighter(ctx, f, sprites, { world: g, v100StageObjects: stageObjects, allowDiagnosticFallback,

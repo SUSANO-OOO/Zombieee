@@ -1179,6 +1179,14 @@
     [
       "            </div>\n          </div>\n          {hud.bossTelegraphWarning && !end && <div className=\"v100-boss-telegraph-warning\" role=\"alert\" data-boss-telegraph-warning=\"true\">{formatBattleText(hud.bossTelegraphWarning)}</div>}\n\n          {armoryKeyStatus ? (!end && <section className=\"health-hud barrier-health v100-control-health archive-objective\"\n",
       "            </div>\n          </div>\n          {hud.bossTelegraphWarning && !end && <div className={hud.bossTelegraphWarning === hud.paintedBossWarningName ? \"v100-announcement-only\" : \"v100-boss-telegraph-warning\"} role=\"alert\" data-boss-telegraph-warning=\"true\">\n            {hud.paintedBossWarningName ? <><span className=\"v100-announcement-only\">{formatBattleText(hud.paintedBossWarningName)}</span>{formatBattleText(hud.bossTelegraphWarning.slice(hud.paintedBossWarningName.length))}</> : formatBattleText(hud.bossTelegraphWarning)}\n          </div>}\n\n          {armoryKeyStatus ? (!end && <section className=\"health-hud barrier-health v100-control-health archive-objective\"\n"
+    ],
+    [
+      "  beginBossAnomalyAbility,\n  bossAnomalyAreaTargetIds,\n  lateBossGroundRadius,\n  createBossAnomalyRuntime,\n  gairenIncomingDamageMultiplier,\n",
+      "  beginBossAnomalyAbility,\n  bossAnomalyAreaTargetIds,\n  bossGroundWarningRadius,\n  createBossAnomalyRuntime,\n  gairenIncomingDamageMultiplier,\n"
+    ],
+    [
+      "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(g.definition.missionConfig.v100StageNumber && (f.kind === \"gate-eater\" || lateBossGroundRadius(f.kind)))) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n",
+      "    const f = renderable.fighter;\n    if (f.combatReady && f.kind !== \"kurome\"\n      && !(g.definition.missionConfig.v100StageNumber && (f.kind === \"gate-eater\" || bossGroundWarningRadius(f.kind)))) drawBossTelegraph(ctx, f, g);\n    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);\n    if (f.kind === \"scout\" && g.definition.missionConfig.v100StageNumber) drawV100ScoutApproachDust(ctx, stageObjects, f);\n"
     ]
   ],
   "app/manualAbilities.js": [
