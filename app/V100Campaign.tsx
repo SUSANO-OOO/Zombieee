@@ -1186,6 +1186,7 @@ export function V100Campaign() {
         }}
       />}
       {(flow.phase === "map" || flow.phase === "formation") && surface === "equipment" && <V100EquipmentView save={save}
+        notice={notice} saving={saveBusy}
         onBack={() => openSurface("support-vehicle")}
         onPurchase={(id, expectedQuantity) => applySaveTransaction(purchaseV100Equipment(save, id, { expectedQuantity }))}
         onUpgrade={(id, expectedLevel) => applySaveTransaction(upgradeV100Equipment(save, id, { expectedLevel }))}
