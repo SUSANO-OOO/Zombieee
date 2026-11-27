@@ -176,6 +176,7 @@
 #v100-campaign .v100-sortie-status strong span { font-weight: 500; font-size: 13px; }
 #v100-campaign .v100-sortie-status small { display: block; margin-top: 2px; color: #cddbc9; font-size: 12px; line-height: 1.15; }
 #v100-campaign .v100-command-formation .v100-formation-footer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr); flex: none; height: 44px; gap: 6px; margin: 0; }
+#v100-campaign .v100-command-formation .v100-formation-footer[data-mode] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); }
 #v100-campaign .v100-command-formation .v100-formation-footer button { min-height: 44px; height: 44px; padding: 5px 8px; font-size: 15px; }
 #v100-campaign .v100-command-formation.picker-open .v100-slot-rail,
 #v100-campaign .v100-command-formation.picker-open .v100-sortie-status,

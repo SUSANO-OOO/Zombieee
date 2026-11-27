@@ -48,9 +48,14 @@ try{
     await openFitting();await fitting.getByLabel('効果を比べる仲間',{exact:true}).selectOption('unit-paisen');
     const expected=v100EquipmentComparison(seed,{unitId:'unit-paisen',itemId:'reinforced-vest',slot:0});
     assert.equal(await fitting.locator('[data-stat="hp"] strong').innerText(),expected.changes.find(c=>c.key==='hp').afterLabel);
-    assert.deepEqual(await saved(),initial,'comparison alone cannot mutate save');await shot('preview');await closeFitting();
-    await panel.getByRole('button',{name:'280 CAPSで購入',exact:true}).click();await ready();
-    await openFitting();await fitting.getByRole('button',{name:'枠1に装備する',exact:true}).click();await ready();await closeFitting();
+    assert.deepEqual(await saved(),initial,'comparison alone cannot mutate save');await shot('preview');
+    await fitting.getByRole('button',{name:'280 CAPSで購入',exact:true}).click();await ready();
+    const equipButton=fitting.getByRole('button',{name:'枠1に装備する',exact:true});await equipButton.waitFor();
+    const purchased=await saved();assert.equal(purchased.caps,220);assert.deepEqual(purchased.equipment.personalByUnit,initial.equipment.personalByUnit);
+    assert.equal(await fitting.getByLabel('効果を比べる仲間',{exact:true}).inputValue(),'unit-paisen');
+    await equipButton.click();await ready();await fitting.getByRole('button',{name:'この枠に装備中',exact:true}).waitFor();
+    assert.doesNotMatch(await fitting.locator('.v100-fitting-replacement').innerText(),/→/);
+    await closeFitting();
     const equipped=await saved();assert.equal(equipped.caps,220);assert.equal(equipped.equipment.personalByUnit['unit-paisen'][0],'reinforced-vest');assert.equal(equipped.equipment.inventory['reinforced-vest'],1);assert.deepEqual(equipped.receipts,[...initial.receipts,'v100:equipment:reinforced-vest:purchase:1']);
     await shot('equipped');await page.reload();await dismissInstallOffer(page,{timeout:20000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});await enterV100FromTitle(page);
     assert.deepEqual((await saved()).equipment,equipped.equipment);row.checks.push('preview-readonly','purchase-280','equip-without-extra-charge','reload-preserves-gear');

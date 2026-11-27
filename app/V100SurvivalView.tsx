@@ -11,10 +11,9 @@ import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { isUnlockedSurvivalStartWave, survivalHighestStartWave, SURVIVAL_START_SKIP_WAVES } from "./survival.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
-type Props = { save: Save; onLoadout?: () => void; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
+type Props = { save: Save; waveInput: string; onWaveInput: (value: string) => void; onLoadout?: () => void; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
 
-export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
-  const [waveInput, setWaveInput] = useState("1");
+export function V100SurvivalView({ save, waveInput, onWaveInput, onSave, onLoadout }: Props) {
   const [unexpected, setUnexpected] = useState(false);
   const progress = save.survival, active = progress.active;
   const session = active ? v100SurvivalSession(active, save.settings) : null;
@@ -75,13 +74,16 @@ export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
             : <div className="v100-survival-wave-picker">
               <label htmlFor="v100-start-wave">開始する波</label>
               <div className="v100-survival-wave-controls">
-                <button type="button" aria-label="前の開始地点" disabled={startWave === previousStart} onClick={() => setWaveInput(String(previousStart))}>−</button>
+                <button type="button" aria-label="前の開始地点" disabled={startWave === previousStart} onClick={() => onWaveInput(String(previousStart))}>−</button>
                 <input id="v100-start-wave" type="number" inputMode="numeric" min={1} max={highestStart} step={SURVIVAL_START_SKIP_WAVES}
-                  value={waveInput} aria-invalid={!validStart} aria-describedby={validStart ? undefined : "v100-start-wave-hint"} onChange={event => setWaveInput(event.target.value)} />
-                <button type="button" aria-label="次の開始地点" disabled={startWave === nextStart} onClick={() => setWaveInput(String(nextStart))}>＋</button>
+                  value={waveInput} aria-invalid={!validStart} aria-describedby={validStart ? undefined : "v100-start-wave-hint"} onChange={event => onWaveInput(event.target.value)} />
+                <button type="button" aria-label="次の開始地点" disabled={startWave === nextStart} onClick={() => onWaveInput(String(nextStart))}>＋</button>
               </div>
             </div>}
-          <button type="button" disabled={!validStart} onClick={() => void onSave(beginV100Survival(save, { runId: `v100-survival:${crypto.randomUUID()}`, startWave }))}>サバイバルへ出撃</button>
+          <button type="button" disabled={!validStart} onClick={async () => {
+            const started = await onSave(beginV100Survival(save, { runId: `v100-survival:${crypto.randomUUID()}`, startWave }));
+            if (started) onWaveInput("1");
+          }}>サバイバルへ出撃</button>
         </div>
         {!validStart && <p id="v100-start-wave-hint" className="v100-survival-wave-hint" role="status">第1波から10波刻みで選べます。現在は第{highestStart}波まで。</p>}
         <p className="v100-survival-start-note">{highestStart === 1 ? "第10波をクリアすると、第11波からも出撃できます。" : "途中の波から始めると、飛ばした波の報酬はもらえません。"}</p>

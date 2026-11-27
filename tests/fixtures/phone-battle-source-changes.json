@@ -1409,6 +1409,10 @@
     [
       "      displayName: v100TwinAttackName(fighter) ?? definition.attackTelegraph.displayName,",
       "      displayName: v100TwinAttackName(fighter, twinLinkCut) ?? definition.attackTelegraph.displayName,"
+    ],
+    [
+      "// V1 players command deployment, support and character abilities. Free movement\n// is not an input; Kurome alone accepts a tap on the tracked ally to evade.\n// Keep the older mode's geometric counterplay contract separate from this help.\nconst V100_BOSS_ACTION_GUIDANCE = deepFreeze({\n  \"boss-takuya\": \"防御技で備え、被弾後は回復\",\n  \"boss-gate-eater\": \"防御技で備え、停止中に攻撃技\",\n  \"boss-kurome-prototype\": \"狙われたユニットをタップで回避\",\n  \"boss-mother\": \"召喚体へ範囲技や火炎支援\",\n  \"boss-ooguchi\": \"防御技で備え、停止中に攻撃技\",\n  \"boss-gairen\": \"外殻展開中に攻撃技や砲撃\",\n  \"boss-futago\": \"防御技で備え、被弾後は回復\",\n  \"boss-mugarian-president-mutated\": \"防御技で備え、攻撃後に砲撃\",\n  \"boss-takuya-omega\": \"防御技で備え、攻撃後に砲撃\",\n});\n\nexport function v100BossActionGuidanceFor(bossId) {\n  return V100_BOSS_ACTION_GUIDANCE[bossId === \"boss-kurome\" ? \"boss-kurome-prototype\" : bossId] ?? null;\n}",
+      "// The story and its rematches share these encounters. The legacy twins split\n// mid-fight, while the two V1 bodies enter the fight together.\nconst V100_BOSS_OBSERVATIONS = deepFreeze({\n  \"boss-takuya\": \"地面を叩き、周りの仲間をまとめて吹き飛ばす。追い詰められると衝撃が遠くまで届く。\",\n  \"boss-gate-eater\": \"改札機を巻き込んだ巨体が、同じ列を突っ切る。突進の直後は足が止まる。\",\n  \"boss-kurome\": \"一人に狙いを定めて光線を放つ。照準がついた仲間をタップすると、射線から飛びのく。\",\n  \"boss-mother\": \"歩く増殖室。体から次々と感染体を吐き出す。\",\n  \"boss-ooguchi\": \"四枚の顎を突き出して突進する。止まった直後だけ、顎の奥の中枢がむき出しになる。\",\n  \"boss-gairen\": \"五枚の外殻で身を守る。殻を開いてなぎ払う瞬間、中枢が見える。\",\n  \"boss-futago\": \"二体が両側から斬り込む。片方が倒れると、残った一体の斬撃が激しくなる。\",\n  \"boss-mugarian-president-mutated\": \"医療機器と一体になった社長。四本の腕を振り下ろし、前方をまとめて叩き潰す。\",\n  \"boss-takuya-omega\": \"背中に何本も投薬管をつないだTAKUYA。巨大な刃のひと振りで、前にいる仲間をなぎ払う。\",\n});\n\nexport function v100BossObservationFor(bossId) {\n  return V100_BOSS_OBSERVATIONS[bossId] ?? null;\n}"
     ]
   ],
   "app/v105AbilityNames.js": [
@@ -1509,6 +1513,18 @@
     [
       "  }\n}\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([...installAudioBySource.values()]);\n\nexport const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({\n",
       "  }\n}\n// Existing installations keep the same inventory order when Nao's three\n// individual files are added after the previous download set.\nexport const INSTALL_AUDIO_ASSETS = Object.freeze([\n  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n]);\n\nexport const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({\n"
+    ],
+    [
+      "import {withV100BossCollapseAudio} from './v100BossCollapseAudio.js';\nimport {withV100BossSkillAudio} from './v100BossSkillAudio.js';\nimport {withV104CombatAudio,V104_SHORT_HEAVY_DEATH_PATHS} from './v104CombatAudio.js';\nimport {recordedHurtFiles} from './v100RecordedHurtTakes.js';\nimport { createAudioManifest } from \"./audioManifest.js\";\n",
+      "import {withV100BossCollapseAudio} from './v100BossCollapseAudio.js';\nimport {withV100BossSkillAudio} from './v100BossSkillAudio.js';\nimport {withV104CombatAudio,V104_SHORT_HEAVY_DEATH_PATHS,V104_MELEE_ATTACK_PATHS} from './v104CombatAudio.js';\nimport {recordedHurtFiles} from './v100RecordedHurtTakes.js';\nimport { createAudioManifest } from \"./audioManifest.js\";\n"
+    ],
+    [
+      "  ...legacyVoiceInstallAssets, ...existingV100InstallAssets,\n  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset) && !recordedHurtFiles.includes(asset.sources[0].src));\n// The older formats are already inventoried under their original cue IDs.\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)\n",
+      "  ...legacyVoiceInstallAssets, ...existingV100InstallAssets,\n  ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley, V104_PAN_GUARD_AUDIO,\n].filter(asset => !isShortHeavyDeath(asset) && !recordedHurtFiles.includes(asset.sources[0].src)\n  && !V104_MELEE_ATTACK_PATHS.includes(asset.sources[0].src));\n// The older formats are already inventoried under their original cue IDs.\nconst shortHeavyDeathInstallAssets = existingV100InstallAssets.filter(isShortHeavyDeath)\n"
+    ],
+    [
+      "  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n]);\n\n",
+      "  ...Array.from(installAudioBySource.values()).filter(asset => !NAO_REACTION_PATHS.includes(asset.sources[0].src)),\n  ...naoReactions.map(asset => PRODUCTION_AUDIO_MANIFEST.assetById[asset.id]),\n  ...V104_MELEE_ATTACK_PATHS.map(src => ({\n    ...V100_AUDIO_MANIFEST.assets.find(asset => asset.sources[0].src === src),\n    id: \"install-melee-effort-\" + src.split(\"/\").pop().replace(/\\.mp3$/, \"\"),\n    sources: [{src, type:\"audio/mpeg\"}],\n  })),\n]);\n\n"
     ]
   ]
 }

@@ -51,6 +51,11 @@ const replacements={
  }))),
 };
 const reactionPoolId = (assetId) => `${assetId}-takes`;
+const meleeAttackFiles = Object.fromEntries(["kumaverson", "crazy-king"].map(kind => [
+  `voice-${kind}-attack`,
+  ["02", "03"].map(take => `/audio/quality-20261127/melee-effort/${kind}-attack-${take}.mp3`),
+]));
+export const V104_MELEE_ATTACK_PATHS = Object.freeze(Object.values(meleeAttackFiles).flat());
 
 export function withV104CombatAudio(base) {
   const assets = base.assets.map(asset => {
@@ -58,20 +63,28 @@ export function withV104CombatAudio(base) {
     const updatedSources = replacement ? recordedSources(replacement) : shortHeavyDeathSources(asset.id, asset.sources);
     return updatedSources === asset.sources ? asset : { ...asset, sources: updatedSources };
   });
-  // Keep the first performance for each role and vary subsequent reactions
-  // with the other recording from the same voice family.
+  // Keep each role's established opening performance first in its pool.
   const reactionTakes = assets.flatMap(asset => {
     const [, role, event] = /^voice-(.+)-(attack|hurt|death)$/.exec(asset.id) ?? [];
     const voice = recordedHumanVoices[role];
-    if (!voice || (event !== 'hurt' && !role.startsWith('red-panther-'))) return [];
-    const alternateTake = voice.take === '01' ? '02' : '01';
-    const alternate = { ...asset, id: `${asset.id}-alternate`, sources: recordedSources(asset.id, alternateTake) };
+    if (!voice) return [];
+    let alternates;
+    if (meleeAttackFiles[asset.id]) {
+      alternates = meleeAttackFiles[asset.id].map((src, index) => ({
+        ...asset, id: `${asset.id}-0${index + 2}`,
+        sources: [{ src, type: "audio/mpeg" }, ...asset.sources],
+      }));
+    } else {
+      if (event !== 'hurt' && !role.startsWith('red-panther-')) return [];
+      const alternateTake = voice.take === '01' ? '02' : '01';
+      alternates = [{ ...asset, id: `${asset.id}-alternate`, sources: recordedSources(asset.id, alternateTake) }];
+    }
     return [{
-      alternate,
+      alternates,
       pool: {
         id: reactionPoolId(asset.id),
         category: asset.category,
-        assetIds: [asset.id, alternate.id],
+        assetIds: [asset.id, ...alternates.map(take => take.id)],
         strategy: 'round-robin',
         cooldownMs: asset.cooldownMs,
         maxInstances: asset.maxInstances,
@@ -81,7 +94,7 @@ export function withV104CombatAudio(base) {
   });
   return withRecordedHurtTakes({
     ...base,
-    assets: [...assets, ...reactionTakes.map(({ alternate }) => alternate)],
+    assets: [...assets, ...reactionTakes.flatMap(({ alternates }) => alternates)],
     pools: [...(base.pools ?? []), ...reactionTakes.map(({ pool }) => pool)],
   });
 }
@@ -184,7 +197,8 @@ export function v104MonsterVoiceEvent(manifest, cueId) {
 // held voice and invalidates an earlier take that is still loading.
 export function playV104FighterVoice(mixer,cueId,event,options){
  if(event!=='attack')mixer.stopInstance(options.instanceKey,{fadeMs:45});
- const takes = event === 'hurt' && mixer.manifest?.poolById?.[reactionPoolId(cueId)];
+ const takes = (event === 'hurt' || (event === 'attack' && meleeAttackFiles[cueId]))
+   && mixer.manifest?.poolById?.[reactionPoolId(cueId)];
  return mixer.play(takes ? takes.id : cueId,{...options,maxInstances:1});
 }
 export function queueV104HumanHurt(world,actor,hpBefore,cueId){
