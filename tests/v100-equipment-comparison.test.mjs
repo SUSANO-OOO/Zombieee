@@ -62,3 +62,24 @@ test('Nao can compare shooting gear without hiding damage gains behind her treat
  assert.equal(treatment.changes.some(change=>change.key==='damage'),false);
  assert.deepEqual(save,before,'both comparisons remain read-only');
 });
+
+test('a shared treatment upgrade and its removal show Nao’s actual healing when viewing a different ally',()=>{
+ const save=fixture(),unitId='unit-hachi',itemId='tactical-trauma-station';
+ save.equipment.inventory={[itemId]:1,'tactical-field-radio':1};
+ const withStation=equipV100Equipment(save,{unitId:null,equipmentId:itemId,slot:0}).save;
+ const before=v100UnitPresentation(save,'unit-nao').current.healing;
+ const after=v100UnitPresentation(withStation,'unit-nao').current.healing;
+ const quote=v100EquipmentComparison(save,{unitId,itemId});
+ const change=quote.changes.find(row=>row.key==='team-healing');
+ assert.equal(change.before,before);assert.equal(change.after,after);
+ assert.equal(change.label,'ナオの通常治療');assert.ok(change.improved);
+ assert.equal(quote.current.current.healing,0);assert.equal(quote.next.current.healing,0);
+ assert.deepEqual(quote.changes.map(row=>row.key),['team-healing']);
+ const replacement=v100EquipmentComparison(withStation,{unitId,itemId:'tactical-field-radio'});
+ const loss=replacement.changes.find(row=>row.key==='team-healing');
+ assert.equal(loss.before,after);assert.equal(loss.after,before);assert.equal(loss.improved,false);
+ const own=v100EquipmentComparison(save,{unitId:'unit-nao',itemId});
+ assert.deepEqual(own.changes.map(row=>row.key),['healing']);
+ const withoutMedic={...save,ownedUnitIds:save.ownedUnitIds.filter(id=>id!=='unit-nao')};
+ assert.equal(v100EquipmentComparison(withoutMedic,{unitId,itemId}).changes.length,0);
+});
