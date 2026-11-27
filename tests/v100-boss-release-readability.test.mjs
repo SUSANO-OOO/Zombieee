@@ -48,7 +48,7 @@ test('radial boss warnings cover the entire actual hit from the start to the end
    assert.deepEqual(gradient,[0,0,0,0,0,ellipse.rx]);
    assert.equal(depthScale*ellipse.rx,ellipse.ry);
    if(kind==='mother'){
-    assert.equal(f.calls.filter(({args})=>args[0]===f.objects['v102-ground-stains']).length,3);
+    assert.equal(f.calls.filter(({args})=>args[0]===f.objects['v102-ground-stains']).length,4);
     assert.equal(f.calls.filter(({args})=>args[0]===f.objects['v104-organic']).length,3);
    }else assert.ok(f.calls.some(({args})=>args[0]===f.objects['v100-dust']));
    for(let bearing=0;bearing<8;bearing++) {
@@ -66,6 +66,22 @@ test('radial boss warnings cover the entire actual hit from the start to the end
    assert.equal(f.calls.length,0);
   }
  }
+});
+
+test('the brood liquid subsides beneath the eruption without starting a second attack',()=>{
+ const opacityAt=elapsed=>{
+  const f=fixture('mother',elapsed);
+  const secretion=f.objects['v104-organic']={complete:true,naturalWidth:512,naturalHeight:512};
+  const before=structuredClone(f.world);
+  Object.assign(f.ctx,{beginPath(){},ellipse(){},clip(){}});
+  drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport);
+  assert.deepEqual(f.world,before);assertState(f);
+  return f.calls.filter(({args})=>args[0]===secretion).map(call=>call.alpha);
+ };
+ const release=opacityAt(.005),settling=opacityAt(.21);
+ assert.equal(release.length,3);assert.equal(settling.length,3);
+ assert.ok(settling.every((alpha,i)=>alpha>0 && alpha<release[i]*.3));
+ assert.deepEqual(opacityAt(.44),[]);
 });
 
 test('six boss ground releases retain the square camera and bound their whole spread on phone screens',()=>{

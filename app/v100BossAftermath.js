@@ -90,10 +90,16 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewp
 
 // Uneven seams in the brood nest. Positions are fractions of its ground radius.
 const BROOD_SEAMS = [[-.32,.16,-2.82,2], [.43,.29,.46,3], [.21,-.46,-1.12,0]];
-function drawBroodSeepage(ctx, objects, radius, progress) {
+function drawBroodSeepage(ctx, objects, radius, progress, intensity = 1) {
  const stain = objects?.['v102-ground-stains'], secretion = objects?.['v104-organic'];
  ctx.save();
  ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
+ if (stain?.complete && stain.naturalWidth && stain.naturalHeight) {
+  const cw = stain.naturalWidth / 2, ch = stain.naturalHeight / 2;
+  const width = radius * (2.03 + .19 * progress);
+  ctx.globalAlpha = intensity * (.70 + .25 * progress);
+  ctx.drawImage(stain, 0, ch, cw, ch, -width * .51, -radius * .98, width, radius * 1.96);
+ }
  for (const [x, y, angle, cell] of BROOD_SEAMS) {
   const swell = .5 - .5 * Math.cos(progress * Math.PI * 3 - cell * .55);
   ctx.save();
@@ -101,15 +107,16 @@ function drawBroodSeepage(ctx, objects, radius, progress) {
   ctx.rotate(angle);
   if (stain?.complete && stain.naturalWidth && stain.naturalHeight) {
    const cw = stain.naturalWidth / 2, ch = stain.naturalHeight / 2;
-   const width = radius * (1.08 + .4 * progress + .09 * swell);
-   ctx.globalAlpha = .69 + progress * .27;
+   const width = radius * (1.22 + .48 * progress + .11 * swell);
+   ctx.globalAlpha = intensity * (.69 + progress * .27);
    ctx.drawImage(stain, cell % 2 * cw, Math.floor(cell / 2) * ch, cw, ch,
     -width * .48, -width * .34, width, width * .68);
   }
   if (secretion?.complete && secretion.naturalWidth && secretion.naturalHeight) {
-   const reach = radius * (.29 + .65 * progress + .10 * swell);
-   ctx.globalAlpha = .56 + progress * .37;
-   ctx.drawImage(secretion, -radius * .27, -radius * .25, reach, radius * (.47 + .10 * swell));
+   const reach = radius * (.59 + .55 * progress + .10 * swell);
+   ctx.globalCompositeOperation = 'screen';
+   ctx.globalAlpha = intensity * (.74 + progress * .24);
+   ctx.drawImage(secretion, -radius * .32, -radius * .45, reach, radius * (.81 + .14 * swell));
   }
   ctx.restore();
  }
@@ -133,7 +140,7 @@ function drawGroundWarning(ctx, objects, fighter, radius) {
  ctx.clip();
  ctx.globalCompositeOperation = 'source-over';
  ctx.shadowBlur = 0;
- ctx.globalAlpha = .72 + progress * .28;
+ ctx.globalAlpha = brood ? .40 + progress * .13 : .72 + progress * .28;
  ctx.save();
  ctx.scale(1, 1 / BOSS_AREA_DEPTH_SCALE);
  const wash = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
@@ -189,6 +196,17 @@ export function drawV100BossReleaseFields(ctx,objects,world,viewport={}){
   }
   if(f.stationAbility?.phase!=='active')continue;
   const elapsed=tuning.activeSeconds-f.stationAbility.remainingSeconds;
+  if(f.kind==='mother' && elapsed>=0 && elapsed<.42 && Number.isFinite(f.x) && Number.isFinite(f.y)
+   && (objects?.['v102-ground-stains']?.naturalWidth || objects?.['v104-organic']?.naturalWidth)){
+   const radius=bossGroundWarningRadius('mother');
+   ctx.save();
+   ctx.translate(f.x,f.y);
+   ctx.beginPath();
+   ctx.ellipse(0,0,radius,radius/BOSS_AREA_DEPTH_SCALE,0,0,Math.PI*2);
+   ctx.clip();
+   drawBroodSeepage(ctx,objects,radius,1,(1-elapsed/.42)**2);
+   ctx.restore();
+  }
   // Futago damages the locked crossing point. Its darker movement dust still
   // follows the fighters' feet in the actor pass.
   const x = f.kind === 'futago' ? Number(f.stationAbility.targetX) || f.x : f.x;
