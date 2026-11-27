@@ -35,6 +35,11 @@ export function V100SurvivalView({ save, waveInput, onWaveInput, onSave, onLoado
   </>;
   const result = progress.lastResult;
   if (progress.view === "result" && result) {
+    async function leaveResult(editFormation: boolean) {
+      if (!await onSave(dismissV100SurvivalResult(save))) return;
+      if (result.startWave !== undefined) onWaveInput(String(result.startWave));
+      if (editFormation) onLoadout?.();
+    }
     const title = {
       [SURVIVAL_END_REASONS.WITHDRAWAL]: "撤退完了",
       [SURVIVAL_END_REASONS.CRAWLER_DESTROYED]: "装甲車大破",
@@ -60,8 +65,8 @@ export function V100SurvivalView({ save, waveInput, onWaveInput, onSave, onLoado
         {result.startWave !== undefined && <button className="v100-survival-retry" type="button" onClick={() => void onSave(beginV100Survival(save, {
           runId: `v100-survival:${crypto.randomUUID()}`, retryOf: result.runId, startWave: result.startWave,
         }))}>第{result.startWave}波から再挑戦</button>}
-        {onLoadout && <button type="button" onClick={() => { void onSave(dismissV100SurvivalResult(save)).then(accepted => { if (accepted) onLoadout(); }); }}>編成を見直す</button>}
-        <button type="button" onClick={() => void onSave(dismissV100SurvivalResult(save))}>出撃準備へ</button>
+        {onLoadout && <button type="button" onClick={() => void leaveResult(true)}>編成を見直す</button>}
+        <button type="button" onClick={() => void leaveResult(false)}>出撃準備へ</button>
       </footer>
       {result.battleReport?.units.length > 0 && <details className="v100-survival-contribution"><summary>ユニット別の戦績</summary><div className="v100-contribution-scroll"><table><thead><tr><th>ユニット</th><th>与ダメージ</th><th>被ダメージ</th><th>回復</th></tr></thead><tbody>{result.battleReport.units.map((unit: { unitId: string; damage: number; damageTaken: number; healing: number }) => <tr key={unit.unitId}><th>{V100_UNITS.find(member => member.id === unit.unitId)?.displayName}</th><td>{Math.round(unit.damage).toLocaleString("ja-JP")}</td><td>{Math.round(unit.damageTaken).toLocaleString("ja-JP")}</td><td>{Math.round(unit.healing).toLocaleString("ja-JP")}</td></tr>)}</tbody></table></div></details>}
     </section>;
