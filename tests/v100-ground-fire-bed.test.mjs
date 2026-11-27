@@ -29,6 +29,19 @@ function render(objects,effect,time,world){
  return {result,calls};
 }
 
+test('whisky lights at the contact point and spreads to the full burn footprint',()=>{
+ const assets={[art.id]:modern};
+ const whisky=effect({sourceUnitKind:'zakimiya',remaining:5});
+ const world={areaEffects:[whisky]};
+ const width=remaining=>render(assets,{...whisky,remaining},5-remaining,world).calls[0].args[7];
+ const fullWidth=whisky.radius*2.2;
+ assert.ok(width(5)<fullWidth/3);
+ assert.ok(width(5)<width(4.88)&&width(4.88)<fullWidth);
+ assert.equal(width(4.65),fullWidth);
+ assert.equal(width(.5),fullWidth);
+ assert.equal(render(assets,effect({remaining:5,sourceSupplyId:4}),0,{}).calls[0].args[7],fullWidth);
+});
+
 test('a live fire keeps its selected raster across cloned effects, late decoding and battle isolation',()=>{
  const first=effect(),world={areaEffects:[first]},other={areaEffects:[first]};
  const objects={'v100-ground-fire':legacy,[art.id]:{complete:false,naturalWidth:768,naturalHeight:512}};
