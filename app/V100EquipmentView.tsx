@@ -83,7 +83,7 @@ export function V100EquipmentView({ save, notice, saving, onBack, onPurchase, on
       ["personal", "個人装備"], ["tactical", "部隊装備"], ["shop", "補給所"],
     ] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>{label}</button>)}</nav><button type="button" onClick={onBack}>支援へ</button></div>
     {tab !== "shop" && <div className="v100-equipment-assignment">
-      {tab === "personal" ? <label>装備する仲間<select value={selectedUnit} onChange={event => setUnitId(event.target.value)}>{UNITS.filter(unit => save.ownedUnitIds.includes(unit.id)).map(unit => <option key={unit.id} value={unit.id}>{unit.displayName}</option>)}</select></label> : <span>部隊全員に効果 / 2枠</span>}
+      {tab === "personal" ? <label>装備する仲間<select value={selectedUnit} onChange={event => setUnitId(event.target.value)}>{UNITS.filter(unit => save.ownedUnitIds.includes(unit.id)).map(unit => <option key={unit.id} value={unit.id}>{unit.displayName}</option>)}</select></label> : <span>部隊共通の装備枠</span>}
       {[0, 1].map(slot => <label key={slot}>枠 {slot + 1}<select aria-label={`装備枠 ${slot + 1}`} value={slots[slot] ?? ""} onChange={event => onEquip(tab === "personal" ? selectedUnit : null, slot, event.target.value || null)}>
         <option value="">装備なし</option>{items.map(entry => <option key={entry.id} value={entry.id}>{entry.displayName}</option>)}
       </select></label>)}
@@ -96,7 +96,7 @@ export function V100EquipmentView({ save, notice, saving, onBack, onPurchase, on
     </div></div><aside className="v100-equipment-focus" aria-label="選択中の装備">{item ? <>
       <div className="v100-equipment-focus-body"><div className="v100-equipment-focus-heading"><div className="v100-equipment-specimen" aria-hidden="true"><EquipmentArt item={item} locked={tab==="shop"&&!unlocked}/></div><div><small>{item.slotType==="personal"?"個人装備":"部隊装備"} / 所持 {quantity}</small><h3>{item.displayName}{level>0?` ＋${level}`:""}</h3><p>{equipmentEffectSummary(item.id,level)}</p></div></div>
       {comparison && selectedPresentation && <section className="v100-equipment-quote" aria-label="装備した場合の能力" data-equipment-quote-unit={selectedUnit} data-equipment-quote-slot={previewSlot}>
-        <header><strong>{item.slotType === "tactical" ? "部隊全員に効果" : "装備した場合"}</strong><span>{selectedPresentation.displayName} / 枠{previewSlot + 1}</span></header>
+        <header><strong>{item.slotType === "tactical" ? "部隊装備の効果" : "装備した場合"}</strong><span>{selectedPresentation.displayName} / 枠{previewSlot + 1}</span></header>
         <dl className="v100-equipment-quote-changes">{comparison.changes.map(change => <div key={change.key} data-stat={change.key} data-improved={change.improved}><dt>{change.label}</dt><dd><span>{change.beforeLabel}</span><span aria-hidden="true">→</span><strong>{change.afterLabel}</strong></dd></div>)}</dl>
         {comparison.changes.length === 0 && (!comparison.reason || quantity === 0) && <p className="v100-equipment-quote-neutral">{noStatChange}</p>}
         {quantity > 0 && comparison.reason && <p className="v100-equipment-quote-guide">{comparison.reason}</p>}
@@ -112,7 +112,7 @@ export function V100EquipmentView({ save, notice, saving, onBack, onPurchase, on
             <span>枠{slot + 1}</span><strong id={`v100-fitting-slot-${slot}`}>{equipped?.displayName ?? "空き"}</strong>
           </button>;
         })}</div>
-        <small>{item.slotType === "tactical" && "部隊全員に有効。数値は選んだ仲間のものです。"} 手動技の威力は含みません。</small></div>
+        <small>{item.slotType === "tactical" && "部隊共通の装備枠を使います。"} 手動技の威力は含みません。</small></div>
         <div className="v100-fitting-result"><p className="v100-fitting-replacement">
           {comparison.alreadyEquipped || comparison.otherSlot ? equipmentEffectSummary(item.id, level) : `${comparison.replacedName} → ${item.displayName}`}
         </p>
@@ -130,13 +130,13 @@ export function V100EquipmentView({ save, notice, saving, onBack, onPurchase, on
           </button>}
         </footer>
       </section></div>,document.body)}
-      <div className="v100-equipment-focus-detail">{quantity>0&&<p>{level<EQUIPMENT_MAX_ENHANCEMENT?`次の強化：${equipmentEffectSummary(item.id,level+1)}`:"最大強化済み"}</p>}{tab==="shop"&&!unlocked&&<p>S{String(item.unlockStageNumber).padStart(2,"0")}をクリアすると購入できます。</p>}{tab==="personal"&&<small>同じ装備は1人1個。別のユニットには人数分が必要です。</small>}{healingItem && <p className="v100-equipment-healing-note">ナオに装備すると、治療の回復量が増えます。ほかの仲間に装備しても、この回復量アップの効果はありません。</p>}{tab === "personal" && selectedPresentation && <p className="v100-equipment-unit-readout">{selectedPresentation.displayName} Lv.{selectedPresentation.level} / 現在の装備込み<br />HP <strong>{selectedPresentation.current.hp}</strong> / 防御 <strong>{(selectedPresentation.current.defense * 100).toFixed(2)}%</strong>{selectedPresentation.current.healing > 0 && <> / 回復量（HP/回） <strong>{formatV100Number(selectedPresentation.current.healing)}</strong></>}</p>}</div>
+      <div className="v100-equipment-focus-detail">{quantity>0&&<p>{level<EQUIPMENT_MAX_ENHANCEMENT?`次の強化：${equipmentEffectSummary(item.id,level+1)}`:"最大強化済み"}</p>}{tab==="shop"&&!unlocked&&<p>S{String(item.unlockStageNumber).padStart(2,"0")}をクリアすると購入できます。</p>}{tab==="personal"&&<small>同じ装備は1人1個。別のユニットには人数分が必要です。</small>}{healingItem && <p className="v100-equipment-healing-note">{item.slotType === "tactical" ? "部隊に装備するとナオの治療量が増えます。" : "ナオが装備すると治療量が増えます。"}</p>}{tab === "personal" && selectedPresentation && <p className="v100-equipment-unit-readout">{selectedPresentation.displayName} Lv.{selectedPresentation.level} / 現在の装備込み<br />HP <strong>{selectedPresentation.current.hp}</strong> / 防御 <strong>{(selectedPresentation.current.defense * 100).toFixed(2)}%</strong>{selectedPresentation.current.healing > 0 && <> / 回復量（HP/回） <strong>{formatV100Number(selectedPresentation.current.healing)}</strong></>}</p>}</div>
       </div><div className="v100-equipment-focus-actions">
         {tab==="shop"&&<p className="v100-equipment-price" aria-label="必要CAPSと不足額">所持 {save.caps} CAPS{item.purchaseCaps !== null && <> / 購入 {item.purchaseCaps} CAPS{save.caps < item.purchaseCaps && <strong> / あと {item.purchaseCaps - save.caps} CAPS</strong>}</>}{quantity > 0 && cost !== null && <> / 強化 {cost} CAPS{save.caps < cost && <strong> / あと {cost - save.caps} CAPS</strong>}</>}</p>}
         {tab === "shop" && purchaseButton}
         {quantity>0&&<button type="button" disabled={cost===null||save.caps<cost} data-ui-sound="transaction" onClick={()=>onUpgrade(item.id,level)}>{cost===null?"強化上限":<>{cost} CAPSで強化{save.caps<cost&&<small>あと {cost-save.caps} CAPS必要</small>}</>}</button>}
         {comparison&&<button type="button" className="v100-open-fitting" onClick={event=>{event.currentTarget.focus();setFittingOpen(true);}}>装備を比べる</button>}
       </div>
-    </>:<div className="v100-equipment-empty-brief" data-kind={tab}><small>{tab === "personal" ? "個人装備支給票" : "部隊装備支給票"}</small><h3>{tab === "personal" ? (selectedPresentation?.displayName ?? "仲間") + "の装備を整える" : "部隊全員を支える装備"}</h3><div className="v100-equipment-unfilled-slots" aria-label="未装備の2枠">{[0, 1].map(slot => <div key={slot}><strong>0{slot + 1}</strong><span>未装備</span></div>)}</div><p>{tab === "personal" ? "仲間ごとに2枠。入手した装備を割り当てられます。" : "部隊共通の2枠。装備すると全員に効果が加わります。"}</p></div>}</aside></div>
+    </>:<div className="v100-equipment-empty-brief" data-kind={tab}><small>{tab === "personal" ? "個人装備支給票" : "部隊装備支給票"}</small><h3>{tab === "personal" ? (selectedPresentation?.displayName ?? "仲間") + "の装備を整える" : "部隊の装備"}</h3><div className="v100-equipment-unfilled-slots" aria-label="未装備の2枠">{[0, 1].map(slot => <div key={slot}><strong>0{slot + 1}</strong><span>未装備</span></div>)}</div><p>{tab === "personal" ? "仲間ごとに2枠。入手した装備を割り当てられます。" : "部隊装備は2つまで。"}</p></div>}</aside></div>
   </section>;
 }
