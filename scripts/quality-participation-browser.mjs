@@ -31,10 +31,14 @@ try {
       const stored=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
       if(phase==='battle' && (empty || onlyPaisen)){
         await page.getByRole('heading',{name:'出撃不可',exact:true}).waitFor();
-        assert.equal(await page.locator('.v100-panel').filter({has:page.getByRole('heading',{name:'出撃不可',exact:true})}).locator('p').innerText(),
+        const panel=page.locator('.v100-sortie-recovery');
+        assert.equal(await panel.locator('p').innerText(),
           empty ? '編成が空です。出撃する仲間を選んでください。' : 'パイセンは庁舎で救助中。ほかの仲間を編成してください。');
+        assert.ok((await panel.locator('.v100-sortie-location').innerText()).trim());
+        const edit=panel.getByRole('button',{name:'編成を見直す',exact:true});
+        assert.ok((await edit.boundingBox()).height>=44);
         await page.screenshot({path:path.join(out,label+'-recovery.png')});
-        await page.getByRole('button',{name:'編成を見直す',exact:true}).click();
+        await edit.click();
       }
       await page.locator('.v100-formation-panel').waitFor();
       const snapshot=await stored();

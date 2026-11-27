@@ -1207,7 +1207,8 @@ export function V100Campaign() {
       {flow.phase === "battle" && productionSession && (
         productionSession.formationKinds.length > 0
           ? <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction, onSettingsChange: handleProductionSettingsChange }} key={productionSession.resultId} />
-          : <section className="v100-panel">
+          : <section className="v100-panel v100-sortie-recovery" style={{ "--v100-stage-art": `url("${stageVisualFor(flow.stageId)}")` } as CSSProperties}>
+            {flow.stageId && <span className="v100-sortie-location">{stageDisplayNameFor(V100_STAGE_BY_ID[flow.stageId])}</span>}
             <h2>出撃不可</h2>
             <p>{v100SortieBlockReason(flow.stageId, save.formationSlots)}</p>
             <button type="button" onClick={() => { const next = leaveV100Battle(flow, "loadout"); if (next.accepted) void updateFlow(next.state); }}>編成を見直す</button>
