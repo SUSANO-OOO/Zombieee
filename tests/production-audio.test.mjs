@@ -69,7 +69,8 @@ function publicFileFor(sourcePath) {
 }
 
 function legacyProductionAliases() {
-  return PRODUCTION_AUDIO_MANIFEST.aliases.filter(({ id }) => !id.startsWith("enemy-"));
+  const fieldExits = ["voice-mizuchi-death", "voice-raider-death", "voice-mrs-chiha-death"];
+  return PRODUCTION_AUDIO_MANIFEST.aliases.filter(({ id }) => !id.startsWith("enemy-") && !fieldExits.includes(id));
 }
 
 function legacyProductionScenes() {
@@ -185,9 +186,8 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   const activeV099Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v099/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  // Nao adds three distinct physical recordings to the prior inventory.
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 282);
-  assert.equal(manifestPaths.length, 499);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 283);
+  assert.equal(manifestPaths.length, 500);
   assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.assets.find(asset=>asset.id==='v104-handgun').sources.map(s=>s.src),
     ['/audio/v104/combat/handgun.mp3','/audio/v104/combat/handgun.ogg']);
   assert.equal(
@@ -223,8 +223,9 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     "/audio/quality-20261125/voices/human-male-heavy-death-02.wav",
   ]);
   const approvedPanGuardSource = "/audio/quality-20261124/manual/pan-guard-contact.mp3";
-  const naoSources = new Map(["nao-hurt-01", "nao-hurt-02", "nao-death"].map(name =>
+  const standaloneVocalSources = new Map(["nao-hurt-01", "nao-hurt-02", "nao-death"].map(name =>
     ["voice-" + name, "/audio/quality-20261127/voices/" + name + ".mp3"]));
+  standaloneVocalSources.set("human-female-hurt-03", "/audio/quality-20261127/voices/field-reaction-03.mp3");
   const effortSources = new Map(["kumaverson","crazy-king"].flatMap(kind => ["02","03"].map(take => {
     const name = kind + "-attack-" + take;
     return ["voice-" + name, "/audio/quality-20261127/melee-effort/" + name + ".mp3"];
@@ -252,9 +253,9 @@ test("every referenced source is repository-local, nonempty, and has a complete 
   for (const asset of [...PRODUCTION_AUDIO_MANIFEST.assets, ...V100_AUDIO_MANIFEST.assets]) {
     const wavCue = asset.sources[0]?.type === "audio/wav";
     const panGuardCue = asset.id === "ability-kumaverson-pan-guard-contact";
-    const naoCue = naoSources.has(asset.id);
-    if (naoCue) assert.equal(asset.sources[0].src, naoSources.get(asset.id));
-    const singleMpegCue = naoCue || panGuardCue || asset.sources[0]?.src.startsWith("/audio/v099/");
+    const recordedVocalSource = standaloneVocalSources.get(asset.id);
+    if (recordedVocalSource) assert.equal(asset.sources[0].src, recordedVocalSource);
+    const singleMpegCue = Boolean(recordedVocalSource) || panGuardCue || asset.sources[0]?.src.startsWith("/audio/v099/");
     if (panGuardCue) assert.equal(asset.sources[0]?.src, approvedPanGuardSource);
     const shortDeathCue = approvedShortDeathSources.has(asset.sources[0]?.src);
     const newHurtCue = newHurtFiles.has(asset.sources[0]?.src);
@@ -283,7 +284,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.ok(approvedSource(source.src) || newHurtFiles.has(source.src) || naoSources.get(asset.id) === source.src || effortSource === source.src, source.src);
+      assert.ok(approvedSource(source.src) || newHurtFiles.has(source.src) || recordedVocalSource === source.src || effortSource === source.src, source.src);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);
@@ -477,7 +478,7 @@ test("production manifest keeps every mixer category and valid two-sample variat
     [...new Set(PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.category))].sort(),
     [...AUDIO_CATEGORIES].sort(),
   );
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.pools.length, 44);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.pools.length, 47);
   for (const pool of PRODUCTION_AUDIO_MANIFEST.pools) {
     assert.equal(pool.assetIds.length, 2, pool.id);
     assert.equal(new Set(pool.assetIds).size, 2, pool.id);
@@ -570,8 +571,12 @@ test("authored story scenes never bind existing human battle-voice cues", () => 
   ));
   assert.equal(v070Assets.some(({ category }) => category === "humanVoices"), false);
   const battleVoiceAssets = PRODUCTION_AUDIO_MANIFEST.assets.filter(({ category }) => category === "humanVoices");
-  assert.equal(battleVoiceAssets.length, 49);
+  assert.equal(battleVoiceAssets.length, 50);
   for (const asset of battleVoiceAssets) {
+    if (asset.id === "human-female-hurt-03") {
+      assert.deepEqual(asset.sources, [{ src: "/audio/quality-20261127/voices/field-reaction-03.mp3", type: "audio/mpeg" }]);
+      continue;
+    }
     if (asset.id.startsWith("voice-nao-")) {
       assert.match(asset.id, /^voice-nao-(?:hurt-0[12]|death)$/);
       assert.deepEqual(asset.sources.map(source => source.src), [
@@ -783,15 +788,16 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
       `${kind}: ${expectedCue}`,
     );
   }
+  const reactionVoices = { medic: "nao", ranger: "mizuchi", gunner: "raider", "mrs-chiha": "mrs-chiha" };
   for (const [kind, expectedVoicePrefix] of Object.entries(expectedVoicePrefixes)) {
     for (const event of ["attack", "hurt", "death"]) {
-      const voiceCue = kind === "medic" && event !== "attack" ? "voice-nao-" + event
+      const voiceCue = reactionVoices[kind] && event !== "attack" ? "voice-" + reactionVoices[kind] + "-" + event
         : kind === "mayo-chan" && event === "death"
         ? "voice-mayo-retreat"
         : `${expectedVoicePrefix}-${event}`;
       assert.equal(humanVoiceCueForUnit(kind, event), voiceCue);
       assert.equal(
-        (PRODUCTION_AUDIO_MANIFEST.assetById[voiceCue] ?? PRODUCTION_AUDIO_MANIFEST.poolById[voiceCue])?.category,
+        (PRODUCTION_AUDIO_MANIFEST.assetById[voiceCue] ?? PRODUCTION_AUDIO_MANIFEST.poolById[voiceCue] ?? PRODUCTION_AUDIO_MANIFEST.aliasById[voiceCue])?.category,
         "humanVoices",
         `${kind}: ${event}`,
       );
@@ -1000,6 +1006,18 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.equal(corpseBurnAsset?.maxInstances, 3);
 });
 
+test("three ranged fighters each reserve a different Type 3 performance for defeat", () => {
+  for (const manifest of [PRODUCTION_AUDIO_MANIFEST, V100_AUDIO_MANIFEST]) {
+    const allTakes = ["human-female-hurt-01", "human-female-hurt-02", "human-female-hurt-03"];
+    for (const [kind, exit] of Object.entries({ ranger: allTakes[0], gunner: allTakes[2], "mrs-chiha": allTakes[1] })) {
+      const hurt = manifest.poolById[humanVoiceCueForUnit(kind, "hurt")];
+      assert.deepEqual(hurt.assetIds, allTakes.filter(id => id !== exit));
+      assert.equal(hurt.avoidImmediateRepeat, true);
+      assert.equal(manifest.aliasById[humanVoiceCueForUnit(kind, "death")].targetId, exit);
+    }
+  }
+});
+
 test("localhost-only audio QA bridge can inspect and individually play every asset, pool, and scene", () => {
   const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
   assert.match(source, /const isLocalQa = window\.location\.hostname === "localhost" \|\| window\.location\.hostname === "127\.0\.0\.1"/);
@@ -1020,7 +1038,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 326);
+  assert.equal(allCueIds.length, 330);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

@@ -556,3 +556,7 @@ The Free Firearm Sound Library（Ben Jaszczak、Brian Nelson、Kevin Heras、Mat
 ### クマバーソンとクレイジーキングの攻撃声（2026-11-27）
 
 HaelDB「Male Grunt/Yelling sounds」（CC0 1.0）から、二人の従来の掛け声と同じ収録シリーズの実演を各2本追加した。クマバーソンには短い掛け声、クレイジーキングには長さの違う力声を選び、音程と速さを保って音量を合わせた。[原音と加工の記録](../assets/source/quality-20261127/melee-effort/provenance.json)
+
+### ミズチ・レイダー・Mrs.チハの負傷と退場（2026-11-27）
+
+3人の戦闘音声には、cicifyre「Female RPG Voice Starter Pack」（CC0 1.0）の Type 3 を使う。既存の負傷声2本に、同じ演者の3本目を追加した。ミズチの退場には damaged1、レイダーには damaged3、Mrs.チハには damaged2 を割り当て、それぞれ残る2本を負傷時に使う。追加の音声は6,731バイト。[原音と加工の記録](../assets/source/quality-20261127/field-reactions/provenance.json)

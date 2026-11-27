@@ -5769,6 +5769,17 @@
       "audioType": "audio/mpeg"
     },
     {
+      "path": "/audio/quality-20261127/voices/field-reaction-03.mp3",
+      "bytes": 6731,
+      "hash": "sha256-e274dfbb4ed14bf4ffb11c9da45efbcac376bd939fbcbcbf916806cc06db8023",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice",
+      "audioId": "human-female-hurt-03",
+      "audioType": "audio/mpeg"
+    },
+    {
       "path": "/audio/quality-20261127/voices/human-male-heavy-hurt-03.mp3",
       "bytes": 7149,
       "hash": "sha256-4ca313e12d3d0397f3ef168ac76dc6fb08943bea06ddf2a5b6d122759f72d354",

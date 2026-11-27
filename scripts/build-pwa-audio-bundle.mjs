@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { INSTALL_AUDIO_ASSETS, NAO_REACTION_PATHS } from "../app/productionAudio.js";
+import { FIELD_REACTION_PATH, INSTALL_AUDIO_ASSETS, NAO_REACTION_PATHS } from "../app/productionAudio.js";
 import { V104_SHORT_HEAVY_DEATH_PATHS, V104_MELEE_ATTACK_PATHS } from "../app/v104CombatAudio.js";
 import { recordedHurtFiles } from "../app/v100RecordedHurtTakes.js";
 import { selectPreferredAudioSource } from "../app/pwaAssetManifest.js";
@@ -69,7 +69,7 @@ async function buildAudioBundle(name, entries) {
 }
 
 // Fetch the new takes individually when updating an existing installation.
-const directVoicePaths = new Set([...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles, ...NAO_REACTION_PATHS, ...V104_MELEE_ATTACK_PATHS]);
+const directVoicePaths = new Set([...V104_SHORT_HEAVY_DEATH_PATHS, ...recordedHurtFiles, ...NAO_REACTION_PATHS, ...V104_MELEE_ATTACK_PATHS, FIELD_REACTION_PATH]);
 const bundledAudio = INSTALL_AUDIO_ASSETS.map(({ id, sources }) => ({
   id,
   source: selectPreferredAudioSource(sources),
