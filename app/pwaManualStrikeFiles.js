@@ -2,7 +2,7 @@
 export const PWA_MANUAL_STRIKE_FILES = Object.freeze({
   "ability-ranger-precision-shot": {
     "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-shot.mp3",
-    "hash": "sha256-39e9711fbd3e4a0fdd0473266edd42917795c83d5830377f8919bddcf1108b8e"
+    "hash": "sha256-56f6b15a34cce67a47abd9458250ad66f6dd72af1189353cf713bd0e1bdcb80c"
   },
   "ability-ranger-precision-impact": {
     "path": "/audio/quality-20261127/manual-strikes/ability-ranger-precision-impact.mp3",
@@ -10,6 +10,6 @@ export const PWA_MANUAL_STRIKE_FILES = Object.freeze({
   },
   "ability-scout-intercept-impact": {
     "path": "/audio/quality-20261127/manual-strikes/ability-scout-intercept-impact.mp3",
-    "hash": "sha256-198e4d8d74ce82edfe5558e2ca5b39d0f14f783b6a94af4731dd10269108d5f4"
+    "hash": "sha256-b11428ef662821c3a06b2f3dbf9c071dc61c2e249fe07668e61832f2991a28a2"
   }
 });

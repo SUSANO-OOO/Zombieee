@@ -24,10 +24,10 @@ function layer(sourceKey, start, length, delay, gain, low, high) {
   return {sourceKey, start, length, delay, gain, low, high};
 }
 const recipes = [
-  {cue:'ability-ranger-precision-shot', duration:.63, onsetDb:-16, layers:[
+  {cue:'ability-ranger-precision-shot', duration:.63, onsetDb:-11.5, layers:[
     layer('rifle',5.640,.55,0,1,70,10300),
-    layer('rifle',5.644,.24,.056,.24,170,2600),
-    layer('rifle',5.646,.25,.122,.12,250,1650),
+    layer('rifle',5.644,.24,.056,.34,170,2600),
+    layer('rifle',5.646,.25,.122,.18,250,1650),
     layer('latch',.005,.12,.205,.17,1050,5700),
   ]},
   {cue:'ability-ranger-precision-impact', duration:.24, onsetDb:-21, layers:[
@@ -35,11 +35,11 @@ const recipes = [
     layer('wood',.004,.14,.005,.70,650,5000),
     layer('tick',.002,.12,.022,.22,2400,7600),
   ]},
-  {cue:'ability-scout-intercept-impact', duration:.39, onsetDb:-14.5, layers:[
+  {cue:'ability-scout-intercept-impact', duration:.39, onsetDb:-10.5, layers:[
     layer('soft',0,.23,0,1.15,75,1350),
     layer('steel',0,.18,.004,.94,470,6500),
     layer('cloth',.008,.16,.028,.34,550,4600),
-    layer('steel',.027,.15,.069,.23,400,2900),
+    layer('steel',.027,.15,.069,.32,400,2900),
   ]},
 ];
 mkdirSync(renderDir,{recursive:true});
