@@ -41,4 +41,4 @@ function createV100FilteredImageLayer({ createCanvas, maxBytes = DEFAULT_MAX_BYT
   return Object.freeze({ draw, clear, snapshot });
 }
 
-export { createV100FilteredImageLayer };
+export { createV100FilteredImageLayer, isColorFilter };
