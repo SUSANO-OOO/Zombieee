@@ -1619,31 +1619,33 @@ export function layoutManualAbilityIcons({
       ? Number(fighter.screenY)
       : Number(fighter.headY ?? fighter.y) / worldHeight * height,
   });
-  const offsetCandidatesFor = (fighter) => {
-    const anchor = anchorFor(fighter);
-    return ICON_OFFSETS.map(([offsetX, offsetY]) => ({
-      x: Math.max(leftInset, Math.min(width - rightInset - hitSize, anchor.x - hitSize / 2 + offsetX)),
-      y: Math.max(placementTopInset, Math.min(height - bottomInset - hitSize, anchor.y - hitSize + offsetY)),
-      width: hitSize,
-      height: hitSize,
-    }));
-  };
-  const candidateRectsFor = (fighter) => {
-    const localCandidates = offsetCandidatesFor(fighter);
-    const unblocked = localCandidates.filter((rect) => !staticBlocked.some((obstacle) => (
+  function* candidateRectsFor(fighter, anchor) {
+    const isBlocked = (rect) => {
+      const visible = visibleRect(rect);
+      return staticBlocked.some((obstacle) => (
         (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
-        && overlaps(visibleRect(rect), obstacle)
-      )));
-    const anchor = anchorFor(fighter);
+        && overlaps(visible, obstacle)
+      ));
+    };
+    // Most controls fit next to their owner, so the caller can stop here
+    // before searching and sorting the entire phone screen.
+    const blockedLocalCandidates = [];
+    for (const [offsetX, offsetY] of ICON_OFFSETS) {
+      const rect = {
+        x: Math.max(leftInset, Math.min(width - rightInset - hitSize, anchor.x - hitSize / 2 + offsetX)),
+        y: Math.max(placementTopInset, Math.min(height - bottomInset - hitSize, anchor.y - hitSize + offsetY)),
+        width: hitSize,
+        height: hitSize,
+      };
+      if (isBlocked(rect)) blockedLocalCandidates.push(rect);
+      else yield rect;
+    }
     const globalCandidates = [];
     const spacing = hitSize + 2;
     for (let y = placementTopInset; y <= height - bottomInset - hitSize; y += spacing) {
       for (let x = leftInset; x <= width - rightInset - hitSize; x += spacing) {
         const rect = { x, y, width: hitSize, height: hitSize };
-        if (staticBlocked.some((obstacle) => (
-          (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
-          && overlaps(visibleRect(rect), obstacle)
-        ))) continue;
+        if (isBlocked(rect)) continue;
         globalCandidates.push(rect);
       }
     }
@@ -1658,42 +1660,40 @@ export function layoutManualAbilityIcons({
       );
       return leftDistance - rightDistance || left.y - right.y || left.x - right.x;
     });
-    const blockedLocalCandidates = localCandidates.filter((rect) => !unblocked.includes(rect));
-    const seen = new Set();
-    return [...unblocked, ...globalCandidates, ...blockedLocalCandidates].filter((rect) => {
-      const key = `${rect.x.toFixed(3)}:${rect.y.toFixed(3)}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  };
-  const pending = [...fighters]
+    yield* globalCandidates;
+    yield* blockedLocalCandidates;
+  }
+  const pending = fighters.map((fighter) => ({ fighter, anchor: anchorFor(fighter) }))
     .sort((left, right) => (
-      anchorFor(left).x - anchorFor(right).x
-      || anchorFor(left).y - anchorFor(right).y
-      || String(left.id).localeCompare(String(right.id))
-    ))
-    .map((fighter) => ({ fighter, candidates: candidateRectsFor(fighter) }));
-  const assigned = new Map();
-  for (const { fighter, candidates } of pending) {
-    const placed = candidates.find((rect) => (
-      ![...assigned.values()].some((other) => overlaps(rect, other, 2))
+      left.anchor.x - right.anchor.x
+      || left.anchor.y - right.anchor.y
+      || String(left.fighter.id).localeCompare(String(right.fighter.id))
     ));
-    if (placed) assigned.set(fighter.id, placed);
+  const assigned = new Map();
+  for (const { fighter, anchor } of pending) {
+    const seen = new Set();
+    const occupied = [...assigned.values()];
+    for (const rect of candidateRectsFor(fighter, anchor)) {
+      const key = `${rect.x.toFixed(3)}:${rect.y.toFixed(3)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (occupied.some((other) => overlaps(rect, other, 2))) continue;
+      assigned.set(fighter.id, rect);
+      break;
+    }
   }
   const result = [];
-  for (const { fighter } of pending) {
+  for (const { fighter, anchor } of pending) {
     const placed = assigned.get(fighter.id);
     if (!placed) continue;
-    const { x: anchorX, y: anchorY } = anchorFor(fighter);
     result.push(Object.freeze({
       fighterId: fighter.id,
       kind: fighter.kind,
       x: placed.x,
       y: placed.y,
       hitSize,
-      anchorX,
-      anchorY,
+      anchorX: anchor.x,
+      anchorY: anchor.y,
     }));
   }
   return Object.freeze(result);
