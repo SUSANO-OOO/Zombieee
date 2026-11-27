@@ -548,3 +548,7 @@ cicifyre の「Female RPG Voice Starter Pack」（CC0 1.0）から、ナオ用�
 ### 指揮官とババヤガの拳銃（2026-11-27）
 
 The Free Firearm Sound Library（Ben Jaszczak、Brian Nelson、Kevin Heras、Matthew Nanney）の同じ録音に収められた別の2発と、Kenneyの金属音を使用。いずれもCC0 1.0。指揮官の拳銃には発砲後の響きを残し、ババヤガの消音拳銃は短い破裂音と金具の動きが聞こえるように加工した。[原音・配布音声の記録](../assets/source/quality-20261127/pistol-takes/provenance.json)
+
+### Mrs.チハ「全弾制圧」（2026-11-27）
+
+発射には The Free Firearm Sound Library の異なる2発と Kenney の打撃音を使用。着弾には Joth の「Chunky Explosion」を重ね、最後の一発にだけ破片が落ちる音と長い余韻を加えた。いずれも CC0 1.0。[原音・加工内容・配布ファイル](../assets/source/quality-20261127/chiha-salvo/provenance.json)

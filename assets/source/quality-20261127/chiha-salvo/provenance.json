@@ -1,0 +1,223 @@
+{
+  "creators": [
+    "Ben Jaszczak",
+    "Brian Nelson",
+    "Kevin Heras",
+    "Matthew Nanney",
+    "Joth",
+    "Kenney"
+  ],
+  "license": "CC0-1.0",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "producerApproval": "Issue 177, smartphone weapon and manual ability sound design using the existing licensed library.",
+  "references": [
+    "assets/source/weapon-recordings/provenance.json",
+    "assets/source/v100/audio/sound-design-provenance.json"
+  ],
+  "recipe": "scripts/build-chiha-salvo-audio.mjs",
+  "originals": [
+    {
+      "key": "discharge",
+      "path": "assets/source/weapon-recordings/D_32P.wav",
+      "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
+    },
+    {
+      "key": "explosion",
+      "path": "assets/source/v100/audio/opengameart/chunky-explosion.mp3",
+      "sha256": "4de53bffac187e59d3f5b43096df2f8fcb4160076b65b71a67074947950e025f"
+    },
+    {
+      "key": "metal",
+      "path": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+      "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003"
+    },
+    {
+      "key": "wood",
+      "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+      "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d"
+    }
+  ],
+  "runtimeAssetCount": 4,
+  "logicalBytes": 26923,
+  "distinctBytes": 26923,
+  "files": {
+    "chiha-salvo-launch-a": {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-launch-a.mp3",
+      "hash": "sha256-c96c8d741ef9232e22d2199365bfe824bea1e8192a4b0cab1207dfa424be11e7",
+      "bytes": 4223,
+      "seconds": 0.2,
+      "layers": [
+        {
+          "key": "discharge",
+          "start": 0.699,
+          "length": 0.19,
+          "low": 90,
+          "high": 3800,
+          "volume": 1,
+          "delay": 0
+        },
+        {
+          "key": "wood",
+          "start": 0,
+          "length": 0.13,
+          "low": 68,
+          "high": 1000,
+          "volume": 0.45,
+          "delay": 0
+        },
+        {
+          "key": "explosion",
+          "start": 0.06,
+          "length": 0.15,
+          "low": 110,
+          "high": 780,
+          "volume": 0.57,
+          "delay": 0
+        },
+        {
+          "key": "metal",
+          "start": 0,
+          "length": 0.08,
+          "low": 1400,
+          "high": 6400,
+          "volume": 0.12,
+          "delay": 0.012
+        }
+      ]
+    },
+    "chiha-salvo-launch-b": {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-launch-b.mp3",
+      "hash": "sha256-096695ae973801f09747a6181be5918893b6b621b0c7c58797a9940b7b8e27a1",
+      "bytes": 4223,
+      "seconds": 0.2,
+      "layers": [
+        {
+          "key": "discharge",
+          "start": 5.644,
+          "length": 0.19,
+          "low": 90,
+          "high": 4200,
+          "volume": 1,
+          "delay": 0
+        },
+        {
+          "key": "wood",
+          "start": 0.003,
+          "length": 0.14,
+          "low": 72,
+          "high": 1100,
+          "volume": 0.42,
+          "delay": 0
+        },
+        {
+          "key": "explosion",
+          "start": 0.073,
+          "length": 0.14,
+          "low": 110,
+          "high": 810,
+          "volume": 0.54,
+          "delay": 0
+        },
+        {
+          "key": "metal",
+          "start": 0.002,
+          "length": 0.08,
+          "low": 1500,
+          "high": 6700,
+          "volume": 0.1,
+          "delay": 0.016
+        }
+      ]
+    },
+    "chiha-salvo-impact": {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-impact.mp3",
+      "hash": "sha256-826d3121f1ba815865a9858c6ab1e5f0be54f553861f5e7dfeac4954ef2a1229",
+      "bytes": 5059,
+      "seconds": 0.24,
+      "layers": [
+        {
+          "key": "wood",
+          "start": 0,
+          "length": 0.16,
+          "low": 100,
+          "high": 3300,
+          "volume": 0.48,
+          "delay": 0
+        },
+        {
+          "key": "explosion",
+          "start": 0.051,
+          "length": 0.22,
+          "low": 90,
+          "high": 5100,
+          "volume": 0.95,
+          "delay": 0
+        },
+        {
+          "key": "metal",
+          "start": 0.009,
+          "length": 0.1,
+          "low": 1400,
+          "high": 6200,
+          "volume": 0.15,
+          "delay": 0.045
+        }
+      ]
+    },
+    "chiha-salvo-final": {
+      "path": "/audio/quality-20261127/chiha/chiha-salvo-final.mp3",
+      "hash": "sha256-1f4dcb70a2f2d72f6dded6d7cf019c093b5c95241336f97faff6959d435d5e5d",
+      "bytes": 13418,
+      "seconds": 0.78,
+      "layers": [
+        {
+          "key": "wood",
+          "start": 0,
+          "length": 0.24,
+          "low": 85,
+          "high": 3200,
+          "volume": 0.57,
+          "delay": 0
+        },
+        {
+          "key": "explosion",
+          "start": 0.049,
+          "length": 0.74,
+          "low": 62,
+          "high": 7200,
+          "volume": 1,
+          "delay": 0
+        },
+        {
+          "key": "metal",
+          "start": 0,
+          "length": 0.19,
+          "low": 1050,
+          "high": 5800,
+          "volume": 0.26,
+          "delay": 0.084
+        },
+        {
+          "key": "wood",
+          "start": 0.004,
+          "length": 0.2,
+          "low": 100,
+          "high": 2200,
+          "volume": 0.29,
+          "delay": 0.185
+        },
+        {
+          "key": "metal",
+          "start": 0.006,
+          "length": 0.14,
+          "low": 1800,
+          "high": 5900,
+          "volume": 0.1,
+          "delay": 0.278
+        }
+      ]
+    }
+  }
+}

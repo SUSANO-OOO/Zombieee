@@ -11,15 +11,20 @@ const sharedShots=Object.freeze({
   'ability-gunner-suppression-muzzle':'weapon-gunner-01',
   'ability-babayaga-appraise-shot':'weapon-suppressed-pistol',
 });
+const manualStrikes = new Set(['ability-ranger-precision-shot','ability-ranger-precision-impact','ability-scout-intercept-impact']);
 function rewrite(manifest,allowed){
   return {...manifest,assets:manifest.assets.map(asset=>{
     const key=Object.hasOwn(sharedShots,asset.id)?sharedShots[asset.id]:asset.id;
     const file=Object.hasOwn(playbackFiles,key)?playbackFiles[key]:null;
-    if(!file)return asset;
-    const fallback=asset.sources.filter(source=>source.src!==file.path);
-    if(!fallback.length)throw new Error('Missing original gun source: '+asset.id);
-    if(allowed&&!allowed.has(file.path))return fallback.length===asset.sources.length?asset:{...asset,sources:fallback};
-    return {...asset,sources:[{src:file.path,type:'audio/mpeg'},...fallback]};
+    const strikePath=manualStrikes.has(asset.id)?'/audio/quality-20261127/manual-strikes/'+asset.id+'.mp3':null;
+    if(!file&&!strikePath)return asset;
+    const fallback=asset.sources.filter(source=>source.src!==file?.path&&source.src!==strikePath);
+    if(!fallback.length)throw new Error('Missing original weapon source: '+asset.id);
+    const sources=[];
+    if(strikePath&&allowed?.has(strikePath))sources.push({src:strikePath,type:'audio/mpeg'});
+    if(file&&(!allowed||allowed.has(file.path)))sources.push({src:file.path,type:'audio/mpeg'});
+    if(!sources.length&&fallback.length===asset.sources.length)return asset;
+    return {...asset,sources:[...sources,...fallback]};
   })};
 }
 // Playback retains the recorded fallback sources in their existing order.
@@ -51,10 +56,31 @@ function withPistolTakes(manifest, allowed) {
   });
   return { ...manifest, assets, pools };
 }
+
+function withChihaSalvo(manifest, allowed) {
+  const source = name => ({src:'/audio/quality-20261127/chiha/chiha-salvo-'+name+'.mp3',type:'audio/mpeg'});
+  const launches = ['launch-a','launch-b'];
+  const poolId = 'ability-mrs-chiha-salvo-shot';
+  const pools = [...manifest.pools];
+  const assets = manifest.assets.flatMap(asset => {
+    if (asset.id === poolId && launches.every(name => allowed.has(source(name).src))) {
+      const takes = launches.map(name => ({...asset,id:'chiha-salvo-'+name,sources:[source(name),...asset.sources]}));
+      pools.push({id:poolId,category:asset.category,assetIds:takes.map(take=>take.id),strategy:'shuffle',
+        avoidImmediateRepeat:true,cooldownMs:asset.cooldownMs,priority:asset.priority,maxInstances:asset.maxInstances});
+      return takes;
+    }
+    if (asset.id === 'ability-mrs-chiha-salvo-impact' || asset.id === 'ability-mrs-chiha-salvo-final') {
+      const sound = source(asset.id.slice('ability-mrs-chiha-salvo-'.length));
+      if (allowed.has(sound.src)) return [{...asset,sources:[sound,...asset.sources]}];
+    }
+    return [asset];
+  });
+  return {...manifest,assets,pools};
+}
 // A battle/conversation snapshots this whitelist at entry. Old committed packs,
 // uncommitted bytes and unwrapped callers retain the original recorded cues.
 export function selectV100GunFinishPlayback(manifest,verifiedPaths=''){
   const allowed = new Set(verifiedPaths.split('\n').filter(Boolean));
   const guns=withPistolTakes(rewrite(manifest, allowed),allowed);
-  return createAudioManifest(withV100HachiCrowbar(guns, allowed));
+  return createAudioManifest(withV100HachiCrowbar(withChihaSalvo(guns, allowed), allowed));
 }

@@ -185,6 +185,7 @@ function formatReason(reason: string | undefined) {
     "activity-active": "進行中の作戦を終えてから挑戦できます。",
     "formation-empty": "出撃する仲間が編成されていません。",
     "invalid-mode-run": "現在の戦闘とセーブの内容が一致しません。ステージ選択に戻ってください。",
+    "invalid-survival-start": "サバイバルの開始地点を選び直してください。",
     "equipment-unavailable": "この装備は購入できません。",
     "equipment-locked": "この装備は、対象のステージをクリアすると購入できます。",
     "equipment-not-owned": "この装備は持っていません。",

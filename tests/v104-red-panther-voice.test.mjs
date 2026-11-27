@@ -241,16 +241,17 @@ test('a rapid series of minor injuries selects short takes for the same fighter 
   assert.equal(hit(0,10).hurtVoiceCueId,undefined);
   assert.equal(hit(.6,10),null);
   assert.equal(hit(1,0),null);
-  const repeat=hit(1.4,5,{...fighter});
+  assert.equal(hit(1.4,5,{...fighter}),null);
+  const repeat=hit(2.4,5,{...fighter});
   assert.equal(repeat.hurtVoiceCueId,brief);
-  assert.equal(hit(2.9,25).hurtVoiceCueId,undefined);
-  assert.equal(hit(5.1,5).hurtVoiceCueId,undefined);
+  assert.equal(hit(3.3,25).hurtVoiceCueId,undefined);
+  assert.equal(hit(5.4,5).hurtVoiceCueId,undefined);
   assert.equal(hit(5.9,5,{...fighter,id:19}).hurtVoiceCueId,undefined);
   assert.equal(hit(6,5,fighter,{time:6,battleAudioGeneration:0}).hurtVoiceCueId,undefined);
   assert.equal(hit(7,5,{...fighter,hp:0}),null);
   const runtime=createBattleAudioRuntime();
   assert.equal(scheduleDelayedBattleAudioCue(runtime,repeat),true);
-  const [due]=takeDueBattleAudioCues(runtime,{simulationTime:2,resolveOwner:()=>({alive:true,retreat:false,activationId:0})});
+  const [due]=takeDueBattleAudioCues(runtime,{simulationTime:2.5,resolveOwner:()=>({alive:true,retreat:false,activationId:0})});
   assert.equal(due.hurtVoiceCueId,brief);
   const dispatch=nodes.filter(n=>ts.isForOfStatement(n) && n.expression.getText(tree)==='dueBattleAudioCues');
   assert.equal(dispatch.length,1);
@@ -294,6 +295,13 @@ test('rapid Panther injuries shorten the voice while armor, fatal contacts and o
     assert.equal(v104EnemyContactAudio(world,actor,8,cue).hurtVoiceCueId,undefined);
     world.time=2.4;
     assert.equal(v104EnemyContactAudio(world,actor,0,cue).voiceAllowed,false);
+    const unvoiced=v104EnemyContactAudio(world,actor,7,cue);
+    assert.deepEqual(unvoiced,{ownerId:13,voiceAllowed:false});
+    const contact=actualPlayer();
+    contact.play(cue,640,unvoiced);
+    await flush();
+    assert.deepEqual(contact.requests.map(row=>row.cueId),[cue]);
+    world.time=3.5;
     const options=v104EnemyContactAudio(world,actor,7,cue);
     const expected=shortHeavyHurtPool('voice-'+kind+'-hurt');
     assert.equal(options.hurtVoiceCueId,expected);
@@ -302,9 +310,9 @@ test('rapid Panther injuries shorten the voice while armor, fatal contacts and o
     await flush();
     assert.deepEqual(player.requests.map(row=>row.cueId),[cue,expected??'voice-'+kind+'-hurt-takes']);
     assert.equal(player.requests[1].options.instanceKey,'rp-voice:13');
-    world.time=3.5;
-    assert.equal(v104EnemyContactAudio(world,actor,30,cue).hurtVoiceCueId,undefined);
-    world.time=5;
+    world.time=4.5;
+    assert.deepEqual(v104EnemyContactAudio(world,actor,30,cue),{ownerId:13,voiceAllowed:true});
+    world.time=5.5;
     assert.equal(v104EnemyContactAudio(world,{...actor,hp:0},20,cue),null);
   }
 });

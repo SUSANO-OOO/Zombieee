@@ -99,6 +99,8 @@
   .pwa-gate[data-pwa-stage="install-offer"] .pwa-install-guide { grid-column:2; grid-row:2; overflow:auto; overscroll-behavior:contain; }
   .pwa-gate[data-pwa-stage="install-offer"] .pwa-secondary-actions { grid-column:1; grid-row:3; }
   .pwa-gate[data-pwa-stage="install-offer"] .pwa-install-offer-skip { grid-column:2; grid-row:3; align-self:center; }
+  .pwa-gate[data-pwa-stage="install-offer"] .pwa-gate-panel[data-home-added] { height:auto; grid-template-rows:auto auto auto; overflow:auto; }
+  .pwa-gate[data-pwa-stage="install-offer"] [data-home-added] .pwa-install-overview { grid-column:1/-1; }
   .pwa-gate .pwa-install-guidance { padding:7px 9px; }
   .pwa-gate .pwa-install-steps { gap:5px; }
   .pwa-gate .pwa-install-steps li { font-size:13px; line-height:1.4; }

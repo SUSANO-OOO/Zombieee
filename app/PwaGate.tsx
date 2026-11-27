@@ -70,6 +70,8 @@ import {PWA_MANUAL_FOLEY_FILES} from "./pwaManualFoleyFiles.js";
 import {PWA_PAN_GUARD_FILE} from "./pwaPanGuardFile.js";
 import {PWA_GUN_FINISH_FILES} from "./pwaGunFinishFiles.js";
 import {PWA_PISTOL_TAKE_FILES} from "./pwaPistolTakeFiles.js";
+import {PWA_CHIHA_SALVO_FILES} from "./pwaChihaSalvoFiles.js";
+import {PWA_MANUAL_STRIKE_FILES} from "./pwaManualStrikeFiles.js";
 import {PWA_HACHI_CROWBAR_FILES} from "./pwaHachiCrowbarFiles.js";
 import {PWA_BOSS_COLLAPSE_FILES} from "./pwaBossCollapseFiles.js";
 import {PWA_BOSS_SKILL_FILES} from "./pwaBossSkillFiles.js";
@@ -208,7 +210,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [stalledSeconds, setStalledSeconds] = useState(0);
   const [copied, setCopied] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<unknown> } | null>(null);
-  const [installPromptUsed, setInstallPromptUsed] = useState(false);
+  const [installStatus, setInstallStatus] = useState<"idle" | "requested" | "added">("idle");
+  const addedToHomeScreen = installStatus === "added";
   const [booted, setBooted] = useState(false);
   const [bootFailure, setBootFailure] = useState(false);
   const [bootAttempt, setBootAttempt] = useState(0);
@@ -431,8 +434,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     const onPrompt = (event: Event) => {
       event.preventDefault();
       setInstallPrompt(event as unknown as { prompt: () => Promise<unknown> });
+      setInstallStatus("idle");
     };
-    const onInstalled = () => { setInstallPrompt(null); setInstallPromptUsed(true); };
+    const onInstalled = () => { setInstallPrompt(null); setInstallStatus("added"); };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
@@ -878,7 +882,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const acceptInstallPrompt = useCallback(() => {
     const prompt = installPrompt;
     if (!prompt) return;
-    setInstallPromptUsed(true);
+    setInstallPrompt(null);
+    setInstallStatus("requested");
     void Promise.resolve(prompt.prompt()).catch(() => {});
   }, [installPrompt]);
 
@@ -941,7 +946,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedGunFinishPaths = verifiedPwaArtworkPaths({
-    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    artworks: {...PWA_GUN_FINISH_FILES,...PWA_HACHI_CROWBAR_FILES,...PWA_PISTOL_TAKE_FILES,...PWA_CHIHA_SALVO_FILES,...PWA_MANUAL_STRIKE_FILES}, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedBossSkillPaths = verifiedPwaArtworkPaths({
@@ -993,9 +998,20 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           ? "取得済みのゲームデータへの切り替えを確認できませんでした。もう一度、反映をお試しください。"
           : "ゲームデータの取得・保存が完了しませんでした。通信環境と空き容量を確認し、取得をやり直してください。";
 
+  const homeLaunchHint = "ホーム画面のアイコンを開き、「ダウンロードを開始」をタップしてください。";
   const storagePanel = <aside onClickCapture={onPwaControlClick} className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
     <h3>アプリの容量・更新</h3>
-    {!standalone && guidance && <details className="pwa-return-install-help"><summary>ホーム画面で遊ぶ</summary><div className="pwa-return-install-columns"><div>{guidance.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}{installPromptUsed && <p>追加画面が出ないときは、下の手順を試してください。</p>}<InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div><p>{storageHost ? "続きから遊ぶには、「進行の保存」で先にセーブを書き出してください。" : "続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。"}追加したアプリで復元してください。保存先が別になる場合があります。</p></div></details>}
+    {!standalone && guidance && <details className="pwa-return-install-help">
+      <summary>ホーム画面で遊ぶ</summary>
+      <div className="pwa-return-install-columns">
+        <div>{addedToHomeScreen ? <p>{homeLaunchHint}</p> : <>
+          {guidance.mode === "prompt" && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
+          {installStatus === "requested" && <p>追加画面が出ないときは、下の手順を試してください。</p>}
+          <InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} />
+        </>}</div>
+        <p>{storageHost ? "続きから遊ぶには、「進行の保存」で先にセーブを書き出してください。" : "続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。"}追加したアプリで復元してください。保存先が別になる場合があります。</p>
+      </div>
+    </details>}
     <dl>
       <div><dt>端末に保存したバージョン</dt><dd>{installedManifest?.version ?? "未保存"}</dd></div>
       <div><dt>ひとつ前のバージョン</dt><dd>{previousManifest?.version ?? "なし"}</dd></div>
@@ -1024,7 +1040,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
       {blocking && (
         <section className="pwa-gate" data-pwa-stage={bootFailure ? "boot-failed" : settling ? "preparing" : registrationFailed && !registrationFailureAcknowledged ? "registration-failed" : phase} onClickCapture={onPwaControlClick} role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
-          <div className="pwa-gate-panel">
+          <div className="pwa-gate-panel" data-home-added={phase === "install-offer" && addedToHomeScreen || undefined}>
             <header className="pwa-edition-heading"><h1>西新世紀末物語</h1><span>スマホ版・ゲーム本体の保存</span></header>
             {bootFailure && <><h2>保存中のゲームデータを確認できませんでした</h2><p role="alert">データは削除していません。もう一度、保存内容を確認してください。</p><button type="button" className="pwa-primary" onClick={() => { setBooted(false); setBootFailure(false); setPublishedChecked(false); setError(null); setBootAttempt(value => value + 1); }}>保存内容を再確認</button></>}
 
@@ -1069,16 +1085,19 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
             {!bootFailure && !settling && phase === "install-offer" && (
               <>
-                <div className="pwa-install-overview"><h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
-                <p>{offerCopy?.body ?? "ホーム画面に追加すると、全画面で遊べます。"}</p>
+                <div className="pwa-install-overview"><h2>{addedToHomeScreen ? "ホーム画面に追加しました" : offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
+                <p>{addedToHomeScreen ? homeLaunchHint : offerCopy?.body ?? "ホーム画面に追加すると、全画面で遊べます。"}</p>
                 {offerCopy ? <p className="pwa-install-size" aria-label={offerCopy.sizeLine ?? undefined}><span>ダウンロード容量：</span><strong>{formatBytes(offerCopy.totalBytes)}</strong></p> : manifestUnreachable ? <>
                   <p className="pwa-warning" role="alert">ダウンロードする容量を取得できませんでした。通信環境を確認して、もう一度お試しください。</p>
                   {manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
                   <div className="pwa-actions"><button type="button" onClick={() => { void loadPublishedManifest(); }}>容量を再確認</button></div>
                 </> : <p className="pwa-hint" role="status">ダウンロードする容量を確認しています…</p>}
-                {guidance?.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
-                </div><div className="pwa-install-guide">{guidance && <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>遊ぶまでの3ステップ</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
-                {guidance?.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}</div>
+                {!addedToHomeScreen && guidance?.mode === "prompt" && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
+                </div>
+                {!addedToHomeScreen && guidance && <div className="pwa-install-guide">
+                  {guidance.mode === "prompt" ? <p>追加したアイコンからゲームをダウンロードできます。</p> : <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>遊ぶまでの3ステップ</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
+                  {guidance.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}
+                </div>}
                 <div className="pwa-actions pwa-secondary-actions"><button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>{browserPlayPending ? "起動しています…" : "ブラウザで遊ぶ"}</button></div>
                 <p className="pwa-hint pwa-install-offer-skip">{offerCopy?.skipHint ?? "保存せずに試す場合は、通信が必要です。"}</p>
               </>
