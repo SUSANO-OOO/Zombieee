@@ -262,7 +262,7 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
   const totalBytes = distinctDownloadBytes(assets);
 
   return {
-    headline: "西新世紀末物語をインストール",
+    headline: "ホーム画面に追加",
     body: "保存後は通信なしで遊べます。",
     sizeLine: totalAssets > 0
       ? `ダウンロード容量：${formatBytes(totalBytes)}`
@@ -272,7 +272,7 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
     totalAssets,
     totalBytes,
     skipLabel: "ブラウザで遊ぶ",
-    skipHint: "保存せずに遊ぶ場合は、通信が必要です。",
+    skipHint: "通信が必要です",
   };
 }
 
@@ -305,17 +305,17 @@ export function describeInstallGuidance({ standalone = false, promptAvailable = 
     ? [
       { icon: "menu", arrow: null, text: "ブラウザの「メニュー」を開く", label: "メニュー" },
       { icon: "add", arrow: null, text: "「インストール」または「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
-      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」を押す", label: "ダウンロードを開始" },
+      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」", label: "ダウンロードを開始" },
     ]
     : [
       {
         icon: "share",
         arrow: null,
-        text: "「共有」ボタン（四角から上向き矢印）を押す",
+        text: "ブラウザの「共有」をタップ",
         label: "共有",
       },
-      { icon: "add", arrow: null, text: "「ホーム画面に追加」→「追加」を押す", label: "ホーム画面に追加" },
-      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」を押す", label: "ダウンロードを開始" },
+      { icon: "add", arrow: null, text: "「ホーム画面に追加」→「追加」", label: "ホーム画面に追加" },
+      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」", label: "ダウンロードを開始" },
     ];
 
   return {

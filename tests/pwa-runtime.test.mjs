@@ -103,7 +103,7 @@ test("a finished download reports completion before starting the game", () => {
 test("the install invitation states the size without fetching anything", () => {
   const assets = [asset("/a", 1), asset("/b", 2), asset("/c", 3), asset("/a-alias", 1)];
   const offer = describeInstallOffer(manifest(assets));
-  assert.match(offer.headline, /西新世紀末物語をインストール/);
+  assert.equal(offer.headline, "ホーム画面に追加");
   assert.equal(offer.totalAssets, 4);
   assert.equal(offer.totalBytes, 3 * 1048576);
   assert.match(offer.sizeLine, /ダウンロード容量/);
@@ -112,7 +112,7 @@ test("the install invitation states the size without fetching anything", () => {
   assert.match(offer.noDownloadHint, /ダウンロードしません/);
   // Declining stays available and is described plainly.
   assert.ok(offer.skipLabel);
-  assert.match(offer.skipHint, /保存せずに/);
+  assert.match(offer.skipHint, /通信が必要/);
 });
 
 test("the install invitation offers a real button only when the browser has one", () => {
@@ -143,7 +143,7 @@ test("install guidance adapts to the browser instead of requiring one", () => {
   assert.equal(iphone.steps[0].icon, "share");
   // Landscape and embedded Safari can put Share at the top instead of below.
   assert.equal(iphone.steps[0].arrow, null);
-  assert.match(iphone.steps[0].text, /四角から上向き矢印/);
+  assert.match(iphone.steps[0].text, /ブラウザの「共有」/);
   assert.doesNotMatch(iphone.steps[0].text, /画面下|画面上/);
   assert.match(iphone.steps[1].text, /ホーム画面に追加/);
   assert.match(iphone.steps[1].text, /「追加」/);

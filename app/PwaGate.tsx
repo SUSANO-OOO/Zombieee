@@ -58,6 +58,7 @@ import {V100_UI_MATERIAL_ART} from "./v100PreparationArt.js";
 import {V100_BOSS_DOSSIER_ART} from "./v100BossDossierArt.js";
 import {V100_BOSS_DEFEAT_ART} from "./v100BossDefeatArt.js";
 import {V100_BOSS_ATTACK_ART} from "./v100BossAttackArt.js";
+import {V100_BOSS_FLOOR_ART} from "./v100BossFloorArt.js";
 import {V100_MANUAL_IMPACT_ART} from "./v100ManualImpactArt.js";
 import {V100_PARTICLE_MATERIAL_ART} from "./v100ParticleMaterialArt.js";
 import {V100_KING_EXHAUST_ART} from "./v100KingExhaustArt.js";
@@ -165,7 +166,9 @@ function InstallSteps({ steps }: { steps: Array<Record<string, unknown>> }) {
             <span className="pwa-step-number" aria-hidden="true">{index + 1}</span>
             <span className="pwa-step-body">
               {icon && <span className="pwa-step-icon">{icon}</span>}
-              <span className="pwa-step-text">{String(step.text)}</span>
+              <span className="pwa-step-text">{String(step.text).split(/(「[^」]+」)/u).map((part, i) =>
+                part.startsWith("「") ? <span key={i} className="pwa-step-control-name">{part}</span> : part
+              )}</span>
               {arrow && <span className="pwa-step-arrow" aria-hidden="true">{arrow}</span>}
             </span>
           </li>
@@ -945,7 +948,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     artworks: V100_BALLISTIC_MATERIAL_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
-  const verifiedBattleArtworkPaths = [verifiedBossDefeatPaths,verifiedBossAttackPaths,verifiedManualImpactPaths,verifiedParticleMaterialPaths,verifiedKingExhaustPaths,verifiedGuardImpactPaths,verifiedGroundFirePaths,verifiedBallisticMaterialPaths,verifiedGuardActivationPaths].filter(Boolean).join('\n');
+  const verifiedBossFloorPaths = canUseVerifiedPwaArtwork({
+    artwork: V100_BOSS_FLOOR_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
+  }) ? V100_BOSS_FLOOR_ART.path : "";
+  const verifiedBattleArtworkPaths = [verifiedBossDefeatPaths,verifiedBossAttackPaths,verifiedBossFloorPaths,verifiedManualImpactPaths,verifiedParticleMaterialPaths,verifiedKingExhaustPaths,verifiedGuardImpactPaths,verifiedGroundFirePaths,verifiedBallisticMaterialPaths,verifiedGuardActivationPaths].filter(Boolean).join('\n');
   const verifiedManualFoleyPaths = verifiedPwaArtworkPaths({
     artworks: { ...PWA_MANUAL_FOLEY_FILES, [PWA_PAN_GUARD_FILE.id]: PWA_PAN_GUARD_FILE }, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
@@ -1007,6 +1014,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           ? "取得済みのゲームデータへの切り替えを確認できませんでした。もう一度、反映をお試しください。"
           : "ゲームデータの取得・保存が完了しませんでした。通信環境と空き容量を確認し、取得をやり直してください。";
 
+  const gateStage = bootFailure ? "boot-failed" : settling ? "preparing"
+    : registrationFailed && !registrationFailureAcknowledged ? "registration-failed" : phase;
   const homeLaunchHint = "ホーム画面のアイコンを開き、「ダウンロードを開始」をタップしてください。";
   const downloadLostConnection = downloadState === "failed" && diagnostics?.failures.length
     && diagnostics.failures.every(({ reason }) => ["network", "timeout", "stall"].includes(reason));
@@ -1050,9 +1059,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       {maintenance && <div className="pwa-maintenance" onClickCapture={onPwaControlClick} role="alertdialog" aria-modal="true" aria-label="アプリデータの確認"><section><h2>{maintenance === "clearing" ? "アプリのデータを確認しています" : "削除の完了を確認できませんでした"}</h2><p>確認が終わるまで、この画面でお待ちください。セーブデータは保持しています。</p>{maintenance === "failed" && <button type="button" onClick={() => { void confirmMaintenance(); }}>保存内容を再確認</button>}</section></div>}
 
       {blocking && (
-        <section className="pwa-gate" data-pwa-stage={bootFailure ? "boot-failed" : settling ? "preparing" : registrationFailed && !registrationFailureAcknowledged ? "registration-failed" : phase} onClickCapture={onPwaControlClick} role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
+        <section className="pwa-gate" data-pwa-stage={gateStage} onClickCapture={onPwaControlClick} role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
           <div className="pwa-gate-panel" data-home-added={phase === "install-offer" && addedToHomeScreen || undefined}>
-            <header className="pwa-edition-heading"><h1>西新世紀末物語</h1><span>スマホ版・ゲーム本体の保存</span></header>
+            {gateStage !== "install-offer" && <header className="pwa-edition-heading"><h1>西新世紀末物語</h1><span>スマホ版・ゲーム本体の保存</span></header>}
             {bootFailure && <><h2>保存中のゲームデータを確認できませんでした</h2><p role="alert">データは削除していません。もう一度、保存内容を確認してください。</p><button type="button" className="pwa-primary" onClick={() => { setBooted(false); setBootFailure(false); setPublishedChecked(false); setError(null); setBootAttempt(value => value + 1); }}>保存内容を再確認</button></>}
 
             {!bootFailure && !settling && phase === "install-required" && !installCopy && (
@@ -1094,23 +1103,33 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {!bootFailure && !settling && phase === "install-offer" && (
+            {gateStage === "install-offer" && (
               <>
-                <div className="pwa-install-overview"><h2>{addedToHomeScreen ? "ホーム画面に追加しました" : offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
-                <p>{addedToHomeScreen ? homeLaunchHint : offerCopy?.body ?? "ホーム画面に追加すると、全画面で遊べます。"}</p>
-                {offerCopy ? <p className="pwa-install-size" aria-label={offerCopy.sizeLine ?? undefined}><span>ダウンロード容量：</span><strong>{formatBytes(offerCopy.totalBytes)}</strong></p> : manifestUnreachable ? <>
-                  <p className="pwa-warning" role="alert">ダウンロードする容量を取得できませんでした。通信環境を確認して、もう一度お試しください。</p>
-                  {manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
-                  <div className="pwa-actions"><button type="button" onClick={() => { void loadPublishedManifest(); }}>容量を再確認</button></div>
-                </> : <p className="pwa-hint" role="status">ダウンロードする容量を確認しています…</p>}
-                {!addedToHomeScreen && guidance?.mode === "prompt" && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
+                <header className="pwa-install-cover">
+                  <h1>西新世紀末物語</h1>
+                  <p>{offerCopy?.body ?? "保存後は通信なしで遊べます。"}</p>
+                  {offerCopy && <p className="pwa-install-size" aria-label={offerCopy.sizeLine ?? undefined}><span>ダウンロード容量：</span><strong>{formatBytes(offerCopy.totalBytes)}</strong></p>}
+                </header>
+                <div className="pwa-install-overview">
+                  <h2>{addedToHomeScreen ? "ホーム画面に追加しました" : offerCopy?.headline ?? "ホーム画面に追加"}</h2>
+                  {addedToHomeScreen && <p>{homeLaunchHint}</p>}
+                  {!offerCopy && (manifestUnreachable ? <>
+                    <p className="pwa-warning" role="alert">ダウンロード容量を確認できませんでした。通信を確認して、もう一度お試しください。</p>
+                    {manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
+                    <div className="pwa-actions"><button type="button" onClick={() => { void loadPublishedManifest(); }}>容量を再確認</button></div>
+                  </> : <p className="pwa-hint" role="status">ダウンロードする容量を確認しています…</p>)}
+                  {!addedToHomeScreen && guidance && <>
+                    {guidance.mode === "prompt" ? <>
+                      <p>追加したアイコンを開くと、ゲームをダウンロードできます。</p>
+                      <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>
+                    </> : <div className="pwa-install-guidance" data-install-platform={guidance.platform}><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
+                    {guidance.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}
+                  </>}
+                  <div className="pwa-install-alternative">
+                    <button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>{browserPlayPending ? "起動しています…" : "ブラウザで遊ぶ"}</button>
+                    <small>{offerCopy?.skipHint ?? "通信が必要です"}</small>
+                  </div>
                 </div>
-                {!addedToHomeScreen && guidance && <div className="pwa-install-guide">
-                  {guidance.mode === "prompt" ? <p>追加したアイコンからゲームをダウンロードできます。</p> : <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>遊ぶまでの3ステップ</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
-                  {guidance.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}
-                </div>}
-                <div className="pwa-actions pwa-secondary-actions"><button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>{browserPlayPending ? "起動しています…" : "ブラウザで遊ぶ"}</button></div>
-                <p className="pwa-hint pwa-install-offer-skip">{offerCopy?.skipHint ?? "保存せずに試す場合は、通信が必要です。"}</p>
               </>
             )}
 
@@ -1128,21 +1147,17 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {(phase === "commit-required" || phase === "committing") && (
+            {phase === "commit-required" && (
+              <>
+                <h2>ダウンロードは完了しています</h2>
+                <p>「保存済みデータを反映」を押してください。再ダウンロードは不要です。</p>
+                <button type="button" className="pwa-primary" onClick={recoverCommittedPack}>保存済みデータを反映</button>
+              </>
+            )}
+            {phase === "committing" && (
               <>
                 <h2>保存済みデータを反映しています</h2>
-                <p className="pwa-progress-line">
-                  ダウンロードしたゲームデータを、この端末で使えるように保存しています。
-                </p>
-                <p className="pwa-hint">
-                  保存が終わるまで、この画面でお待ちください。
-                </p>
-                {phase === "commit-required" && (
-                  <button type="button" className="pwa-primary" onClick={recoverCommittedPack}>
-                    保存済みデータを反映
-                  </button>
-                )}
-                {phase === "committing" && <p className="pwa-hint" role="status">反映を確認しています…</p>}
+                <p className="pwa-hint" role="status">保存が終わるまで、この画面でお待ちください。</p>
               </>
             )}
 

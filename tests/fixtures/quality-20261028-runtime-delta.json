@@ -4,6 +4,14 @@
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval. The campaign bridge adds one 271,754-byte painted asset; all 926 earlier payload rows remain exact. Station contamination adds two short CC0 foley cues. Existing bundled audio bytes and offsets stay exact. The painted floor adds one exact 92,352-byte transparent atlas without changing retained payloads. The turned enemy's 15,722-byte hurt fallback is stored directly for offline play. Kumaverson adds one 6,000-byte Kenney CC0 guard effect at the end of the retained audio bank. Three existing voice alternatives requested during offline combat add 28,137 bytes without changing the audio bank.",
   "added": [
     {
+      "path": "/art/quality-20261127/vfx/late-boss-floor-r1.webp",
+      "bytes": 78302,
+      "hash": "sha256-d73266558f889f3cd4ed726b961a6ca184190c729b4648505d09b982401ee0fb",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261126/vfx/hachi-intercept-six-r1.webp",
       "bytes": 114012,
       "hash": "sha256-dff77d4bc37b1dfc64434e096494d2fc23c53dacefe6dc63b068e27493ad8f13",

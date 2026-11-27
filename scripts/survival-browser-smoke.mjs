@@ -330,12 +330,12 @@ for (const engine of engines) {
         }
         if (await activate(
           page,
-          page.getByRole("button", { name: "エリアマップへ撤退", exact: true }),
+          page.getByRole("button", { name: "撤退", exact: true }),
           viewport.safeArea,
         ) === "touch") touchActivationCount += 1;
         if (await activate(
           page,
-          page.getByRole("button", { name: "実行する", exact: true }),
+          page.getByRole("button", { name: "撤退する", exact: true }),
           viewport.safeArea,
         ) === "touch") touchActivationCount += 1;
         await page.waitForFunction((expectedAttempts) => (

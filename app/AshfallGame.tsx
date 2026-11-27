@@ -26329,7 +26329,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           <small>第{survivalHud.lastCompletedWave}波を制圧</small>
           <h2>強化を1つ選択</h2>
           {externalSessionActive && externalSession?.survivalCheckpointReward && !pendingSurvivalCheckpoint && !survivalSavePending && <div className="v100-checkpoint-reward" role="status"><strong>第{survivalHud.lastCompletedWave}波を制圧 / +{externalSession.survivalCheckpointReward.caps} CAPS</strong><span>装備：{externalSession.survivalCheckpointReward.equipmentText}</span><small>報酬と中間記録を保存済み</small></div>}
-          <p>{pendingSurvivalCheckpoint || survivalSavePending ? (externalSessionActive ? "中間記録を保存しています。保存完了後に選択できます。" : "checkpointを保存しています。保存完了後に選択できます。") : (externalSessionActive ? "このステージ中だけ有効です。1つ選ぶと次の波へ進みます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。")}</p>
+          <p>{pendingSurvivalCheckpoint || survivalSavePending ? "戦果を保存中…" : "選んだ強化は今回の出撃中ずっと有効です。"}</p>
           {survivalHud.nextWavePreview && <div className="survival-next-wave-preview"><strong>次は第{survivalHud.nextWavePreview.wave}波 / {survivalHud.nextWavePreview.total}体</strong><span>{survivalHud.nextWavePreview.threats}</span></div>}
           <div className="survival-upgrade-choices">
             {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
@@ -26364,7 +26364,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <button className="primary" onClick={togglePause}>戦闘を再開</button>
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("restart")}>{externalSessionActive ? "最初からやり直す" : "ステージを最初からやり直す"}</button>}
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
-            <button className="danger" onClick={() => requestPauseAction("withdraw")}>{externalSessionActive ? "ステージ選択へ撤退" : "エリアマップへ撤退"}</button>
+            <button className="danger" onClick={() => requestPauseAction("withdraw")}>{isSurvivalBattle ? "撤退" : externalSessionActive ? "ステージ選択へ撤退" : "エリアマップへ撤退"}</button>
           </div>
           <ManualAbilityTactics campaignPortraits={externalSessionActive} onToggle={externalSessionActive ? (open) => { playUiOperationCue(open ? "selection" : "back", `manual-tactics:${open ? "open" : "close"}`); } : undefined} entries={gameRef.current.fighters
             .filter(fighter=>fighter.side==='human' && fighter.hp>0 && fighter.manualAbility)
@@ -26403,7 +26403,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </button>
           </section>
           {!isSurvivalBattle && !externalSessionActive && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "ステージから撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "制圧済みの波の未受取報酬を保存してステージを終了します。" : "制圧済みの波の報酬を一括保存してステージを終了します。") : "この戦闘の途中経過は失われます。星や報酬は獲得できず、新しい仲間や装備も解禁されません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>{pauseConfirm === "restart" ? "最初からやり直す" : pauseConfirm === "loadout" ? "編成に戻る" : "撤退する"}</button></span></div></div>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div>
+            <h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "ここで撤退しますか？"}</h3>
+            <p>{isSurvivalBattle && externalSessionActive
+              ? survivalHud.pendingCaps > 0 ? `撤退すると、突破報酬の${survivalHud.pendingCaps} CAPSを受け取れます。` : "今回の撤退で受け取る追加報酬はありません。"
+              : isSurvivalBattle ? "突破した波の報酬を受け取って撤退します。" : "この戦闘の途中経過は失われます。星や報酬は獲得できず、新しい仲間や装備も解禁されません。"}</p>
+            <span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>{pauseConfirm === "restart" ? "最初からやり直す" : pauseConfirm === "loadout" ? "編成に戻る" : "撤退する"}</button></span>
+          </div></div>}
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>
@@ -26545,8 +26551,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       {pendingResultCommit && <div className="result-save-blocker" role="alertdialog" aria-modal="true" aria-label="戦闘結果の保存失敗">
         <section><small>SAVE REQUIRED</small><h2>戦闘結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>
       </div>}
-      {pendingSurvivalSettlement && <div className="result-save-blocker survival-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival結果の保存">
-        {externalSessionActive ? <section><small>戦果の保存</small><h2>{survivalSavePending ? "防衛継続ステージの結果を保存しています" : "防衛継続ステージの結果を保存できません"}</h2><p>この画面で戦果を保持しています。保存完了後に未受取報酬を受け取れます。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
+      {pendingSurvivalSettlement && <div className="result-save-blocker survival-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="サバイバルの戦果を保存">
+        {externalSessionActive ? <section>
+          <h2>{survivalSettlementAwaitingRetry ? "戦果を保存できませんでした" : "戦果を保存中…"}</h2>
+          {survivalSettlementAwaitingRetry && <>
+            <p>この画面を開いたまま、もう一度保存してください。</p>
+            <div><button onClick={retrySurvivalSettlementSave}>もう一度保存</button></div>
+          </>}
+        </section>
           : <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>}
       </div>}
       {pendingOutbreakSettlement && <div className="result-save-blocker outbreak-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="異常発生任務結果の保存">

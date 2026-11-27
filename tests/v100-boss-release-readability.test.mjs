@@ -5,6 +5,7 @@ import {execFileSync} from 'node:child_process';
 import {restorePreMusashiManualSource} from './helpers/guard-spectacle-source.mjs';
 import {drawV100BossAftermath,drawV100BossReleaseFields} from '../app/v100BossAftermath.js';
 import {V100_BOSS_ATTACK_ART as ART} from '../app/v100BossAttackArt.js';
+import {V100_BOSS_FLOOR_ART as FLOOR} from '../app/v100BossFloorArt.js';
 import {advanceBossAnomalyAbility,beginBossAnomalyAbility,bossAnomalyAreaTargetIds,BOSS_ANOMALY_TUNING} from '../app/bossAnomalies.js';
 const kinds=['mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega'];
 function fixture(kind,elapsed=.22){
@@ -95,6 +96,43 @@ test('six boss ground releases retain the square camera and bound their whole sp
   const top=Math.min(...p.map(c=>c.ty+c.args[6])),bottom=Math.max(...p.map(c=>c.ty+c.args[6]+c.args[8]));
   assert.ok((right-left)*(bottom-top)*scale*scale<=w*h*.18+1e-6,kind+' combined painted rectangle');
   assert.deepEqual(f.world,before);assertState(f);
+ }
+});
+
+test('the four arm impacts stay planted while the blade opens its own trench in the attack direction',()=>{
+ for(const kind of ['mugarian-president-mutated','takuya-omega']) {
+  for(const direction of [-1,1]) {
+   const f=fixture(kind);
+   const image={complete:true,naturalWidth:2*FLOOR.cellSize,naturalHeight:FLOOR.cellSize};
+   f.objects[FLOOR.id]=image;
+   f.owner.stationAbility.targetX=f.owner.x+100*direction;
+   const duration=BOSS_ANOMALY_TUNING[kind].activeSeconds;
+   const at=elapsed=>{
+    f.calls.length=0;
+    f.owner.stationAbility.remainingSeconds=duration-elapsed;
+    drawV100BossReleaseFields(f.ctx,f.objects,f.world,viewport);
+    assertState(f);
+    return f.calls.filter(c=>c.args[0]===image);
+   };
+   const first=at(.05),full=at(.26),last=at(duration-.04);
+   if(kind==='takuya-omega'){
+    assert.equal(first.length,1);assert.equal(full.length,1);
+    assert.equal(first[0].args[1],FLOOR.cellSize);
+    assert.equal(full[0].sx,direction);
+    assert.ok(first[0].args[3]<full[0].args[3]);
+    assert.equal(first[0].args[5],full[0].args[5]);
+   } else {
+    assert.equal(full.length,4);
+    assert.equal(new Set(full.map(c=>[c.tx,c.ty].join(','))).size,4);
+    assert.deepEqual(first.map(c=>c.args.slice(1)),full.map(c=>c.args.slice(1)));
+    at(.26);
+    const impact=f.calls.filter(c=>c.args[0]===f.objects[ART[kind].id]);
+    assert.deepEqual(new Set(impact.map(c=>[c.tx,c.ty].join(','))),new Set(full.map(c=>[c.tx,c.ty].join(','))));
+   }
+   assert.ok(last.every((c,i)=>c.alpha<full[i].alpha*.2));
+   image.complete=false;
+   assert.deepEqual(at(.2),[]);
+  }
  }
 });
 
